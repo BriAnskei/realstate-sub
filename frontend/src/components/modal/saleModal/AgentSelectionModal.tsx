@@ -95,7 +95,6 @@ const AgentSelectionModal = ({
     return agents;
   }, [searchQuery, sortBy]);
 
-  // ✅ Handle checkbox (multi-select)
   const toggleSelection = (agent: AgentType) => {
     setSelectedAgents((prev) => {
       if (prev.find((a) => a._id === agent._id)) {

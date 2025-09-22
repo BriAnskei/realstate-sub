@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
@@ -11,6 +11,8 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import { deleteLand, LandTypes } from "../../store/slices/landSlice";
 import { useNavigate } from "react-router";
 import LotTable from "../../components/tables/projects/LotTable";
+import { LotType, searchLotOnLandName } from "../../store/slices/lotSlice";
+import { debouncedSearch } from "../../utils/debouncer";
 
 export default function Lot() {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,20 +21,30 @@ export default function Lot() {
   const { isConfirmationOpen, closeConfirmationModal, openConfirmationModal } =
     useConfirmationModal();
 
-  const [deleteData, setDeleteData] = useState<LandTypes>({} as LandTypes);
   const [editLand, setEditLand] = useState<LandTypes | undefined>(undefined);
 
-  const { allIds, byId, updateLoading } = useSelector(
-    (state: RootState) => state.lot
-  );
+  // filters
+  const [searchInput, setSearchInput] = useState<string | undefined>();
 
-  const deleteHanlder = async () => {
-    try {
-      await dispatch(deleteLand(deleteData!._id!));
-    } catch (error) {
-      console.log("error: ", error);
+  const { allIds, byId, updateLoading, loading, filterById, allFilterIds } =
+    useSelector((state: RootState) => state.lot);
+
+  // handler filter
+  useEffect(() => {
+    if (searchInput !== undefined) {
+      debouncedSearch(searchInput, dispatch);
     }
-  };
+  }, [searchInput, dispatch]);
+
+  const dataDistributor = useCallback(() => {
+    if (searchInput !== undefined && searchInput !== "") {
+      console.log("Retrung search");
+
+      // user is searching
+      return { byId: filterById, allIds: allFilterIds };
+    }
+    return { byId, allIds: allIds };
+  }, [searchInput, allIds, byId, allFilterIds, filterById]);
 
   return (
     <>
@@ -41,23 +53,20 @@ export default function Lot() {
       <div className="space-y-6">
         <ComponentCard title="Project Lots">
           <LotTable
-            setDeleteData={setDeleteData}
+            dispatch={dispatch}
+            setSeachInput={setSearchInput}
             openConfirmationModal={openConfirmationModal}
-            byId={byId}
-            allIds={allIds}
+            allIds={dataDistributor().allIds}
+            byId={dataDistributor().byId}
+            isLoading={loading}
+            isConfirmationOpen={isConfirmationOpen}
+            updateLoading={updateLoading}
+            closeConfirmationModal={closeConfirmationModal}
           />
         </ComponentCard>
       </div>
 
       {/* Deletion */}
-      <ConfirmtionModal
-        title="Delete Land Project "
-        message="Are you sure you want to delete this? Once deleted, all the transactions data will be lost."
-        loading={updateLoading}
-        isOpen={isConfirmationOpen}
-        onClose={closeConfirmationModal}
-        onConfirm={deleteHanlder}
-      />
     </>
   );
 }

@@ -24,7 +24,7 @@ export default function LotsAddedTable({
   setLots,
 }: LotsAddedTableProp) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editData, seEditData] = useState<LotType>();
+  const [editData, seEditData] = useState<LotType | undefined>();
 
   const saveUpdateHandler = (newData: LotType) => {
     setLots((prevLots) =>
@@ -54,6 +54,11 @@ export default function LotsAddedTable({
 
   const addLotsHandler = (lot: LotType) => {
     setLots((prev) => [...prev, lot]);
+  };
+
+  const closeModalHanlder = () => {
+    seEditData(undefined);
+    setIsModalOpen(false);
   };
 
   return (
@@ -161,15 +166,15 @@ export default function LotsAddedTable({
                           <Badge
                             size="sm"
                             color={
-                              lot.lotStatus === "available"
+                              lot.status === "available"
                                 ? "success"
-                                : lot.lotStatus === "reserved"
+                                : lot.status === "reserved"
                                 ? "warning"
                                 : "error"
                             }
                           >
-                            {lot.lotStatus?.charAt(0).toLocaleUpperCase()! +
-                              lot.lotStatus?.slice(1)!}
+                            {lot.status?.charAt(0).toLocaleUpperCase()! +
+                              lot.status?.slice(1)!}
                           </Badge>
                         </TableCell>
 
@@ -195,8 +200,8 @@ export default function LotsAddedTable({
       </ComponentCard>
       <LotFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        data={editData}
+        onClose={closeModalHanlder}
+        data={editData ?? undefined}
         saveLot={addLotsHandler}
         saveUpdate={saveUpdateHandler}
       />

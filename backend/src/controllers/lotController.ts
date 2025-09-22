@@ -20,7 +20,6 @@ export class LotController {
   getLots = async (req: Request, res: Response) => {
     const cursor = req.query.cursor as string | undefined;
     const limit = parseInt(req.query.limit as string, 10) || 10;
-    console.log("gets lots");
 
     const response = await this.lotRepo.findAllPaginated({ cursor, limit });
 
@@ -34,6 +33,8 @@ export class LotController {
   searchLotsByLandName = async (req: Request, res: Response) => {
     const landName = req.query.name as string;
     const lots = await this.lotRepo.searchLotsByLandName(landName);
+
+    console.log("Seached name: ", landName);
 
     res.json({
       success: true,

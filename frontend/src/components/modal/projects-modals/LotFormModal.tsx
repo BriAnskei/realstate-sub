@@ -24,7 +24,7 @@ const initialValue: LotType = {
   pricePerSqm: "",
   totalAmount: "",
   lotType: "",
-  lotStatus: "available",
+  status: "available",
 };
 
 const LotFormModal = ({
@@ -39,15 +39,8 @@ const LotFormModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      if (data) {
-        setInputData(data);
-      }
-    } else {
-      // reset input values if closed
-      setInputData(initialValue);
-      setTotalAmount("");
     }
-  }, [isOpen, data]);
+  }, [isOpen]);
 
   useEffect(() => {
     const productAmount = () => {
@@ -75,7 +68,7 @@ const LotFormModal = ({
   const onChangeHanlder = createChangeHandler(setInputData);
 
   const handleRadioChange = (value: string) => {
-    setInputData((prev) => ({ ...prev, lotStatus: value }));
+    setInputData((prev) => ({ ...prev, status: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -186,7 +179,7 @@ const LotFormModal = ({
                       name="status"
                       value="available"
                       label="Available"
-                      checked={inputData.lotStatus === "available"}
+                      checked={inputData.status === "available"}
                       onChange={handleRadioChange}
                     />
                     <Radio
@@ -194,7 +187,7 @@ const LotFormModal = ({
                       name="status"
                       value="reserved"
                       label="Reserved"
-                      checked={inputData.lotStatus === "reserved"}
+                      checked={inputData.status === "reserved"}
                       onChange={handleRadioChange}
                     />
                     <Radio
@@ -202,7 +195,7 @@ const LotFormModal = ({
                       name="status"
                       value="sold"
                       label="Sold"
-                      checked={inputData.lotStatus === "sold"}
+                      checked={inputData.status === "sold"}
                       onChange={handleRadioChange}
                     />
                   </div>

@@ -13,12 +13,14 @@ export interface LotType {
   pricePerSqm?: string;
   totalAmount?: string;
   lotType?: string;
-  lotStatus?: string;
+  status?: string;
   createdAt?: string;
 }
 
 interface LotState extends NormalizeState<LotType> {
   updateLoading: boolean;
+  filterById: { [key: string]: LotType };
+  allFilterIds: string[];
 }
 
 const initialState: LotState = {
@@ -27,6 +29,8 @@ const initialState: LotState = {
   loading: false,
   error: null,
   updateLoading: false,
+  filterById: {},
+  allFilterIds: [],
 };
 
 const lotApi = new LotApi();
@@ -35,10 +39,25 @@ export const fetchLots = createAsyncThunk(
   "lot/fetch",
   async (data: { cursor?: string }, { rejectWithValue }) => {
     try {
-      console.log("fetching lots:");
-
       const res = await lotApi.getLots();
-      console.log("fetch reponmse: ", res);
+
+      return res.lots;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const searchLotOnLandName = createAsyncThunk(
+  "lot/search",
+  async (landName: string, { rejectWithValue }) => {
+    try {
+      console.log("searching triggere:");
+
+      const res = await lotApi.searchLotsByLandName(landName);
+
+      console.log("searching responmse: ", res);
+
       return res.lots;
     } catch (error) {
       return rejectWithValue(error);
@@ -87,21 +106,25 @@ const lotSclice = createSlice({
   extraReducers: (builder) => {
     builder
 
-      .addCase(fetchLots.pending, (state) => {
-        state.updateLoading = true;
+      .addCase(fetchLots.pending, (state, action) => {
+        if (action.meta.arg.cursor) {
+          state.updateLoading = true;
+        } else {
+          state.loading = true;
+        }
       })
       .addCase(fetchLots.fulfilled, (state, action) => {
         const { allIds, byId } = normalizeResponse(action.payload);
-
-        console.log("allIDs", allIds);
 
         state.allIds = [...state.allIds, ...allIds];
         state.byId = { ...state.byId, ...byId };
 
         state.updateLoading = false;
+        state.loading = false;
       })
       .addCase(fetchLots.rejected, (state) => {
         state.updateLoading = false;
+        state.loading = false;
       })
 
       .addCase(editLot.pending, (state) => {
@@ -128,6 +151,20 @@ const lotSclice = createSlice({
         state.updateLoading = false;
       })
       .addCase(deleteLot.rejected, (state) => {
+        state.updateLoading = false;
+      })
+      .addCase(searchLotOnLandName.pending, (state) => {
+        state.updateLoading = true;
+      })
+      .addCase(searchLotOnLandName.fulfilled, (state, action) => {
+        const { byId, allIds } = normalizeResponse(action.payload);
+
+        state.allFilterIds = allIds;
+        state.filterById = byId;
+
+        state.updateLoading = false;
+      })
+      .addCase(searchLotOnLandName.rejected, (state) => {
         state.updateLoading = false;
       });
   },

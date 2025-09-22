@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
@@ -10,6 +10,7 @@ import { userUser } from "../../context/UserContext";
 import { createChangeHandler } from "../../utils/createChangeHandler";
 
 export default function SignInForm() {
+  const navigate = useNavigate();
   const { login } = userUser();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -34,10 +35,6 @@ export default function SignInForm() {
     setErrors({ role: "", userName: "", password: "" });
   }, [input, role]);
 
-  useEffect(() => {
-    console.log("error: ", errors);
-  }, [errors]);
-
   const onChangeHanlder = createChangeHandler(setInput);
 
   const handleRoleChange = (value: string) => {
@@ -48,9 +45,7 @@ export default function SignInForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const validateInput = () => {
     if (!role || !input.userName || !input.password) {
       if (!role) {
         setErrors((prev) => ({ ...prev, role: "Role selection is required." }));
@@ -65,8 +60,16 @@ export default function SignInForm() {
           password: "Password is required.",
         }));
       }
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateInput()) return;
 
     const response = login({ ...input, role });
 
@@ -77,7 +80,7 @@ export default function SignInForm() {
         setErrors((prev) => ({ ...prev, userName: response.message! }));
       }
     } else {
-      console.log("pass");
+      navigate("/");
     }
   };
 
@@ -209,12 +212,9 @@ export default function SignInForm() {
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Don&apos;t have an account?{" "}
-                <Link
-                  to="/signup"
-                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
+                <a className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
                   Sign Up
-                </Link>
+                </a>
               </p>
             </div>
           </div>

@@ -7,6 +7,6 @@ export interface Lot {
   pricePerSqm: number;
   totalAmount: number;
   lotType: string;
-  lotStatus: string;
+  status: string;
   createdAt?: string;
 }

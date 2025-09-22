@@ -11,10 +11,10 @@ export class LotRepository {
 
   async searchLotsByLandName(landName: string): Promise<Land[] | null> {
     const query = `
-      SELECT Lot.*, Land.projectName
+      SELECT Lot.*, Land.name
       FROM Lot
       JOIN Land ON Lot.landId = Land._id
-      WHERE Land.projectName LIKE ?;
+      WHERE Land.name LIKE ?;
     `;
     return this.db.all(query, [`%${landName}%`]);
   }
@@ -38,8 +38,6 @@ export class LotRepository {
     cursor?: string;
     limit?: number;
   }): Promise<{ lots: Lot[]; hasMore: boolean }> {
-    console.log("Fething all lots");
-
     const { cursor, limit = 10 } = payload;
 
     let query = `

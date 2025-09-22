@@ -1,6 +1,7 @@
-import { createContext, use, useContext, useState } from "react";
+import { createContext, use, useContext, useEffect, useState } from "react";
 
 interface UserType {
+  _id?: string;
   profilePicc?: string;
   firstName?: string;
   middleName: string;
@@ -14,13 +15,25 @@ interface UserType {
 
 interface ContextValue {
   users: UserType[];
-  curUser: UserType;
-  setCurUser: React.Dispatch<React.SetStateAction<UserType>>;
+  curUser: UserType | undefined;
+  setCurUser: React.Dispatch<React.SetStateAction<UserType | undefined>>;
   login: (data: { role: string; userName: string; password: string }) => {
     success: boolean;
     message?: string;
     type?: string;
   };
+  handleSignOut: () => void;
+}
+
+export enum Role {
+  Agent = "agent",
+  Employee = "employee",
+}
+
+export enum UserRole {
+  Staff = "staff",
+  Manager = "manager",
+  Admin = "admin",
 }
 
 const UserContext = createContext<ContextValue | undefined>(undefined);
@@ -28,12 +41,13 @@ const UserContext = createContext<ContextValue | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [curUser, setCurUser] = useState<UserType>({} as UserType);
+  const [curUser, setCurUser] = useState<UserType>();
 
   // mock users
   const users: UserType[] = [
     // Agents
     {
+      _id: "1",
       profilePicc: "https://randomuser.me/api/portraits/men/11.jpg",
       firstName: "John",
       middleName: "A",
@@ -41,10 +55,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "john.cruz@example.com",
       userName: "johncruz",
       passWord: "agent123",
-      role: "agent",
-      userRole: "staff",
+      role: Role.Agent,
+      userRole: UserRole.Staff,
     },
     {
+      _id: "2",
       profilePicc: "https://randomuser.me/api/portraits/women/12.jpg",
       firstName: "Maria",
       middleName: "B",
@@ -52,10 +67,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "maria.santos@example.com",
       userName: "marias",
       passWord: "agent456",
-      role: "agent",
-      userRole: "staff",
+      role: Role.Agent,
+      userRole: UserRole.Staff,
     },
     {
+      _id: "3",
       profilePicc: "https://randomuser.me/api/portraits/men/13.jpg",
       firstName: "Carlos",
       middleName: "D",
@@ -63,10 +79,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "carlos.reyes@example.com",
       userName: "carlosr",
       passWord: "agent789",
-      role: "agent",
-      userRole: "staff",
+      role: Role.Agent,
+      userRole: UserRole.Staff,
     },
     {
+      _id: "4",
       profilePicc: "https://randomuser.me/api/portraits/women/14.jpg",
       firstName: "Angela",
       middleName: "E",
@@ -74,10 +91,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "angela.lopez@example.com",
       userName: "angelal",
       passWord: "agent321",
-      role: "agent",
-      userRole: "staff",
+      role: Role.Agent,
+      userRole: UserRole.Staff,
     },
     {
+      _id: "5",
       profilePicc: "https://randomuser.me/api/portraits/men/15.jpg",
       firstName: "Mark",
       middleName: "F",
@@ -85,12 +103,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "mark.v@example.com",
       userName: "markv",
       passWord: "agent654",
-      role: "agent",
-      userRole: "staff",
+      role: Role.Agent,
+      userRole: UserRole.Staff,
     },
 
     // Employees
     {
+      _id: "6",
       profilePicc: "https://randomuser.me/api/portraits/men/21.jpg",
       firstName: "Joseph",
       middleName: "G",
@@ -98,10 +117,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "joseph.g@example.com",
       userName: "josephg",
       passWord: "emp123",
-      role: "employee",
-      userRole: "manager",
+      role: Role.Employee,
+      userRole: UserRole.Manager,
     },
     {
+      _id: "7",
       profilePicc: "https://randomuser.me/api/portraits/women/22.jpg",
       firstName: "Sophia",
       middleName: "H",
@@ -109,10 +129,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "sophia.dc@example.com",
       userName: "sophiadc",
       passWord: "emp456",
-      role: "employee",
-      userRole: "staff",
+      role: Role.Employee,
+      userRole: UserRole.Staff,
     },
     {
+      _id: "8",
       profilePicc: "https://randomuser.me/api/portraits/men/23.jpg",
       firstName: "Anthony",
       middleName: "I",
@@ -120,10 +141,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       email: "anthony.t@example.com",
       userName: "anthonyt",
       passWord: "admin123",
-      role: "employee",
-      userRole: "admin", // 👈 Admin inside employee group
+      role: Role.Employee,
+      userRole: UserRole.Admin,
     },
   ];
+
+  useEffect(() => {
+    const userLogJson = localStorage.getItem("user");
+    console.log("userLogJson: ", userLogJson, localStorage.getItem("user"));
+    if (userLogJson) {
+      const useData = JSON.parse(userLogJson);
+      console.log("useData: ", useData);
+
+      setCurUser(useData);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (curUser) {
+      localStorage.setItem("user", JSON.stringify(curUser));
+    }
+  }, [curUser]);
 
   const login = (data: {
     role: string;
@@ -154,8 +192,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     return { success: false, message: "there is no match for this username" };
   };
 
+  const handleSignOut = () => {
+    setCurUser(undefined);
+    localStorage.removeItem("user");
+  };
+
   return (
-    <UserContext.Provider value={{ users, curUser, setCurUser, login }}>
+    <UserContext.Provider
+      value={{ users, curUser, setCurUser, login, handleSignOut }}
+    >
       {children}
     </UserContext.Provider>
   );

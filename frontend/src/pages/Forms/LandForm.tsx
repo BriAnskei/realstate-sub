@@ -11,24 +11,25 @@ import { createChangeHandler } from "../../utils/createChangeHandler";
 import { AppDispatch, RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import LotsAddedTable from "../../components/tables/employee/LotsAddedTable";
+import { useNavigate } from "react-router";
 
-interface LandFormProp {
-  data?: LotType;
-}
+const initialLandInput = {
+  _id: "",
+  name: "",
+  location: "",
+  lotsSold: 0,
+  available: 0,
+  totalArea: 0,
+  totalLots: 0,
+};
 
-const LandForm = ({ data }: LandFormProp) => {
+const LandForm = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { loading } = useSelector((state: RootState) => state.land);
 
-  const [landInputData, setLandInputData] = useState<LandTypes>({
-    _id: "",
-    name: "",
-    location: "",
-    lotsSold: 0,
-    available: 0,
-    totalArea: 0,
-    totalLots: 0,
-  });
+  const [landInputData, setLandInputData] =
+    useState<LandTypes>(initialLandInput);
   const [lots, setLots] = useState<LotType[]>([]);
 
   useEffect(() => {
@@ -36,7 +37,7 @@ const LandForm = ({ data }: LandFormProp) => {
       const totalLots = lots.length;
       setLandInputData((prev) => ({ ...prev, totalLots: totalLots }));
       for (let lot of lots) {
-        if (lot.lotStatus === "sold" || lot.lotStatus === "sold") {
+        if (lot.status === "sold" || lot.status === "reserved") {
           setLandInputData((prev) => ({
             ...prev,
             lotsSold: (landInputData.lotsSold || 0) + 1,
@@ -52,10 +53,7 @@ const LandForm = ({ data }: LandFormProp) => {
     countLotTypes();
   }, [lots]);
 
-  useEffect(() => {
-    console.log("land input data update: ", landInputData);
-  }, [landInputData]);
-
+  // land input listener
   const onChangeHanlder = createChangeHandler(setLandInputData);
 
   const handleSave = async () => {
@@ -63,17 +61,14 @@ const LandForm = ({ data }: LandFormProp) => {
       await dispatch(createLand({ land: landInputData, lots: lots }));
     } catch (error) {
       console.log(error);
+    } finally {
+      console.log("Success navigating to land table");
+      navigate("/land");
     }
   };
 
   const clearInput = () => {
-    setLandInputData({
-      _id: "",
-      name: "",
-      location: "",
-      totalArea: 0,
-      totalLots: 0,
-    });
+    setLandInputData({ ...initialLandInput, totalLots: lots.length });
   };
 
   return (

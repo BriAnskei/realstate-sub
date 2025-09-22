@@ -87,7 +87,6 @@ const SaleForm = ({ data }: LandFormProp) => {
       };
 
       await dispatch(createLand(landData!));
-      await dispatch(bulkSaveLots(selectedLots));
     } catch (error) {
       console.log(error);
     }

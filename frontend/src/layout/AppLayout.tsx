@@ -3,7 +3,7 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 
-import { userUser } from "../context/UserContext";
+import { Role, userUser } from "../context/UserContext";
 
 import EmployeeSlideBar from "./AppSlidebar/EmployeSidebar";
 import AgentSlidebar from "./AppSlidebar/AgentSlidebar";
@@ -15,7 +15,11 @@ const LayoutContent: React.FC = () => {
   return (
     <div className="min-h-screen xl:flex">
       <div>
-        {false ? <AgentSlidebar /> : <EmployeeSlideBar />}
+        {curUser?.role === Role.Agent ? (
+          <AgentSlidebar />
+        ) : (
+          <EmployeeSlideBar />
+        )}
         <Backdrop />
       </div>
       <div

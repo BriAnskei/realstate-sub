@@ -48,7 +48,7 @@ export class LandRepository {
           lot.pricePerSqm,
           lot.totalAmount,
           lot.lotType,
-          lot.lotStatus,
+          lot.status,
         ]);
       }
 

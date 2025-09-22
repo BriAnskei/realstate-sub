@@ -26,7 +26,7 @@ export class LandApi {
     }
   };
 
-  getLands = async () => {
+  getLands = async (): Promise<LandTypes[]> => {
     try {
       const res = await api.get("/api/land/get");
       return res.data;
