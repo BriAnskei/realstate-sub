@@ -11,8 +11,6 @@ export class LandApi {
     lots: LotType[];
   }): Promise<{ land: LandTypes; lots: LotType[] }> => {
     try {
-      console.log("payload api: ", payload);
-
       const res = await api.post("/api/land/add", {
         landData: payload.land,
         lots: payload.lots,
@@ -22,6 +20,19 @@ export class LandApi {
       return res.data;
     } catch (error) {
       errorThrower("addLand", error);
+      throw error;
+    }
+  };
+
+  search = async (landName: string): Promise<{ lands: LandTypes[] }> => {
+    try {
+      const res = await api.get("/api/land/search", {
+        params: { landName },
+      });
+
+      return res.data;
+    } catch (error) {
+      console.log("search, ", error);
       throw error;
     }
   };

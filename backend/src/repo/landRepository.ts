@@ -68,7 +68,13 @@ export class LandRepository {
     }
   }
 
-  // READ: find by id
+  async findByName(name: string): Promise<Land[]> {
+    return this.db.all<Land[]>(
+      `SELECT * FROM Land WHERE name LIKE ? COLLATE NOCASE`,
+      [`%${name}%`]
+    );
+  }
+
   async findById(id: number): Promise<Land | null> {
     const row = await this.db.get<Land>(`SELECT * FROM Land WHERE _id = ?`, [
       id,
@@ -76,12 +82,10 @@ export class LandRepository {
     return row ?? null;
   }
 
-  // READ: find all
   async findAll(): Promise<Land[]> {
     return this.db.all<Land[]>(`SELECT * FROM Land`);
   }
 
-  // UPDATE
   async update(id: number, land: Partial<Land>): Promise<Land | null> {
     // Build dynamic update query
     const fields = Object.keys(land)
@@ -99,7 +103,6 @@ export class LandRepository {
     return this.findById(id);
   }
 
-  // DELETE
   async delete(id: number): Promise<boolean> {
     const result = await this.db.run(`DELETE FROM Land WHERE _id = ?`, [id]);
     return result.changes! > 0;

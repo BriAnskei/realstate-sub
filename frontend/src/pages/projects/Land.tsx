@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
@@ -15,6 +15,7 @@ import {
 } from "../../store/slices/landSlice";
 import { useNavigate } from "react-router";
 import LandTable from "../../components/tables/projects/LandTable";
+import { debouncedLandSearch } from "../../utils/debouncer";
 
 export default function Land() {
   const dispatch = useDispatch<AppDispatch>();
@@ -26,13 +27,28 @@ export default function Land() {
   const [deleteData, setDeleteData] = useState<LandTypes>({} as LandTypes);
   const [editLand, setEditLand] = useState<LandTypes | undefined>(undefined);
 
-  const { allIds, byId, updateLoading } = useSelector(
-    (state: RootState) => state.land
-  );
+  // filter
+  const [search, setSearch] = useState<string | undefined>(undefined);
 
+  const {
+    allIds,
+    byId,
+    updateLoading,
+    loading,
+    filterById,
+    filterIds,
+    filterLoading,
+  } = useSelector((state: RootState) => state.land);
+
+  // handler filter via effect
   useEffect(() => {
-    console.log("byid: ", byId);
-  }, [byId]);
+    const handlerSearch = () => {
+      if (search?.trim()) {
+        debouncedLandSearch(search, dispatch);
+      }
+    };
+    handlerSearch();
+  }, [search]);
 
   const deleteHanlder = async () => {
     try {
@@ -41,6 +57,16 @@ export default function Land() {
       console.log("error: ", error);
     }
   };
+
+  const shouldShowFiltered = useMemo(() => {
+    return search?.trim() && !filterLoading ? true : false;
+  }, [search]);
+
+  const displayData = useMemo(() => {
+    return shouldShowFiltered
+      ? { byId: filterById, allIds: filterIds }
+      : { byId, allIds };
+  }, [shouldShowFiltered, filterById, filterIds, byId, allIds]);
 
   return (
     <>
@@ -62,8 +88,11 @@ export default function Land() {
           <LandTable
             setDeleteData={setDeleteData}
             openConfirmationModal={openConfirmationModal}
-            byId={byId}
-            allIds={allIds}
+            byId={displayData.byId}
+            allIds={displayData.allIds}
+            loading={loading}
+            isFiltering={filterLoading}
+            setSearch={setSearch}
           />
         </ComponentCard>
       </div>

@@ -32,8 +32,8 @@ export default function EmployeApp() {
   useEffect(() => {
     const initialFetch = async () => {
       try {
-        await dispatch(fetchLands());
         await dispatch(fetchLots({}));
+        await dispatch(fetchLands());
       } catch (error) {
         console.log(error);
       }

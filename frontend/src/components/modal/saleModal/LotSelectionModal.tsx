@@ -38,7 +38,7 @@ const LotSelectionModal = ({
       pricePerSqm: "5000",
       totalAmount: "600000",
       lotType: "Residential",
-      lotStatus: "Available",
+      status: "Available",
       createdAt: "2025-01-10T08:30:00Z",
     },
     {
@@ -50,7 +50,7 @@ const LotSelectionModal = ({
       pricePerSqm: "4800",
       totalAmount: "720000",
       lotType: "Residential",
-      lotStatus: "Reserved",
+      status: "Reserved",
       createdAt: "2025-02-05T14:10:00Z",
     },
     {
@@ -62,7 +62,7 @@ const LotSelectionModal = ({
       pricePerSqm: "5200",
       totalAmount: "520000",
       lotType: "Commercial",
-      lotStatus: "Available",
+      status: "Available",
       createdAt: "2025-03-21T09:45:00Z",
     },
     {
@@ -74,7 +74,7 @@ const LotSelectionModal = ({
       pricePerSqm: "5500",
       totalAmount: "1100000",
       lotType: "Residential",
-      lotStatus: "Sold",
+      status: "Sold",
       createdAt: "2025-04-15T13:20:00Z",
     },
   ];

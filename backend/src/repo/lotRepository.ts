@@ -9,20 +9,43 @@ export class LotRepository {
     await this.db.run(`DELETE FROM Lot WHERE _id = ?`, [id]);
   }
 
-  async searchLotsByLandName(landName: string): Promise<Land[] | null> {
-    const query = `
+  async searchLotsByLandName(payload: {
+    landName?: string;
+    status?: string;
+  }): Promise<Land[] | null> {
+    const { landName, status } = payload;
+
+    let query = `
       SELECT Lot.*, Land.name
       FROM Lot
       JOIN Land ON Lot.landId = Land._id
-      WHERE Land.name LIKE ?;
+  
     `;
-    return this.db.all(query, [`%${landName}%`]);
+
+    const params: any[] = [];
+
+    if (landName) {
+      query += `WHERE Land.name LIKE ?`;
+      params.push(`%${landName}%`);
+    }
+
+    if (status) {
+      if (landName) {
+        query += ` AND Lot.status = ?`;
+      } else {
+        query += `WHERE Lot.status = ?`;
+      }
+
+      params.push(status);
+    }
+
+    query += `;`;
+
+    return this.db.all(query, params);
   }
 
-  async findById(id: number): Promise<Land | null> {
-    const row = await this.db.get<Land>(`SELECT * FROM Lot WHERE _id = ?`, [
-      id,
-    ]);
+  async findById(id: number): Promise<Lot | null> {
+    const row = await this.db.get<Lot>(`SELECT * FROM Lot WHERE _id = ?`, [id]);
     return row ?? null;
   }
 
@@ -36,6 +59,7 @@ export class LotRepository {
 
   async findAllPaginated(payload: {
     cursor?: string;
+    filterStatus?: string;
     limit?: number;
   }): Promise<{ lots: Lot[]; hasMore: boolean }> {
     const { cursor, limit = 10 } = payload;
@@ -45,10 +69,12 @@ export class LotRepository {
       FROM Lot
       JOIN Land ON Lot.landId = Land._id
     `;
+
     const params: any[] = [];
 
     if (cursor) {
-      query += ` WHERE Lot.createdAt < ?`;
+      query += `Lot.createdAt < ?`;
+
       params.push(cursor);
     }
 

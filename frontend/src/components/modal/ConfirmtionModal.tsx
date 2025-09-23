@@ -4,7 +4,7 @@ import { Modal } from "../ui/modal";
 interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => Promise<void>;
+  onConfirm?: () => Promise<void>;
   title?: string;
   message?: string;
   loading: boolean;
@@ -37,7 +37,9 @@ const ConfirmationModal = ({
 
   const handleConfirm = async () => {
     if (loading) return;
-    await onConfirm();
+    if (onConfirm) {
+      await onConfirm();
+    }
     onClose();
   };
 

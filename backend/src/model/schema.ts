@@ -11,6 +11,8 @@ export const schema = `
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_land_name ON Land(name);
+
 
 
 CREATE TABLE IF NOT EXISTS Lot ( 
@@ -28,10 +30,25 @@ CREATE TABLE IF NOT EXISTS Lot (
 );
 
 
-CREATE INDEX IF NOT EXISTS idx_land_name ON Land(name);
-
 
 CREATE INDEX IF NOT EXISTS idx_lot_landId ON Lot(landId);
 CREATE INDEX IF NOT EXISTS idx_lot_createdAt ON Lot(createdAt);
+
+
+CREATE TABLE IF NOT EXISTS Client (
+  _id INTEGER PRIMARY KEY AUTOINCREMENT,
+  validIdPicc TEXT,
+  firstName TEXT NOT NULL,
+  middleName TEXT,
+  lastName TEXT NOT NULL,
+  email TEXT UNIQUE,
+  contact TEXT,
+  Marital TEXT,
+  balance REAL DEFAULT 0,
+  address TEXT,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_client_firstName ON Client(firstName);
 
 `;

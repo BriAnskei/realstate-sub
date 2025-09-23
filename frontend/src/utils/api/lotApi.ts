@@ -24,20 +24,18 @@ export class LotApi {
     }
   };
 
-  getLots = async (
-    cursor?: string,
-    limit: number = 10
-  ): Promise<{
+  getLots = async (payload: {
+    cursor?: string;
+    limit?: number;
+  }): Promise<{
     hasMore: boolean;
     lots: LotType[];
     messsage: string;
     success: boolean;
   }> => {
-    console.log("fething lots api");
-
     try {
       const res = await api.get("/api/lot/lots", {
-        params: { cursor, limit },
+        params: payload,
       });
       return res.data;
     } catch (error) {
@@ -46,10 +44,13 @@ export class LotApi {
     }
   };
 
-  searchLotsByLandName = async (name: string) => {
+  searchLotsByLandName = async (payload: {
+    landName: string;
+    status?: string;
+  }) => {
     try {
       const res = await api.get("/api/lot/lots/search", {
-        params: { name },
+        params: payload,
       });
       return res.data;
     } catch (error) {

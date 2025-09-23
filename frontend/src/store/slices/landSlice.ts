@@ -17,14 +17,20 @@ export interface LandTypes {
 
 interface LandState extends NormalizeState<LandTypes> {
   updateLoading: boolean;
+  filterById: { [key: string]: LandTypes };
+  filterIds: string[];
+  filterLoading: boolean;
 }
 
 const initialState: LandState = {
   byId: {},
   allIds: [],
-  loading: false,
   error: null,
+  loading: false,
   updateLoading: false,
+  filterLoading: false,
+  filterById: {},
+  filterIds: [],
 };
 
 const landApi = new LandApi();
@@ -33,7 +39,20 @@ const landApi = new LandApi();
 const fakeApi = <T>(data: T, delay = 800): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(data), delay));
 
-// Async thunks
+export const searchLand = createAsyncThunk(
+  "land/search",
+  async (landName: string, { rejectWithValue }) => {
+    try {
+      console.log("seaching land: ", landName);
+
+      const res = await landApi.search(landName);
+      return res.lands;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const createLand = createAsyncThunk(
   "lands/create",
   async (
@@ -41,8 +60,6 @@ export const createLand = createAsyncThunk(
     { dispatch, rejectWithValue }
   ) => {
     try {
-      console.log("payload slice: ", payload);
-
       const res = await landApi.addLand(payload);
 
       dispatch(bulkSaveLots(res.lots));
@@ -58,8 +75,6 @@ export const fetchLands = createAsyncThunk(
   "lands/fetch",
   async (_: void, { rejectWithValue }) => {
     try {
-      console.log("fething land: ");
-
       const res = await landApi.getLands();
 
       return res;
@@ -94,16 +109,16 @@ const landSlice = createSlice({
     // CREATE
     builder
       .addCase(createLand.pending, (state) => {
-        state.updateLoading = true;
+        state.loading = true;
       })
       .addCase(createLand.fulfilled, (state, action) => {
         const { allIds, byId } = normalizeResponse(action.payload);
         state.byId = { ...state.byId, ...byId };
         state.allIds.push(allIds[0]);
-        state.updateLoading = false;
+        state.loading = false;
       })
       .addCase(createLand.rejected, (state) => {
-        state.updateLoading = false;
+        state.loading = false;
       })
       .addCase(fetchLands.pending, (state) => {
         state.loading = true;
@@ -141,6 +156,21 @@ const landSlice = createSlice({
       })
       .addCase(deleteLand.rejected, (state) => {
         state.updateLoading = false;
+      })
+      .addCase(searchLand.pending, (state) => {
+        state.filterLoading = true;
+      })
+      .addCase(searchLand.fulfilled, (state, action) => {
+        const { allIds, byId } = normalizeResponse(action.payload);
+
+        state.filterById = byId;
+        state.filterIds = allIds;
+
+        state.filterLoading = false;
+      })
+      .addCase(searchLand.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.filterLoading = false;
       });
   },
 });

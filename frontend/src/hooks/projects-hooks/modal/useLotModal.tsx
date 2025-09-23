@@ -14,9 +14,9 @@ const useLotModal = () => {
     () => setIsLotModalOpen((prev) => !prev),
     []
   );
-  const editLot = useCallback((data: any) => {
-    setIsLotModalOpen(true);
+  const editLot = useCallback((data: LotType) => {
     setEditData(data);
+    setIsLotModalOpen(true);
   }, []);
 
   return {

@@ -9,21 +9,27 @@ import {
 } from "../../ui/table";
 import Filter from "../../filter/Filter";
 import { LandTypes } from "../../../store/slices/landSlice";
+import LoadingOverlay from "../../loading/LoadingOverlay";
+import TableRowSkeleton from "../../loading/TableRowSkeleton";
 
 interface LandTableProp {
   openConfirmationModal: () => void;
-
+  loading: boolean;
+  isFiltering: boolean;
   allIds: string[];
   byId: { [key: string]: LandTypes };
   setDeleteData: (data: LandTypes) => void;
+  setSearch: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 export default function LandTable({
   openConfirmationModal,
-
+  isFiltering,
+  loading,
   setDeleteData,
   allIds,
   byId,
+  setSearch,
 }: LandTableProp) {
   const deleteHanlder = (data: LandTypes) => {
     setDeleteData(data);
@@ -32,104 +38,150 @@ export default function LandTable({
 
   return (
     <>
-      <Filter />
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <div className="max-w-full overflow-x-auto">
-          <Table>
-            {/* Table Header */}
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-              <TableRow>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Project Name
-                </TableCell>
+      <Filter onSearchChange={setSearch} />
+      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+        {isFiltering && <LoadingOverlay message="Filtering results..." />}
 
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Location
-                </TableCell>
+        <div className="relative overflow-hidden">
+          {/* Fixed height container for the table body */}
+          <div className="h-[500px] overflow-auto custom-scrollbar">
+            <Table className="min-w-full border-collapse">
+              {/* Sticky Table Header */}
+              <TableHeader className="sticky top-0 z-10 border-b border-gray-100 bg-white dark:border-white/[0.05] dark:bg-gray-900">
+                <TableRow>
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
+                  >
+                    Project Name
+                  </TableCell>
 
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Total Area (sqm)
-                </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
+                  >
+                    Location
+                  </TableCell>
 
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Total Lots
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Available Lots
-                </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
+                  >
+                    <span className="hidden sm:inline">Total Area (sqm)</span>
+                    <span className="sm:hidden">Area</span>
+                  </TableCell>
 
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Lots Sold
-                </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
+                  >
+                    <span className="hidden sm:inline">Total Lots</span>
+                    <span className="sm:hidden">Total</span>
+                  </TableCell>
 
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHeader>
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
+                  >
+                    <span className="hidden sm:inline">Available Lots</span>
+                    <span className="sm:hidden">Available</span>
+                  </TableCell>
 
-            {/* Table Body */}
-            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {allIds.map((id, index) => {
-                const land: LandTypes = byId[id];
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
+                  >
+                    <span className="hidden sm:inline">Lots Sold</span>
+                    <span className="sm:hidden">Sold</span>
+                  </TableCell>
 
-                return (
-                  <TableRow key={index}>
-                    <TableCell className="px-5 py-4 sm:px-6 text-start dark:text-gray-50">
-                      {land.name}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {land.location}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {land.totalArea} Sqm
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {land.totalLots}
-                    </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap sticky right-0 bg-white dark:bg-gray-900"
+                  >
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHeader>
 
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {land.available}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {land.lotsSold}
-                    </TableCell>
+              {/* Table Body with fixed height container */}
+              <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                {loading ? (
+                  <>
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                  </>
+                ) : (
+                  allIds.map((id, index) => {
+                    const land: LandTypes = byId[id];
 
-                    <TableCell className="px-4 py-3 ">
-                      <div className="flex  gap-2">
-                        <EditIcon className="dark:text-gray-400 cursor-pointer" />
-                        <DeleteIcon
-                          className="text-red-600 cursor-pointer"
-                          onClick={() => deleteHanlder(land)}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                    return (
+                      <TableRow
+                        key={id}
+                        className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                      >
+                        <TableCell className="px-3 py-4 sm:px-5 text-start dark:text-gray-50">
+                          <div
+                            className="font-medium truncate max-w-[150px] sm:max-w-none"
+                            title={land.name}
+                          >
+                            {land.name}
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+                          <div
+                            className="truncate max-w-[120px] sm:max-w-[200px]"
+                            title={land.location}
+                          >
+                            {land.location}
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 whitespace-nowrap">
+                          <span className="hidden sm:inline">
+                            {land.totalArea} Sqm
+                          </span>
+                          <span className="sm:hidden">{land.totalArea}</span>
+                        </TableCell>
+
+                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+                          {land.totalLots}
+                        </TableCell>
+
+                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+                          {land.available}
+                        </TableCell>
+
+                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+                          {land.lotsSold}
+                        </TableCell>
+
+                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+                          <div className="flex gap-1 sm:gap-2">
+                            <EditIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" />
+                            <DeleteIcon
+                              className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                              onClick={() => deleteHanlder(land)}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     </>

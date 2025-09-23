@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { LandRepository } from "../repo/landRepository";
+import { Land } from "../model/landModel";
 
 export class LandController {
   constructor(private landRepo: LandRepository) {}
@@ -9,11 +10,20 @@ export class LandController {
     res.json(lands);
   };
 
+  searchByName = async (req: Request, res: Response) => {
+    const landName = req.query.landName as string;
+    console.log("seached name: ", landName);
+
+    const lands: Land[] = await this.landRepo.findByName(landName);
+
+    console.log("found: ", lands);
+
+    res.json({ lands });
+  };
+
   newLandAndLots = async (req: Request, res: Response) => {
     const land = req.body.landData;
     const lot = req.body.lots;
-
-    console.log("land: ", land, "lot: ", lot);
 
     const response = await this.landRepo.createLandWithLots(land, lot);
 

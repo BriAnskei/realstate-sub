@@ -12,6 +12,7 @@ import { AppDispatch, RootState } from "../../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import LotsAddedTable from "../../components/tables/employee/LotsAddedTable";
 import { useNavigate } from "react-router";
+import ConfirmationModal from "../../components/modal/ConfirmtionModal";
 
 const initialLandInput = {
   _id: "",
@@ -31,6 +32,10 @@ const LandForm = () => {
   const [landInputData, setLandInputData] =
     useState<LandTypes>(initialLandInput);
   const [lots, setLots] = useState<LotType[]>([]);
+
+  // confirmation modal
+  const [onSaveModalConfirm, setOnSaveModalConfirm] = useState(false);
+  const [isInvalidModalOpen, setisInvalidModalOpen] = useState(false);
 
   useEffect(() => {
     const countLotTypes = () => {
@@ -55,6 +60,20 @@ const LandForm = () => {
 
   // land input listener
   const onChangeHanlder = createChangeHandler(setLandInputData);
+
+  const verifyInputOnSave = () => {
+    const isInputInvalid: boolean =
+      !landInputData.name?.trim() ||
+      !landInputData.location?.trim() ||
+      !landInputData.totalArea ||
+      !landInputData.totalLots;
+
+    if (isInputInvalid) {
+      setisInvalidModalOpen(true);
+    } else {
+      setOnSaveModalConfirm(true);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -134,7 +153,7 @@ const LandForm = () => {
                 className="bg-green-500"
                 size="sm"
                 variant="primary"
-                onClick={handleSave}
+                onClick={verifyInputOnSave}
               >
                 {loading ? "Processing..." : "Save Land Project"}
               </Button>
@@ -143,6 +162,42 @@ const LandForm = () => {
         </div>
         <LotsAddedTable lots={lots} setLots={setLots} />
       </ComponentCard>
+      <ConfirmationModal
+        title="Save Land and Lot"
+        message="Are you sure you want to save this land and lot property? This will create a new listing in the system."
+        buttonText="Save Property"
+        cancelText="Cancel"
+        variant="success"
+        icon={
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className="w-6 h-6 text-green-600"
+          >
+            <path
+              d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        }
+        bgIcon="bg-green-100"
+        bgButton="bg-green-600 hover:bg-green-700"
+        isOpen={onSaveModalConfirm}
+        onClose={() => setOnSaveModalConfirm(false)}
+        onConfirm={handleSave}
+        loading={loading}
+      />
+
+      <ConfirmationModal
+        title="Invalid Form Input"
+        message="Please ensure all required fields are filled out and at least one lot is added before proceeding."
+        loading={false}
+        isOpen={isInvalidModalOpen}
+        onClose={() => setisInvalidModalOpen(false)}
+      />
     </>
   );
 };

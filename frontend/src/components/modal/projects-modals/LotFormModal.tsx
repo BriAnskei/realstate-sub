@@ -11,8 +11,16 @@ interface LotFormModalProp {
   isOpen: boolean;
   onClose: () => void;
   data?: LotType;
-  saveLot: (data: LotType) => void;
+  saveLot?: (data: LotType) => void;
   saveUpdate: (newData: LotType) => void;
+}
+
+interface ErrorState {
+  blockNumber: boolean;
+  lotNumber: boolean;
+  lotSize: boolean;
+  pricePerSqm: boolean;
+  lotType: boolean;
 }
 
 const initialValue: LotType = {
@@ -27,6 +35,14 @@ const initialValue: LotType = {
   status: "available",
 };
 
+const initialErrors: ErrorState = {
+  blockNumber: false,
+  lotNumber: false,
+  lotSize: false,
+  pricePerSqm: false,
+  lotType: false,
+};
+
 const LotFormModal = ({
   isOpen,
   onClose,
@@ -36,10 +52,18 @@ const LotFormModal = ({
 }: LotFormModalProp) => {
   const [totalAmount, setTotalAmount] = useState("");
   const [inputData, setInputData] = useState<LotType>(initialValue);
+  const [errors, setErrors] = useState<ErrorState>(initialErrors);
+  const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && data) {
+      setInputData(data);
+    } else {
+      setInputData(initialValue);
+      setTotalAmount("");
     }
+    setErrors(initialErrors);
+    setShowErrors(false);
   }, [isOpen]);
 
   useEffect(() => {
@@ -67,15 +91,53 @@ const LotFormModal = ({
 
   const onChangeHanlder = createChangeHandler(setInputData);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    // Clear error for this field when user starts typing
+    if (showErrors && errors[name as keyof ErrorState]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: false,
+      }));
+    }
+
+    onChangeHanlder(e);
+  };
+
   const handleRadioChange = (value: string) => {
     setInputData((prev) => ({ ...prev, status: value }));
   };
 
+  const validateForm = (): boolean => {
+    console.log(inputData);
+
+    const newErrors: ErrorState = {
+      blockNumber: !String(inputData.blockNumber || "").trim(),
+      lotNumber: !String(inputData.lotNumber || "").trim(),
+      lotSize: !String(inputData.lotSize || "").trim(),
+      pricePerSqm: !String(inputData.pricePerSqm || "").trim(),
+      lotType: !String(inputData.lotType || "").trim(),
+    };
+
+    setErrors(newErrors);
+    setShowErrors(true);
+
+    // Return true if no errors
+    return !Object.values(newErrors).some((error) => error);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     if (data) {
       saveUpdate(inputData);
     } else {
-      saveLot(inputData);
+      saveLot!(inputData);
     }
 
     onClose();
@@ -83,6 +145,14 @@ const LotFormModal = ({
 
   const handleClose = () => {
     onClose();
+  };
+
+  const getInputClassName = (fieldName: keyof ErrorState): string => {
+    const baseClasses = "dark:[color-scheme:dark]";
+    if (showErrors && errors[fieldName]) {
+      return `${baseClasses} border-red-500 focus:border-red-500 focus:ring-red-500`;
+    }
+    return baseClasses;
   };
 
   return (
@@ -102,49 +172,79 @@ const LotFormModal = ({
             <div className="px-2 overflow-y-auto custom-scrollbar p-2">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Block Number</Label>
+                  <Label>Block Number *</Label>
                   <Input
                     type="text"
                     value={inputData.blockNumber}
                     name="blockNumber"
                     placeholder="e.g. 5"
-                    onChange={onChangeHanlder}
+                    onChange={handleInputChange}
+                    className={
+                      showErrors && errors.blockNumber
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : ""
+                    }
                   />
+                  {showErrors && errors.blockNumber && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Block number is required
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <Label>Lot Number</Label>
+                  <Label>Lot Number *</Label>
                   <Input
                     type="number"
                     value={inputData.lotNumber}
                     name="lotNumber"
                     placeholder="e.g. 12"
-                    onChange={onChangeHanlder}
+                    onChange={handleInputChange}
+                    className={
+                      showErrors && errors.lotNumber
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:[color-scheme:dark]"
+                        : "dark:[color-scheme:dark]"
+                    }
                   />
+                  {showErrors && errors.lotNumber && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Lot number is required
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <Label>Lot Size (sqm)</Label>
+                  <Label>Lot Size (sqm) *</Label>
                   <Input
                     type="number"
                     value={inputData.lotSize}
-                    className="dark:[color-scheme:dark]"
+                    className={getInputClassName("lotSize")}
                     name="lotSize"
                     placeholder="e.g. 120"
-                    onChange={onChangeHanlder}
+                    onChange={handleInputChange}
                   />
+                  {showErrors && errors.lotSize && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Lot size is required
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <Label>Price per sqm</Label>
+                  <Label>Price per sqm *</Label>
                   <Input
                     type="number"
-                    className="dark:[color-scheme:dark]"
+                    className={getInputClassName("pricePerSqm")}
                     value={inputData.pricePerSqm}
                     name="pricePerSqm"
                     placeholder="e.g. 1,500"
-                    onChange={onChangeHanlder}
+                    onChange={handleInputChange}
                   />
+                  {showErrors && errors.pricePerSqm && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Price per sqm is required
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -152,7 +252,7 @@ const LotFormModal = ({
                   <Input
                     readonly
                     type="number"
-                    className="dark:[color-scheme:dark]"
+                    className="dark:[color-scheme:dark] bg-gray-50 dark:bg-gray-800"
                     value={totalAmount}
                     name="totalAmount"
                     placeholder="Generated Total Amount"
@@ -161,14 +261,24 @@ const LotFormModal = ({
                 </div>
 
                 <div>
-                  <Label>Lot Type</Label>
+                  <Label>Lot Type *</Label>
                   <Input
                     type="text"
                     value={inputData.lotType}
                     name="lotType"
                     placeholder="e.g. Residential, Commercial"
-                    onChange={onChangeHanlder}
+                    onChange={handleInputChange}
+                    className={
+                      showErrors && errors.lotType
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : ""
+                    }
                   />
+                  {showErrors && errors.lotType && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Lot type is required
+                    </p>
+                  )}
                 </div>
 
                 <div className="lg:col-span-2">

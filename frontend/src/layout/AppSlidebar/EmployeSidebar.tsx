@@ -16,6 +16,7 @@ import {
   AgentsIcon,
   ChevronDownIcon,
   HorizontaLDots,
+  TransactionIcon,
 } from "../../icons";
 
 type NavItem = {
@@ -41,37 +42,24 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    name: "Sales",
-    icon: <SaleIcon />,
+    name: "Transaction",
+    icon: <TransactionIcon />,
     subItems: [
-      { name: "New", path: "/saleform", pro: false },
-      { name: "Sales Information", path: "/sale", pro: false },
-      { name: "Payments Informations", path: "/form-elements", pro: false },
+      { name: "Applications", path: "/saleform", pro: false },
+      { name: "Reservations", path: "/sale", pro: false },
+      { name: "Contracts", path: "/form-elements", pro: false },
     ],
   },
 
-  {
-    name: "Payments",
-    icon: <PaymentIcon />,
-    subItems: [
-      { name: "Payments", path: "/form-elements", pro: false },
-      { name: "Commisions", path: "/", pro: false },
-    ],
-  },
   {
     name: "Report",
     icon: <ReportIcon />,
     subItems: [{ name: "Over Due Payments", path: "/", pro: false }],
   },
   {
-    icon: <UserCircleIcon />,
-    name: "Clients",
-    path: "/client",
-  },
-  {
     icon: <AgentsIcon />,
-    name: "Agents",
-    path: "/agents",
+    name: "Client",
+    path: "/client",
   },
 ];
 

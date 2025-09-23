@@ -19,6 +19,10 @@ const landRouter = Router();
   );
   landRouter.get("/find/:_id", asyncHandler(controller.findOne, "findOne"));
   landRouter.post("/delete", asyncHandler(controller.delete, "delete"));
+  landRouter.get(
+    "/search",
+    asyncHandler(controller.searchByName, "seacrhByName")
+  );
 })();
 
 export default landRouter;

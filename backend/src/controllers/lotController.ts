@@ -12,16 +12,29 @@ export class LotController {
   };
 
   finLotById = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id, 10);
-    const lots = this.lotRepo.findById(id);
-    res.json({ success: true, lots });
+    const id = req.params.id;
+
+    let lot: Lot | null = null; // default to null
+
+    if (id) {
+      lot = await this.lotRepo.findById(parseInt(id, 10));
+    }
+
+    res.json({ success: true, lot });
   };
 
   getLots = async (req: Request, res: Response) => {
     const cursor = req.query.cursor as string | undefined;
+    const lotStatus = req.query.status as string;
     const limit = parseInt(req.query.limit as string, 10) || 10;
 
-    const response = await this.lotRepo.findAllPaginated({ cursor, limit });
+    console.log("status: ", lotStatus);
+
+    const response = await this.lotRepo.findAllPaginated({
+      cursor,
+      limit,
+      filterStatus: lotStatus,
+    });
 
     res.json({
       success: true,
@@ -31,10 +44,15 @@ export class LotController {
   };
 
   searchLotsByLandName = async (req: Request, res: Response) => {
-    const landName = req.query.name as string;
-    const lots = await this.lotRepo.searchLotsByLandName(landName);
+    const landName = req.query.landName as string;
+    const lotStatus = req.query.status as string;
 
-    console.log("Seached name: ", landName);
+    const lots = await this.lotRepo.searchLotsByLandName({
+      landName,
+      status: lotStatus,
+    });
+
+    console.log("Seached name: ", landName, lotStatus, "fetching: ", lots);
 
     res.json({
       success: true,

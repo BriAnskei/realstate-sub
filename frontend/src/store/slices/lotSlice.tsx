@@ -19,8 +19,10 @@ export interface LotType {
 
 interface LotState extends NormalizeState<LotType> {
   updateLoading: boolean;
+  fetchingMoreLoading: boolean;
   filterById: { [key: string]: LotType };
   allFilterIds: string[];
+  filterLoading: boolean;
 }
 
 const initialState: LotState = {
@@ -29,6 +31,8 @@ const initialState: LotState = {
   loading: false,
   error: null,
   updateLoading: false,
+  fetchingMoreLoading: false,
+  filterLoading: false,
   filterById: {},
   allFilterIds: [],
 };
@@ -37,9 +41,9 @@ const lotApi = new LotApi();
 
 export const fetchLots = createAsyncThunk(
   "lot/fetch",
-  async (data: { cursor?: string }, { rejectWithValue }) => {
+  async (payload: { cursor?: string; limit?: number }, { rejectWithValue }) => {
     try {
-      const res = await lotApi.getLots();
+      const res = await lotApi.getLots(payload);
 
       return res.lots;
     } catch (error) {
@@ -50,13 +54,14 @@ export const fetchLots = createAsyncThunk(
 
 export const searchLotOnLandName = createAsyncThunk(
   "lot/search",
-  async (landName: string, { rejectWithValue }) => {
+  async (
+    payload: { landName: string; status?: string },
+    { rejectWithValue }
+  ) => {
     try {
-      console.log("searching triggere:");
+      console.log("seach payload: ", payload);
 
-      const res = await lotApi.searchLotsByLandName(landName);
-
-      console.log("searching responmse: ", res);
+      const res = await lotApi.searchLotsByLandName(payload);
 
       return res.lots;
     } catch (error) {
@@ -102,13 +107,17 @@ const lotSclice = createSlice({
       state.allIds = [...state.allIds, ...allIds];
       state.byId = { ...state.byId, ...byId };
     },
+    resetFilter: (state) => {
+      state.allFilterIds = [];
+      state.filterById = {};
+    },
   },
   extraReducers: (builder) => {
     builder
 
       .addCase(fetchLots.pending, (state, action) => {
         if (action.meta.arg.cursor) {
-          state.updateLoading = true;
+          state.fetchingMoreLoading = true;
         } else {
           state.loading = true;
         }
@@ -119,11 +128,11 @@ const lotSclice = createSlice({
         state.allIds = [...state.allIds, ...allIds];
         state.byId = { ...state.byId, ...byId };
 
-        state.updateLoading = false;
+        state.fetchingMoreLoading = false;
         state.loading = false;
       })
       .addCase(fetchLots.rejected, (state) => {
-        state.updateLoading = false;
+        state.fetchingMoreLoading = false;
         state.loading = false;
       })
 
@@ -154,7 +163,7 @@ const lotSclice = createSlice({
         state.updateLoading = false;
       })
       .addCase(searchLotOnLandName.pending, (state) => {
-        state.updateLoading = true;
+        state.filterLoading = true;
       })
       .addCase(searchLotOnLandName.fulfilled, (state, action) => {
         const { byId, allIds } = normalizeResponse(action.payload);
@@ -162,13 +171,13 @@ const lotSclice = createSlice({
         state.allFilterIds = allIds;
         state.filterById = byId;
 
-        state.updateLoading = false;
+        state.filterLoading = false;
       })
       .addCase(searchLotOnLandName.rejected, (state) => {
-        state.updateLoading = false;
+        state.filterLoading = false;
       });
   },
 });
 
-export const { bulkSaveLots } = lotSclice.actions;
+export const { bulkSaveLots, resetFilter } = lotSclice.actions;
 export default lotSclice.reducer;

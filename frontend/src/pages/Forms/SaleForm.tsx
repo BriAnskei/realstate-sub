@@ -11,7 +11,7 @@ import {
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
-import useLandModal from "../../hooks/projects-hooks/modal/useLandModal";
+import useLandModal from "../../hooks/projects-hooks/modal/useLotModal";
 
 import { bulkSaveLots, LotType } from "../../store/slices/lotSlice";
 import { EditIcon, DeleteIcon } from "../../icons";
