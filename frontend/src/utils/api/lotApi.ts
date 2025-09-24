@@ -54,7 +54,17 @@ export class LotApi {
       });
       return res.data;
     } catch (error) {
-      console.error("Error in searchLotsByLandName:", error);
+      console.error("Error in searchLotsBylotName:", error);
+      throw error;
+    }
+  };
+
+  updateLot = async (id: number, lot: Partial<LotType>) => {
+    try {
+      const res = await api.post(`/api/lot/update/${id}`, { lot });
+      return res.data;
+    } catch (error) {
+      console.error("Error in updateLot:", error);
       throw error;
     }
   };

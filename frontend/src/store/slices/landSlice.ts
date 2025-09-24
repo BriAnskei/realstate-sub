@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { NormalizeState } from "../../types/TypesHelper";
 import { normalizeResponse } from "../../utils/normalizeResponse"; // adjust path
-import { bulkSaveLots, LotType } from "./lotSlice";
+import { bulkSaveLots, LotType, updateName } from "./lotSlice";
 import { LandApi } from "../../utils/api/landApi";
 
 export interface LandTypes {
@@ -43,9 +43,8 @@ export const searchLand = createAsyncThunk(
   "land/search",
   async (landName: string, { rejectWithValue }) => {
     try {
-      console.log("seaching land: ", landName);
-
       const res = await landApi.search(landName);
+
       return res.lands;
     } catch (error) {
       return rejectWithValue(error);
@@ -62,7 +61,7 @@ export const createLand = createAsyncThunk(
     try {
       const res = await landApi.addLand(payload);
 
-      dispatch(bulkSaveLots(res.lots));
+      dispatch(bulkSaveLots({ landName: res.land.name, lots: res.lots }));
 
       return res.land;
     } catch (error) {
@@ -86,15 +85,28 @@ export const fetchLands = createAsyncThunk(
 
 export const updateLand = createAsyncThunk(
   "lands/update",
-  async (land: LandTypes) => {
-    return await fakeApi(land);
+  async (land: LandTypes, { rejectWithValue, dispatch }) => {
+    try {
+      await landApi.updateLand(parseInt(land._id, 10), land);
+
+      dispatch(updateName({ landId: land._id, newName: land.name }));
+
+      return land;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
 );
 
 export const deleteLand = createAsyncThunk(
   "lands/delete",
-  async (id: string) => {
-    return await fakeApi({ _id: id });
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await landApi.deleteLand(parseInt(id, 10));
+      return id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
 );
 
@@ -104,6 +116,19 @@ const landSlice = createSlice({
   initialState,
   reducers: {
     resetLands: () => initialState,
+
+    decrementLotsCount: (state, action) => {
+      // this function will be used for deletion
+      const { status, landId } = action.payload;
+
+      if (status === "reserved" || status === "sold") {
+        const currCount = state.byId[landId].lotsSold;
+        state.byId[landId].lotsSold! -= currCount ? 1 : 0;
+      } else if (status === "available") {
+        const currCount = state.byId[landId].available;
+        state.byId[landId].available! -= currCount ? 1 : 0;
+      }
+    },
   },
   extraReducers: (builder) => {
     // CREATE
@@ -149,7 +174,7 @@ const landSlice = createSlice({
         state.updateLoading = true;
       })
       .addCase(deleteLand.fulfilled, (state, action) => {
-        const id = action.payload._id;
+        const id = action.payload;
         delete state.byId[id];
         state.allIds = state.allIds.filter((landId) => landId !== id);
         state.updateLoading = false;
@@ -175,5 +200,5 @@ const landSlice = createSlice({
   },
 });
 
-export const { resetLands } = landSlice.actions;
+export const { resetLands, decrementLotsCount } = landSlice.actions;
 export default landSlice.reducer;

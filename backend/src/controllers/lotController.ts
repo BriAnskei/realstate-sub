@@ -52,12 +52,16 @@ export class LotController {
       status: lotStatus,
     });
 
-    console.log("Seached name: ", landName, lotStatus, "fetching: ", lots);
-
     res.json({
       success: true,
       message: "Lots fetched by land name",
       lots,
     });
+  };
+
+  update = async (req: Request, res: Response) => {
+    const _id = req.params._id;
+    await this.lotRepo.update({ _id: parseInt(_id, 10), lot: req.body });
+    res.json({ success: true });
   };
 }

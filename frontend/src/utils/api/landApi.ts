@@ -59,7 +59,13 @@ export class LandApi {
 
   updateLand = async (id: number, land: Partial<LandTypes>) => {
     try {
-      const res = await api.post(`/api/land/update/${id}`, { land });
+      const updatedLand = {
+        name: land.name,
+        location: land.location,
+        totalArea: land.totalArea,
+      };
+
+      const res = await api.post(`/api/land/update/${id}`, { updatedLand });
       return res.data;
     } catch (error) {
       console.error("Error in updateLand:", error);

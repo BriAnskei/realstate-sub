@@ -47,7 +47,7 @@ export const deleteClient = createAsyncThunk(
 
 export interface ClientType {
   _id: string;
-  validIdPicc?: string;
+  profilePicc?: string;
   firstName?: string;
   middleName: string;
   lastName?: string;
@@ -56,6 +56,7 @@ export interface ClientType {
   Marital?: string;
   balance?: number;
   address?: string;
+  status?: string;
   createdAt?: string;
 }
 

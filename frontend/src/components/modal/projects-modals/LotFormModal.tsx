@@ -6,6 +6,7 @@ import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
 import { LotType } from "../../../store/slices/lotSlice";
 import Radio from "../../form/input/Radio";
+import { diffDates } from "@fullcalendar/core/internal";
 
 interface LotFormModalProp {
   isOpen: boolean;
@@ -25,7 +26,7 @@ interface ErrorState {
 
 const initialValue: LotType = {
   _id: "",
-  LandId: "",
+  landId: "",
   blockNumber: "",
   lotNumber: "",
   lotSize: "",
@@ -281,35 +282,37 @@ const LotFormModal = ({
                   )}
                 </div>
 
-                <div className="lg:col-span-2">
-                  <Label>Status</Label>
-                  <div className="flex flex-wrap items-center gap-8 mt-3">
-                    <Radio
-                      id="available"
-                      name="status"
-                      value="available"
-                      label="Available"
-                      checked={inputData.status === "available"}
-                      onChange={handleRadioChange}
-                    />
-                    <Radio
-                      id="reserved"
-                      name="status"
-                      value="reserved"
-                      label="Reserved"
-                      checked={inputData.status === "reserved"}
-                      onChange={handleRadioChange}
-                    />
-                    <Radio
-                      id="sold"
-                      name="status"
-                      value="sold"
-                      label="Sold"
-                      checked={inputData.status === "sold"}
-                      onChange={handleRadioChange}
-                    />
+                {!data && (
+                  <div className="lg:col-span-2">
+                    <Label>Status</Label>
+                    <div className="flex flex-wrap items-center gap-8 mt-3">
+                      <Radio
+                        id="available"
+                        name="status"
+                        value="available"
+                        label="Available"
+                        checked={inputData.status === "available"}
+                        onChange={handleRadioChange}
+                      />
+                      <Radio
+                        id="reserved"
+                        name="status"
+                        value="reserved"
+                        label="Reserved"
+                        checked={inputData.status === "reserved"}
+                        onChange={handleRadioChange}
+                      />
+                      <Radio
+                        id="sold"
+                        name="status"
+                        value="sold"
+                        label="Sold"
+                        checked={inputData.status === "sold"}
+                        onChange={handleRadioChange}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">

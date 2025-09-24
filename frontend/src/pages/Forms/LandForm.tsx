@@ -40,19 +40,23 @@ const LandForm = () => {
   useEffect(() => {
     const countLotTypes = () => {
       const totalLots = lots.length;
+      const latestLot: LotType = lots[totalLots - 1];
+
       setLandInputData((prev) => ({ ...prev, totalLots: totalLots }));
-      for (let lot of lots) {
-        if (lot.status === "sold" || lot.status === "reserved") {
-          setLandInputData((prev) => ({
-            ...prev,
-            lotsSold: (landInputData.lotsSold || 0) + 1,
-          }));
-        } else {
-          setLandInputData((prev) => ({
-            ...prev,
-            available: (landInputData.available || 0) + 1,
-          }));
-        }
+
+      if (latestLot?.status === "reserved" || latestLot?.status === "sold") {
+        console.log("Adding one to sold");
+
+        setLandInputData((prev) => ({
+          ...prev,
+          lotsSold: (prev.lotsSold || 0) + 1,
+        }));
+      } else if (latestLot?.status === "available") {
+        console.log("Adding one to available");
+        setLandInputData((prev) => ({
+          ...prev,
+          available: (prev.available || 0) + 1,
+        }));
       }
     };
     countLotTypes();
@@ -77,6 +81,8 @@ const LandForm = () => {
 
   const handleSave = async () => {
     try {
+      console.log("Input land: ", landInputData, " input lots: ", lots);
+
       await dispatch(createLand({ land: landInputData, lots: lots }));
     } catch (error) {
       console.log(error);

@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS Client (
   Marital TEXT,
   balance REAL DEFAULT 0,
   address TEXT,
+  status TEXT NOT NULL,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

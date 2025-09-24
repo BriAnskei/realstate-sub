@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "../../ui/table";
 import Filter from "../../filter/Filter";
+import Badge from "../../ui/badge/Badge";
 
 interface ClientTableProp {
   openConfirmationModal: () => void;
@@ -33,13 +34,7 @@ export default function ClientTable({
 
   return (
     <>
-      <Filter
-        sortTitle="All"
-        sortOptions={[
-          { label: "Highest balance", value: "0" },
-          { label: "Lowest balance", value: "0" },
-        ]}
-      />
+      <Filter />
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="max-w-full overflow-x-auto">
           <Table>
@@ -75,7 +70,7 @@ export default function ClientTable({
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Outstanding Balance
+                  Status
                 </TableCell>
                 <TableCell
                   isHeader
@@ -125,14 +120,16 @@ export default function ClientTable({
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {client.address}
                     </TableCell>
-                    <TableCell
-                      className={`px-4 py-3 ${
-                        client.balance && client.balance > 0
-                          ? "text-red-400"
-                          : "text-green-400"
-                      } text-theme-sm `}
-                    >
-                      ₱{client.balance}
+                    <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+                      <Badge
+                        size="sm"
+                        color={
+                          client.status === "available" ? "success" : "warning"
+                        }
+                      >
+                        {client.status?.charAt(0).toLocaleUpperCase()! +
+                          client.status?.slice(1)!}
+                      </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-3 ">
                       <div className="flex  gap-2">

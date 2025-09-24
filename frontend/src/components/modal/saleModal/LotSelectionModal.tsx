@@ -31,7 +31,7 @@ const LotSelectionModal = ({
   const mockLots: LotType[] = [
     {
       _id: "lot_001",
-      LandId: "land_001",
+      landId: "land_001",
       blockNumber: "1",
       lotNumber: "A",
       lotSize: "120",
@@ -43,7 +43,7 @@ const LotSelectionModal = ({
     },
     {
       _id: "lot_002",
-      LandId: "land_001",
+      landId: "land_001",
       blockNumber: "1",
       lotNumber: "B",
       lotSize: "150",
@@ -55,7 +55,7 @@ const LotSelectionModal = ({
     },
     {
       _id: "lot_003",
-      LandId: "land_002",
+      landId: "land_002",
       blockNumber: "2",
       lotNumber: "C",
       lotSize: "100",
@@ -67,7 +67,7 @@ const LotSelectionModal = ({
     },
     {
       _id: "lot_004",
-      LandId: "land_002",
+      landId: "land_002",
       blockNumber: "2",
       lotNumber: "D",
       lotSize: "200",

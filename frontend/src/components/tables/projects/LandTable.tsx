@@ -20,6 +20,8 @@ interface LandTableProp {
   byId: { [key: string]: LandTypes };
   setDeleteData: (data: LandTypes) => void;
   setSearch: React.Dispatch<React.SetStateAction<string | undefined>>;
+  editLand: (data: LandTypes) => void;
+  openLandModal: () => void;
 }
 
 export default function LandTable({
@@ -30,10 +32,17 @@ export default function LandTable({
   allIds,
   byId,
   setSearch,
+  editLand,
+  openLandModal,
 }: LandTableProp) {
   const deleteHanlder = (data: LandTypes) => {
     setDeleteData(data);
     openConfirmationModal();
+  };
+
+  const openEditModal = (land: LandTypes) => {
+    editLand(land);
+    openLandModal();
   };
 
   return (
@@ -54,13 +63,6 @@ export default function LandTable({
                     className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
                   >
                     Project Name
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
-                  >
-                    Location
                   </TableCell>
 
                   <TableCell
@@ -134,16 +136,12 @@ export default function LandTable({
                             className="font-medium truncate max-w-[150px] sm:max-w-none"
                             title={land.name}
                           >
-                            {land.name}
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-                          <div
-                            className="truncate max-w-[120px] sm:max-w-[200px]"
-                            title={land.location}
-                          >
-                            {land.location}
+                            <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                              {land.name}
+                            </span>
+                            <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
+                              {land.location}
+                            </span>
                           </div>
                         </TableCell>
 
@@ -166,9 +164,12 @@ export default function LandTable({
                           {land.lotsSold}
                         </TableCell>
 
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 sticky right-0 bg-white dark:bg-gray-900 min-w-[80px]">
                           <div className="flex gap-1 sm:gap-2">
-                            <EditIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" />
+                            <EditIcon
+                              className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                              onClick={() => openEditModal(land)}
+                            />
                             <DeleteIcon
                               className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
                               onClick={() => deleteHanlder(land)}

@@ -6,10 +6,12 @@ import { Lot } from "../model/lotModel";
 export class LandRepository {
   constructor(private db: Database) {}
 
-  async createLandWithLots(
-    land: Land,
-    lots: Lot[]
-  ): Promise<{ land: Land; lots: Lot[] }> {
+  async createLandWithLots(payload: {
+    land: Land;
+    lots: Lot[];
+  }): Promise<{ land: Land; lots: Lot[] }> {
+    const { land, lots } = payload;
+
     await this.db.exec("BEGIN TRANSACTION");
 
     try {
@@ -87,15 +89,16 @@ export class LandRepository {
   }
 
   async update(id: number, land: Partial<Land>): Promise<Land | null> {
-    // Build dynamic update query
-    const fields = Object.keys(land)
-      .filter((key) => key !== "_id" && key !== "createdAt")
-      .map((key) => `${key} = ?`);
+    const fields = Object.keys(land);
     const values = Object.values(land);
 
     if (fields.length === 0) return this.findById(id);
 
-    await this.db.run(`UPDATE Land SET ${fields.join(", ")} WHERE _id = ?`, [
+    const setClause = fields.map((f) => `${f} = ?`).join(", ");
+
+    console.log(`UPDATE Land SET ${setClause} WHERE _id = ?`, [...values, id]);
+
+    await this.db.run(`UPDATE Land SET ${setClause} WHERE _id = ?`, [
       ...values,
       id,
     ]);

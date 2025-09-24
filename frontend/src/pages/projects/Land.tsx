@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
@@ -10,12 +10,15 @@ import { AppDispatch, RootState } from "../../store/store";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import {
   deleteLand,
-  fetchLands,
   LandTypes,
+  updateLand,
 } from "../../store/slices/landSlice";
 import { useNavigate } from "react-router";
 import LandTable from "../../components/tables/projects/LandTable";
 import { debouncedLandSearch } from "../../utils/debouncer";
+import LandFormModal from "../../components/modal/projects-modals/landFormModal";
+
+import useLandModal from "../../hooks/projects-hooks/modal/useLandModal";
 
 export default function Land() {
   const dispatch = useDispatch<AppDispatch>();
@@ -25,8 +28,6 @@ export default function Land() {
     useConfirmationModal();
 
   const [deleteData, setDeleteData] = useState<LandTypes>({} as LandTypes);
-  const [editLand, setEditLand] = useState<LandTypes | undefined>(undefined);
-
   // filter
   const [search, setSearch] = useState<string | undefined>(undefined);
 
@@ -39,6 +40,9 @@ export default function Land() {
     filterIds,
     filterLoading,
   } = useSelector((state: RootState) => state.land);
+
+  const { isLandModalOpen, openLandModal, closeLandModal, editLand, editData } =
+    useLandModal();
 
   // handler filter via effect
   useEffect(() => {
@@ -55,6 +59,16 @@ export default function Land() {
       await dispatch(deleteLand(deleteData!._id!));
     } catch (error) {
       console.log("error: ", error);
+    }
+  };
+
+  const handleUpdate = async (newLandData: LandTypes) => {
+    try {
+      console.log("Updated data: ", newLandData);
+
+      await dispatch(updateLand(newLandData));
+    } catch (error) {
+      console.log("handleUpdate, ", error);
     }
   };
 
@@ -86,8 +100,10 @@ export default function Land() {
           ]}
         >
           <LandTable
+            editLand={editLand}
             setDeleteData={setDeleteData}
             openConfirmationModal={openConfirmationModal}
+            openLandModal={openLandModal}
             byId={displayData.byId}
             allIds={displayData.allIds}
             loading={loading}
@@ -105,6 +121,15 @@ export default function Land() {
         isOpen={isConfirmationOpen}
         onClose={closeConfirmationModal}
         onConfirm={deleteHanlder}
+      />
+
+      {/* Form for Updating  */}
+      <LandFormModal
+        loading={updateLoading}
+        isOpen={isLandModalOpen}
+        data={editData}
+        onClose={closeLandModal}
+        saveUpdate={handleUpdate}
       />
     </>
   );

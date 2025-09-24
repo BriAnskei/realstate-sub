@@ -2,11 +2,12 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { NormalizeState } from "../../types/TypesHelper";
 import { normalizeResponse } from "../../utils/normalizeResponse";
 import { LotApi } from "../../utils/api/lotApi";
+import { decrementLotsCount } from "./landSlice";
 
 export interface LotType {
   _id: string;
   name?: string; // land name
-  LandId?: string;
+  landId?: string;
   blockNumber?: string;
   lotNumber?: string;
   lotSize?: string;
@@ -59,8 +60,6 @@ export const searchLotOnLandName = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log("seach payload: ", payload);
-
       const res = await lotApi.searchLotsByLandName(payload);
 
       return res.lots;
@@ -87,10 +86,13 @@ export const editLot = createAsyncThunk(
 
 export const deleteLot = createAsyncThunk(
   "lot/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (lotData: LotType, { rejectWithValue, dispatch }) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      return id;
+      const { _id, landId, status } = lotData;
+
+      await lotApi.deleteLot(parseInt(_id, 10));
+      dispatch(decrementLotsCount({ status, landId }));
+      return _id;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -101,10 +103,29 @@ const lotSclice = createSlice({
   name: "lot",
   initialState,
   reducers: {
+    updateName: (state, action) => {
+      const { landId, newName } = action.payload;
+      const allIds = state.allIds;
+      const byId = state.byId;
+      for (let id of allIds) {
+        if (byId[id].landId === landId) {
+          state.byId[id] = { ...state.byId[id], name: newName };
+        }
+      }
+    },
     bulkSaveLots: (state, action) => {
-      const { allIds, byId } = normalizeResponse(action.payload);
+      const { landName, lots } = action.payload;
 
-      state.allIds = [...state.allIds, ...allIds];
+      console.log("payload in lot slice recioeved: ", action.payload);
+
+      // Initialize land name before normalizing data
+      for (let i = 0; i < lots.length; i++) {
+        lots[i] = { ...lots[i], name: landName };
+      }
+
+      const { allIds, byId } = normalizeResponse(lots);
+
+      state.allIds = [...allIds, ...state.allIds];
       state.byId = { ...state.byId, ...byId };
     },
     resetFilter: (state) => {
@@ -154,8 +175,15 @@ const lotSclice = createSlice({
         state.updateLoading = true;
       })
       .addCase(deleteLot.fulfilled, (state, action) => {
-        state.allIds = state.allIds.filter((id) => id !== action.payload);
-        delete state.byId[action.payload];
+        const lotId = action.payload;
+
+        state.allIds = state.allIds.filter((id) => id !== lotId);
+        delete state.byId[lotId];
+
+        if (state.filterById[lotId]) {
+          delete state.filterById[lotId];
+          state.allFilterIds = state.allFilterIds.filter((id) => id !== lotId);
+        }
 
         state.updateLoading = false;
       })
@@ -179,5 +207,5 @@ const lotSclice = createSlice({
   },
 });
 
-export const { bulkSaveLots, resetFilter } = lotSclice.actions;
+export const { bulkSaveLots, resetFilter, updateName } = lotSclice.actions;
 export default lotSclice.reducer;

@@ -12,26 +12,25 @@ export class LandController {
 
   searchByName = async (req: Request, res: Response) => {
     const landName = req.query.landName as string;
-    console.log("seached name: ", landName);
 
     const lands: Land[] = await this.landRepo.findByName(landName);
-
-    console.log("found: ", lands);
 
     res.json({ lands });
   };
 
   newLandAndLots = async (req: Request, res: Response) => {
     const land = req.body.landData;
-    const lot = req.body.lots;
+    const lots = req.body.lots;
 
-    const response = await this.landRepo.createLandWithLots(land, lot);
+    const response = await this.landRepo.createLandWithLots({ land, lots });
 
     res.json({ ...response });
   };
   updateLand = async (req: Request, res: Response) => {
     const id = parseInt(req.params._id, 10);
-    const updatedLand = await this.landRepo.update(id, req.body);
+    console.log("payload: ", req.body.land, id);
+
+    const updatedLand = await this.landRepo.update(id, req.body.updatedLand);
     res.json(updatedLand);
   };
 
