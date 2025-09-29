@@ -22,6 +22,7 @@ interface LandTableProp {
   setSearch: React.Dispatch<React.SetStateAction<string | undefined>>;
   editLand: (data: LandTypes) => void;
   openLandModal: () => void;
+  isEmployee?: boolean;
 }
 
 export default function LandTable({
@@ -34,6 +35,7 @@ export default function LandTable({
   setSearch,
   editLand,
   openLandModal,
+  isEmployee = true,
 }: LandTableProp) {
   const deleteHanlder = (data: LandTypes) => {
     setDeleteData(data);
@@ -97,12 +99,14 @@ export default function LandTable({
                     <span className="sm:hidden">Sold</span>
                   </TableCell>
 
-                  <TableCell
-                    isHeader
-                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap sticky right-0 bg-white dark:bg-gray-900"
-                  >
-                    Actions
-                  </TableCell>
+                  {isEmployee && (
+                    <TableCell
+                      isHeader
+                      className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap sticky right-0 bg-white dark:bg-gray-900"
+                    >
+                      Actions
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHeader>
 
@@ -164,18 +168,20 @@ export default function LandTable({
                           {land.lotsSold}
                         </TableCell>
 
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 sticky right-0 bg-white dark:bg-gray-900 min-w-[80px]">
-                          <div className="flex gap-1 sm:gap-2">
-                            <EditIcon
-                              className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                              onClick={() => openEditModal(land)}
-                            />
-                            <DeleteIcon
-                              className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                              onClick={() => deleteHanlder(land)}
-                            />
-                          </div>
-                        </TableCell>
+                        {isEmployee && (
+                          <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 sticky right-0 bg-white dark:bg-gray-900 min-w-[80px]">
+                            <div className="flex gap-1 sm:gap-2">
+                              <EditIcon
+                                className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                onClick={() => openEditModal(land)}
+                              />
+                              <DeleteIcon
+                                className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                onClick={() => deleteHanlder(land)}
+                              />
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })

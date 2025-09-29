@@ -1,7 +1,15 @@
 interface AvatarProps {
   src: string; // URL of the avatar image
   alt?: string; // Alt text for the avatar
-  size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | "xxlarge"; // Avatar size
+  size?:
+    | "xsmall"
+    | "small"
+    | "medium"
+    | "large"
+    | "xlarge"
+    | "xxlarge"
+    | "modal"
+    | "profile"; // Avatar size
   status?: "online" | "offline" | "busy" | "none"; // Status indicator
 }
 
@@ -12,6 +20,8 @@ const sizeClasses = {
   large: "h-12 w-12 max-w-12",
   xlarge: "h-14 w-14 max-w-14",
   xxlarge: "h-16 w-16 max-w-16",
+  modal: "h-24 w-24 max-w-24", // 96px - perfect for modals
+  profile: "h-32 w-32 max-w-32", // 128px - great for profile pages
 };
 
 const statusSizeClasses = {
@@ -21,6 +31,8 @@ const statusSizeClasses = {
   large: "h-3 w-3 max-w-3",
   xlarge: "h-3.5 w-3.5 max-w-3.5",
   xxlarge: "h-4 w-4 max-w-4",
+  modal: "h-5 w-5 max-w-5", // Proportionally larger status indicator
+  profile: "h-6 w-6 max-w-6", // Even larger for profile size
 };
 
 const statusColorClasses = {
@@ -36,9 +48,13 @@ const Avatar: React.FC<AvatarProps> = ({
   status = "none",
 }) => {
   return (
-    <div className={`relative  rounded-full ${sizeClasses[size]}`}>
+    <div className={`relative rounded-full ${sizeClasses[size]}`}>
       {/* Avatar Image */}
-      <img src={src} alt={alt} className="object-cover rounded-full" />
+      <img
+        src={src}
+        alt={alt}
+        className={`object-cover rounded-full ${sizeClasses[size]}`}
+      />
 
       {/* Status Indicator */}
       {status !== "none" && (

@@ -8,8 +8,6 @@ import { Role, userUser } from "./context/UserContext";
 import { JSX } from "react";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const { curUser } = userUser();
-
   if (Object.keys.length === 0) {
     return <Navigate to="/signin" replace />;
   }

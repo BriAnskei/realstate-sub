@@ -1,45 +1,69 @@
 import { Database } from "sqlite";
 import { Client } from "../model/clientModel";
+import { UploadService } from "../service/UploadService";
 
 export class ClientRepository {
   constructor(private db: Database) {}
 
-  async create(client: Client): Promise<Client> {
+  async saveClientPhoto(clientId: number, file?: Express.Multer.File) {
+    const fileName = await UploadService.saveClientProfileIfExist(
+      clientId,
+      file
+    );
+    await this.updateClientPhoto(clientId, fileName);
+    return fileName;
+  }
+
+  async updateClientPhoto(clientId: number, fileName?: string): Promise<void> {
+    if (fileName) {
+      await this.db.run(`UPDATE Client SET profilePicc = ? WHERE _id = ?`, [
+        fileName,
+        clientId,
+      ]);
+    }
+  }
+
+  async create(
+    client: Client
+  ): Promise<{ success: boolean; message?: string; client?: Client }> {
+    if (await this.doesEmailExist(client.email!)) {
+      return { success: false, message: "Email Already Exist" };
+    }
+
     const result = await this.db.run(
       `INSERT INTO Client 
-        (validIdPicc, firstName, middleName, lastName, email, contact, Marital, balance, address, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (profilePicc, firstName, middleName, lastName, email, contact, Marital, address, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        client.validIdPicc,
+        client.profilePicc,
         client.firstName,
         client.middleName,
         client.lastName,
         client.email,
         client.contact,
         client.Marital,
-        client.balance ?? 0,
         client.address,
         client.status,
       ]
     );
 
-    return { _id: result.lastID, ...client };
-  }
-
-  async findById(id: number): Promise<Client | undefined> {
-    return this.db.get<Client>("SELECT * FROM Client WHERE _id = ?", [id]);
-  }
-
-  async findAll(): Promise<Client[]> {
-    return this.db.all<Client[]>("SELECT * FROM Client");
+    return { client: { _id: result.lastID, ...client }, success: true };
   }
 
   async update(
     id: number,
     updates: Partial<Client>
-  ): Promise<Client | undefined> {
+  ): Promise<{ client?: Client; success: boolean; message?: string }> {
     const fields = Object.keys(updates);
-    if (fields.length === 0) return this.findById(id);
+    if (fields.length === 0)
+      return { success: true, message: "No field needed to change" };
+
+    if (updates.email && (await this.doesEmailExist(updates.email))) {
+      return {
+        success: false,
+        message: "This email is connected in another account",
+      };
+    }
 
     const setClause = fields.map((f) => `${f} = ?`).join(", ");
     const values = Object.values(updates);
@@ -49,10 +73,70 @@ export class ClientRepository {
       id,
     ]);
 
-    return this.findById(id);
+    return { success: true, client: await this.findById(id) };
+  }
+
+  async doesEmailExist(email: string): Promise<boolean> {
+    // return true if email exist
+    return Boolean(
+      await this.db.get(`SELECT * FROM Client WHERE  email = ?`, [email])
+    );
+  }
+
+  async searchClientByName(payload: {
+    query?: string;
+    status?: string;
+  }): Promise<Client[]> {
+    const { query, status } = payload;
+    // Base query
+    let sql = `
+    SELECT *
+    FROM Client
+    WHERE 1=1
+  `;
+
+    const params: any[] = [];
+
+    // Add query filter (search by first, middle, last name)
+    if (query) {
+      sql += `
+      AND (
+        firstName LIKE ?
+        OR middleName LIKE ?
+        OR lastName LIKE ?
+      )
+    `;
+      const likeQuery = `%${query}%`;
+      params.push(likeQuery, likeQuery, likeQuery);
+    }
+
+    // Add status filterp
+    if (status) {
+      sql += ` AND status = ? `;
+      params.push(status);
+    }
+
+    // Order results
+    sql += ` ORDER BY createdAt DESC `;
+
+    // Execute
+    const rows = await this.db.all<Client[]>(sql, params);
+    return rows;
   }
 
   async delete(id: number): Promise<void> {
     await this.db.run("DELETE FROM Client WHERE _id = ?", [id]);
+  }
+
+  async findById(id: number): Promise<Client | undefined> {
+    return await this.db.get<Client>("SELECT * FROM Client WHERE _id = ?", [
+      id,
+    ]);
+  }
+
+  async findAll(): Promise<Client[]> {
+    return await this.db.all<Client[]>(
+      "SELECT * FROM Client ORDER BY createdAt DESC"
+    );
   }
 }

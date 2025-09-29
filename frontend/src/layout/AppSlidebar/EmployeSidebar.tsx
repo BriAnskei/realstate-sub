@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
     name: "Transaction",
     icon: <TransactionIcon />,
     subItems: [
-      { name: "Applications", path: "/saleform", pro: false },
+      { name: "Applications", path: "/application", pro: false },
       { name: "Reservations", path: "/sale", pro: false },
       { name: "Contracts", path: "/form-elements", pro: false },
     ],

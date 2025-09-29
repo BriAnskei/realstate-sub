@@ -1,4 +1,3 @@
-
 import { ReactComponent as PlusIcon } from "./plus.svg?react";
 import { ReactComponent as CloseIcon } from "./close.svg?react";
 import { ReactComponent as BoxIcon } from "./box.svg?react";
@@ -63,8 +62,14 @@ import { ReactComponent as ReportIcon } from "./report.svg?react";
 import { ReactComponent as SaleIcon } from "./sales-icon.svg?react";
 import { ReactComponent as PaymentIcon } from "./payments-icon.svg?react";
 import { ReactComponent as AgentsIcon } from "./agents-icon.svg?react";
+import { ReactComponent as ViewIcon } from "./view-icon.svg?react";
+import { ReactComponent as ApproveIcon } from "./approve-icon.svg?react";
+import { ReactComponent as RejectIcon } from "./reject-icon.svg?react";
 
 export {
+  RejectIcon,
+  ApproveIcon,
+  ViewIcon,
   AgentsIcon,
   PaymentIcon,
   SaleIcon,

@@ -10,92 +10,56 @@ import {
   TableBody,
 } from "../../ui/table";
 import Filter from "../../filter/Filter";
-import { AgentType } from "../../../store/slices/agentSlice";
+
 import DefaultProfile from "../../../icons/default-profile.svg";
+import { UserType } from "../../../context/UserContext";
 
 interface AgentFormModalProp {
+  users?: UserType[];
   isOpen: boolean;
+  dealerId?: string;
   onClose: () => void;
-  selectedData: React.Dispatch<React.SetStateAction<AgentType[]>>;
+  selectedData: React.Dispatch<React.SetStateAction<UserType[]>>;
 }
 
 const AgentSelectionModal = ({
+  dealerId,
+  users,
   isOpen,
   onClose,
   selectedData,
 }: AgentFormModalProp) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAgents, setSelectedAgents] = useState<AgentType[]>([]);
-  const [sortBy, setSortBy] = useState("");
-
-  // ✅ Mock Agents
-  const mockAgents: AgentType[] = [
-    {
-      _id: "agent_001",
-      profilePicc: "/images/agent1.jpg",
-      firstName: "Maria",
-      middleName: "Santos",
-      lastName: "Reyes",
-      email: "maria.reyes@example.com",
-      contact: "09171234567",
-      address: "Quezon City, PH",
-      totalSales: "15",
-      createdAt: "2025-01-12T09:30:00Z",
-    },
-    {
-      _id: "agent_002",
-      profilePicc: "/images/agent2.jpg",
-      firstName: "Juan",
-      middleName: "Dela",
-      lastName: "Cruz",
-      email: "juan.cruz@example.com",
-      contact: "09181234567",
-      address: "Makati, PH",
-      totalSales: "25",
-      createdAt: "2025-02-20T11:15:00Z",
-    },
-    {
-      _id: "agent_003",
-      profilePicc: "/images/agent3.jpg",
-      firstName: "Ana",
-      middleName: "Lopez",
-      lastName: "Garcia",
-      email: "ana.garcia@example.com",
-      contact: "09221234567",
-      address: "Cebu City, PH",
-      totalSales: "10",
-      createdAt: "2025-03-10T14:50:00Z",
-    },
-  ];
+  const [selectedAgents, setSelectedAgents] = useState<UserType[]>([]);
 
   const saveHandler = () => {
     if (selectedAgents.length === 0) return;
-    selectedData((prev) => ({ ...prev, ...selectedAgents }));
+
+    selectedData((prev) => {
+      console.log("new selectedData: ", ...prev, ...selectedAgents);
+      return [...prev, ...selectedAgents];
+    });
     onClose();
   };
 
   const filteredAgents = useMemo(() => {
-    let agents = mockAgents.filter(
-      (agent) =>
-        (agent.firstName || "")
+    let agents = users?.filter(
+      (user) =>
+        (user.firstName || "")
           .toLowerCase()
           .includes(searchQuery.toLowerCase()) ||
-        (agent.lastName || "")
+        (user.lastName || "")
           .toLowerCase()
           .includes(searchQuery.toLowerCase()) ||
-        (agent.email || "").toLowerCase().includes(searchQuery.toLowerCase())
+        (user.email || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (sortBy === "sales") {
-      agents = [...agents].sort(
-        (a, b) =>
-          parseFloat(b.totalSales || "0") - parseFloat(a.totalSales || "0")
-      );
-    }
-    return agents;
-  }, [searchQuery, sortBy]);
+    agents = agents?.filter((agent) => agent._id !== dealerId);
 
-  const toggleSelection = (agent: AgentType) => {
+    return agents;
+  }, [searchQuery]);
+
+  const toggleSelection = (agent: UserType) => {
     setSelectedAgents((prev) => {
       if (prev.find((a) => a._id === agent._id)) {
         return prev.filter((a) => a._id !== agent._id); // remove
@@ -122,8 +86,6 @@ const AgentSelectionModal = ({
         <Filter
           onSearchChange={setSearchQuery}
           SearchPlaceholder="Search agent..."
-          onSortChange={setSortBy}
-          sortOptions={[{ label: "By Sales", value: "sales" }]}
         />
 
         {/* Fixed height table container */}
@@ -138,12 +100,6 @@ const AgentSelectionModal = ({
                   >
                     Agent
                   </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 min-w-[100px]"
-                  >
-                    Email
-                  </TableCell>
 
                   <TableCell
                     isHeader
@@ -156,13 +112,13 @@ const AgentSelectionModal = ({
 
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {filteredAgents.length > 0 ? (
-                  filteredAgents.map((agent) => (
+                {filteredAgents?.length || 0 > 0 ? (
+                  filteredAgents?.map((user) => (
                     <TableRow
-                      key={agent._id}
+                      key={user._id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     >
-                      {/* Agent Info */}
+                      {/* user Info */}
                       <TableCell className="px-3 py-4 text-start min-w-[150px]">
                         <div className="flex items-center gap-3">
                           <img
@@ -172,28 +128,22 @@ const AgentSelectionModal = ({
                           />
                           <div>
                             <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                              {agent.firstName} {agent.middleName}{" "}
-                              {agent.lastName}
+                              {user.firstName} {user.middleName} {user.lastName}
                             </span>
                             <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
-                              {agent.contact}
+                              {user.email}
                             </span>
                           </div>
                         </div>
-                      </TableCell>
-
-                      {/* Email */}
-                      <TableCell className="px-3 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 min-w-[100px]">
-                        {agent.email}
                       </TableCell>
 
                       {/* Checkbox */}
                       <TableCell className="px-3 py-3 min-w-[80px]">
                         <Checkbox
                           checked={
-                            !!selectedAgents.find((a) => a._id === agent._id)
+                            !!selectedAgents.find((u) => u._id === user._id)
                           }
-                          onChange={() => toggleSelection(agent)}
+                          onChange={() => toggleSelection(user!)}
                         />
                       </TableCell>
                     </TableRow>

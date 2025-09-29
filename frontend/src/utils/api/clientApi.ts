@@ -2,11 +2,15 @@ import { ClientType } from "../../store/slices/clientSlice";
 import { api } from "./instance";
 
 export class ClientApi {
-  constructor() {}
-
-  createClient = async (client: ClientType) => {
+  static createClient = async (
+    client: FormData
+  ): Promise<{ success: boolean; message?: string; client: ClientType }> => {
     try {
-      const res = await api.post("/api/clients", client);
+      const res = await api.post("/api/client/create", client, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return res.data;
     } catch (error) {
       console.error("Error in createClient:", error);
@@ -14,9 +18,9 @@ export class ClientApi {
     }
   };
 
-  getClients = async (): Promise<ClientType[]> => {
+  static getClients = async (): Promise<ClientType[]> => {
     try {
-      const res = await api.get("/api/clients");
+      const res = await api.get("/api/client/fetch");
       return res.data;
     } catch (error) {
       console.error("Error in getClients:", error);
@@ -24,9 +28,9 @@ export class ClientApi {
     }
   };
 
-  getClientById = async (id: number): Promise<ClientType> => {
+  static getClientById = async (id: number): Promise<ClientType> => {
     try {
-      const res = await api.get(`/api/clients/${id}`);
+      const res = await api.get(`/api/client/find/${id}`);
       return res.data;
     } catch (error) {
       console.error("Error in getClientById:", error);
@@ -34,9 +38,15 @@ export class ClientApi {
     }
   };
 
-  updateClient = async (id: number, client: Partial<ClientType>) => {
+  static updateClient = async (
+    id: number,
+    client: Partial<ClientType>
+  ): Promise<{ client?: ClientType; success: boolean; message?: string }> => {
     try {
-      const res = await api.put(`/api/clients/${id}`, client);
+      console.log("Cliendd paylaod: ", client);
+
+      const res = await api.put(`/api/client/update/${id}`, client);
+
       return res.data;
     } catch (error) {
       console.error("Error in updateClient:", error);
@@ -44,9 +54,25 @@ export class ClientApi {
     }
   };
 
-  deleteClient = async (id: number) => {
+  static search = async (payload: {
+    name?: string;
+    status?: string;
+  }): Promise<{ clients: ClientType[] }> => {
     try {
-      const res = await api.delete(`/api/clients/${id}`);
+      const res = await api.get(`/api/client/search`, {
+        params: { name: payload.name, status: payload.status },
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error in updateClient:", error);
+      throw error;
+    }
+  };
+
+  static deleteClient = async (id: number) => {
+    try {
+      const res = await api.delete(`/api/client/delete/${id}`);
+
       return res.data;
     } catch (error) {
       console.error("Error in deleteClient:", error);

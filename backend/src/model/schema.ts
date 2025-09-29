@@ -36,20 +36,43 @@ CREATE INDEX IF NOT EXISTS idx_lot_createdAt ON Lot(createdAt);
 
 
 CREATE TABLE IF NOT EXISTS Client (
-  _id INTEGER PRIMARY KEY AUTOINCREMENT,
-  validIdPicc TEXT,
+_id INTEGER PRIMARY KEY AUTOINCREMENT,
+ profilePicc TEXT DEFAULT NULL,
   firstName TEXT NOT NULL,
   middleName TEXT,
   lastName TEXT NOT NULL,
   email TEXT UNIQUE,
   contact TEXT,
   Marital TEXT,
-  balance REAL DEFAULT 0,
   address TEXT,
   status TEXT NOT NULL,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_client_firstName ON Client(firstName);
+CREATE INDEX IF NOT EXISTS idx_client_middleName ON Client(middleName);
+CREATE INDEX IF NOT EXISTS idx_client_lastName ON Client(lastName);
+CREATE INDEX IF NOT EXISTS idx_client_email ON Client(email);
+
+
+
+CREATE TABLE IF NOT EXISTS Application (
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    landId TEXT,
+    landName TEXT,
+    clientName TEXT,
+    lotIds TEXT,           
+    clientId TEXT,
+    agentDealer TEXT,       
+    otherAgent TEXT,        
+    appointmentDate DATETIME,  
+    status TEXT NOT NULL,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_application_landName ON Application(landName);
+CREATE INDEX IF NOT EXISTS idx_application_clientName ON Application(clientName);
+CREATE INDEX IF NOT EXISTS idx_application_status ON Application(status);
+
 
 `;

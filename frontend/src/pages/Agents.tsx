@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../components/common/ComponentCard";
 import PageMeta from "../components/common/PageMeta";
-import ClientFormModal from "../components/modal/ClientFormModal";
+import ClientFormModal from "../components/modal/client/ClientFormModal";
 import ConfirmtionModal from "../components/modal/ConfirmtionModal";
 import useConfirmationModal from "../hooks/useConfirmationModal";
 import { AppDispatch, RootState } from "../store/store";

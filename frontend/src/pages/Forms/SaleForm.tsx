@@ -32,7 +32,6 @@ import { AgentType } from "../../store/slices/agentSlice";
 import ClientDetails from "../../components/form/agents/ClientDetails";
 import LandDetails from "../../components/form/agents/LandDetails";
 import { SaleLotTable } from "../../components/tables/saleForm/SaleLotTable";
-import { SaleAgentTable } from "../../components/tables/saleForm/SaleAgentTable";
 
 interface LandFormProp {
   data?: LotType;
@@ -125,12 +124,6 @@ const SaleForm = ({ data }: LandFormProp) => {
             lots={selectedLots}
             setSelectedLots={setSelectedLots}
             openLotForm={() => setIsLotModalOpen(true)}
-          />
-
-          <SaleAgentTable
-            setSelectedAgents={selectedAgents}
-            agents={selectedAgents}
-            openAgentsForm={() => setIsAgentModalOpen(true)}
           />
 
           <form action="">

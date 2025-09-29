@@ -11,6 +11,8 @@ export async function initDB() {
 
   await db.exec("PRAGMA foreign_keys = ON");
 
+  
+
   //   Land table
   await db.exec(schema);
 

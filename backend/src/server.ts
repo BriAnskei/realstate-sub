@@ -4,6 +4,8 @@ import express, { Response, Request, NextFunction } from "express";
 import cors from "cors";
 import landRouter from "./routes/landRouter";
 import lotRouter from "./routes/lotRouter";
+import clientRouter from "./routes/clientRouter";
+import { UPLOAD_PATHS } from "./middleware/multer/UploadPaths";
 
 const app = express();
 const PORT = 4000;
@@ -20,6 +22,11 @@ app.get("/", (req: Request, res: Response) => {
 // api endpoints(Routes)
 app.use("/api/land", landRouter);
 app.use("/api/lot", lotRouter);
+app.use("/api/client", clientRouter);
+// app.use("/api/application, ");
+
+//  static routes(images)
+app.use("/uploads/clients", express.static(UPLOAD_PATHS.CLIENTS));
 
 // Error handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

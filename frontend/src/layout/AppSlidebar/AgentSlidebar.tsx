@@ -13,6 +13,7 @@ import {
   AgentsIcon,
   ChevronDownIcon,
   HorizontaLDots,
+  ProjectIcon,
 } from "../../icons";
 
 type NavItem = {
@@ -28,13 +29,21 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     path: "/",
   },
+  {
+    name: "Projects",
+    icon: <ProjectIcon />,
+    subItems: [
+      { name: "Land", path: "/land", pro: false },
+      { name: "Lot", path: "/lot", pro: false },
+    ],
+  },
 
   {
     name: "transaction",
     icon: <PaymentIcon />,
     subItems: [
-      { name: "new", path: "/form-application", pro: false },
-      { name: "Application", path: "/", pro: false },
+      { name: "new", path: "/application/form", pro: false },
+      { name: "Application", path: "/application", pro: false },
     ],
   },
   {

@@ -18,7 +18,7 @@ import SaleForm from "../Forms/SaleForm";
 import Land from "../projects/Land";
 import Lot from "../projects/Lot";
 import BasicTables from "../Tables/BasicTables";
-import Sale from "../transaction/Sale";
+
 import Alerts from "../UiElements/Alerts";
 import Avatars from "../UiElements/Avatars";
 import Badges from "../UiElements/Badges";
@@ -26,6 +26,8 @@ import Buttons from "../UiElements/Buttons";
 import Images from "../UiElements/Images";
 import Videos from "../UiElements/Videos";
 import { fetchLots } from "../../store/slices/lotSlice";
+import { getClients } from "../../store/slices/clientSlice";
+import Application from "../transaction/Application";
 
 export default function EmployeApp() {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,6 +36,7 @@ export default function EmployeApp() {
       try {
         await dispatch(fetchLots({}));
         await dispatch(fetchLands());
+        await dispatch(getClients());
       } catch (error) {
         console.log(error);
       }
@@ -56,8 +59,7 @@ export default function EmployeApp() {
           <Route path="/lot" element={<Lot />} />
 
           {/* tansation */}
-          <Route path="/saleform" element={<SaleForm />} />
-          <Route path="/sale" element={<Sale />} />
+          <Route path="/application" element={<Application />} />
 
           {/* Client and agent management */}
           <Route path="/client" element={<Client />} />

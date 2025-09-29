@@ -6,7 +6,7 @@ import { ClientType, deleteClient } from "../../../store/slices/clientSlice";
 import { AppDispatch, RootState } from "../../../store/store";
 import ComponentCard from "../../common/ComponentCard";
 import PageMeta from "../../common/PageMeta";
-import ClientFormModal from "../../modal/ClientFormModal";
+import ClientFormModal from "../../modal/client/ClientFormModal";
 import ConfirmtionModal from "../../modal/ConfirmtionModal";
 import ClientTable from "../Client/ClientTable";
 

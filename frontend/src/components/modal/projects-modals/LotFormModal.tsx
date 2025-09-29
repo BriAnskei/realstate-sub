@@ -6,7 +6,6 @@ import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
 import { LotType } from "../../../store/slices/lotSlice";
 import Radio from "../../form/input/Radio";
-import { diffDates } from "@fullcalendar/core/internal";
 
 interface LotFormModalProp {
   isOpen: boolean;

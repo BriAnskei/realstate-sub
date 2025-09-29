@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
@@ -11,25 +11,21 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import {
   deleteLand,
   LandTypes,
+  searchLand,
   updateLand,
 } from "../../store/slices/landSlice";
 import { useNavigate } from "react-router";
 import LandTable from "../../components/tables/projects/LandTable";
-import { debouncedLandSearch } from "../../utils/debouncer";
+import { debouncer } from "../../utils/debouncer";
 import LandFormModal from "../../components/modal/projects-modals/landFormModal";
 
 import useLandModal from "../../hooks/projects-hooks/modal/useLandModal";
+import { Role, userUser } from "../../context/UserContext";
 
 export default function Land() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-
-  const { isConfirmationOpen, closeConfirmationModal, openConfirmationModal } =
-    useConfirmationModal();
-
-  const [deleteData, setDeleteData] = useState<LandTypes>({} as LandTypes);
-  // filter
-  const [search, setSearch] = useState<string | undefined>(undefined);
+  const { curUser } = userUser();
 
   const {
     allIds,
@@ -41,14 +37,30 @@ export default function Land() {
     filterLoading,
   } = useSelector((state: RootState) => state.land);
 
+  const { isConfirmationOpen, closeConfirmationModal, openConfirmationModal } =
+    useConfirmationModal();
+
   const { isLandModalOpen, openLandModal, closeLandModal, editLand, editData } =
     useLandModal();
+
+  const [deleteData, setDeleteData] = useState<LandTypes>({} as LandTypes);
+  // filter
+  const [search, setSearch] = useState<string | undefined>(undefined);
+
+  // loading
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // refs
+  const debouncedSearchRef = useRef<ReturnType<typeof debouncer> | null>(null);
+
+  filterHanlder();
 
   // handler filter via effect
   useEffect(() => {
     const handlerSearch = () => {
       if (search?.trim()) {
-        debouncedLandSearch(search, dispatch);
+        setSearchLoading(true);
+        debouncedSearchRef.current!(search);
       }
     };
     handlerSearch();
@@ -89,15 +101,19 @@ export default function Land() {
       <div className="space-y-6">
         <ComponentCard
           title="Project-lands"
-          actions={[
-            <button
-              key="add"
-              className="inline-flex items-center justify-center gap-2 rounded-lg transition  px-4 py-3 text-sm   bg-green-500 hover:bg-green-600 text-white shadow"
-              onClick={() => navigate("/land/add")}
-            >
-              Add new
-            </button>,
-          ]}
+          actions={
+            curUser?.role === Role.Employee
+              ? [
+                  <button
+                    key="add"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg transition  px-4 py-3 text-sm   bg-green-500 hover:bg-green-600 text-white shadow"
+                    onClick={() => navigate("/land/add")}
+                  >
+                    Add new
+                  </button>,
+                ]
+              : undefined
+          }
         >
           <LandTable
             editLand={editLand}
@@ -107,8 +123,9 @@ export default function Land() {
             byId={displayData.byId}
             allIds={displayData.allIds}
             loading={loading}
-            isFiltering={filterLoading}
+            isFiltering={filterLoading || searchLoading}
             setSearch={setSearch}
+            isEmployee={curUser?.role === Role.Employee}
           />
         </ComponentCard>
       </div>
@@ -133,4 +150,18 @@ export default function Land() {
       />
     </>
   );
+
+  function filterHanlder() {
+    if (!debouncedSearchRef.current) {
+      debouncedSearchRef.current = debouncer(async (landName: string) => {
+        try {
+          await dispatch(searchLand(landName));
+        } catch (error) {
+          console.log("onSearchFilter error: ", error);
+        } finally {
+          setSearchLoading(false);
+        }
+      }, 400);
+    }
+  }
 }

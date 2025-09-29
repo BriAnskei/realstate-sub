@@ -1,6 +1,6 @@
 import { createContext, use, useContext, useEffect, useState } from "react";
 
-interface UserType {
+export interface UserType {
   _id?: string;
   profilePicc?: string;
   firstName?: string;
@@ -148,10 +148,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const userLogJson = localStorage.getItem("user");
-    console.log("userLogJson: ", userLogJson, localStorage.getItem("user"));
+
     if (userLogJson) {
       const useData = JSON.parse(userLogJson);
-      console.log("useData: ", useData);
 
       setCurUser(useData);
     }

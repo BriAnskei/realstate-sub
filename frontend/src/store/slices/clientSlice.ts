@@ -1,29 +1,45 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { NormalizeState } from "../../types/TypesHelper";
 import { normalizeResponse } from "../../utils/normalizeResponse";
+import { ClientApi } from "../../utils/api/clientApi";
 
 export const addClient = createAsyncThunk(
   "client/add",
-  async (data: ClientType, { rejectWithValue }) => {
+  async (data: FormData, { rejectWithValue }) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const res = await ClientApi.createClient(data);
 
-      data = { ...data, _id: Math.random().toString(), balance: 0 };
+      console.log("api respomse: ", res);
 
-      return data;
+      if (!res.success) {
+        console.log("faile:", res.message);
+
+        return rejectWithValue(res.message || "Failed to add Client");
+      }
+
+      return res;
     } catch (error) {
       return rejectWithValue(error);
     }
   }
 );
 
-export const editClient = createAsyncThunk(
+export const updateClientData = createAsyncThunk(
   "client/update",
-  async (data: ClientType, { rejectWithValue }) => {
+  async (
+    payload: { data: Partial<ClientType>; clientId: number },
+    { rejectWithValue }
+  ) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const { data, clientId } = payload;
 
-      return data;
+      const res = await ClientApi.updateClient(clientId, data);
+
+      if (!res.success) {
+        return rejectWithValue(res.message || "Failed to update client");
+      }
+
+      return res;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -34,9 +50,9 @@ export const deleteClient = createAsyncThunk(
   "client/delete",
   async (data: ClientType, { rejectWithValue }) => {
     try {
-      console.log("deletig this client: ", data);
+      console.log("deleting client paylaod in slice: ", data);
 
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await ClientApi.deleteClient(parseInt(data._id, 10));
 
       return data;
     } catch (error) {
@@ -45,16 +61,42 @@ export const deleteClient = createAsyncThunk(
   }
 );
 
+export const getClients = createAsyncThunk(
+  "client/fetch",
+  async (_: void, { rejectWithValue }) => {
+    try {
+      const res = await ClientApi.getClients();
+
+      return res;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const searchClient = createAsyncThunk(
+  "client/search",
+  async (payload: { query?: string; status?: string }, { rejectWithValue }) => {
+    try {
+      const { query, status } = payload;
+      const res = await ClientApi.search({ name: query, status });
+
+      return res.clients;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export interface ClientType {
   _id: string;
-  profilePicc?: string;
+  profilePicc?: string | File;
   firstName?: string;
   middleName: string;
   lastName?: string;
   email?: string;
   contact?: string;
   Marital?: string;
-  balance?: number;
   address?: string;
   status?: string;
   createdAt?: string;
@@ -63,11 +105,17 @@ export interface ClientType {
 interface ClientState extends NormalizeState<ClientType> {
   updateLoading: boolean;
   fetchingMore: boolean;
+  filterLoading: boolean;
+  filterById: { [ket: string]: ClientType };
+  filterIds: string[];
 }
 
 const initialState: ClientState = {
   byId: {},
   allIds: [],
+  filterById: {},
+  filterIds: [],
+  filterLoading: false,
   loading: false,
   error: null,
   updateLoading: false,
@@ -77,27 +125,33 @@ const initialState: ClientState = {
 const clientSlice = createSlice({
   name: "client",
   initialState,
-  reducers: {},
+  reducers: {
+    resetClientFilter(state) {
+      state.filterById = {};
+      state.filterIds = [];
+    },
+  },
   extraReducers: (builder) =>
     builder
       .addCase(addClient.pending, (state) => {
         state.updateLoading = true;
       })
       .addCase(addClient.fulfilled, (state, action) => {
-        const { byId, allIds } = normalizeResponse(action.payload);
+        const { byId, allIds } = normalizeResponse(action.payload.client);
 
-        state.byId = { ...state.byId, ...byId };
-        state.allIds = [...state.allIds, ...allIds];
+        state.byId = { ...byId, ...state.byId };
+        state.allIds = [...allIds, ...state.allIds];
         state.updateLoading = false;
       })
-      .addCase(addClient.rejected, (state) => {
+      .addCase(addClient.rejected, (state, action) => {
+        state.error = action.payload as string;
         state.updateLoading = false;
       })
-      .addCase(editClient.pending, (state) => {
+      .addCase(updateClientData.pending, (state) => {
         state.updateLoading = true;
       })
-      .addCase(editClient.fulfilled, (state, action) => {
-        const updatedClient = action.payload; // since you return a single client
+      .addCase(updateClientData.fulfilled, (state, action) => {
+        const updatedClient = action.payload.client!;
 
         if (state.byId[updatedClient._id]) {
           state.byId[updatedClient._id] = {
@@ -108,7 +162,7 @@ const clientSlice = createSlice({
 
         state.updateLoading = false;
       })
-      .addCase(editClient.rejected, (state) => {
+      .addCase(updateClientData.rejected, (state) => {
         state.updateLoading = false;
       })
       .addCase(deleteClient.pending, (state) => {
@@ -124,8 +178,37 @@ const clientSlice = createSlice({
       })
       .addCase(deleteClient.rejected, (state) => {
         state.updateLoading = false;
+      })
+      .addCase(getClients.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getClients.fulfilled, (state, action) => {
+        const { allIds, byId } = normalizeResponse(action.payload);
+
+        state.allIds = [...state.allIds, ...allIds];
+        state.byId = { ...state.byId, ...byId };
+
+        state.loading = false;
+      })
+      .addCase(getClients.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(searchClient.pending, (state) => {
+        state.filterLoading = true;
+      })
+      .addCase(searchClient.fulfilled, (state, action) => {
+        const { allIds, byId } = normalizeResponse(action.payload);
+
+        state.filterIds = allIds;
+        state.filterById = byId;
+
+        state.filterLoading = false;
+      })
+      .addCase(searchClient.rejected, (state, action) => {
+        state.filterLoading = false;
+        state.error = action.payload as string;
       }),
 });
 
-export const {} = clientSlice.actions;
+export const { resetClientFilter } = clientSlice.actions;
 export default clientSlice.reducer;

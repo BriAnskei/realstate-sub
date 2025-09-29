@@ -29,6 +29,7 @@ interface LotTableProp {
   isConfirmationOpen: boolean;
   isLoading?: boolean;
   isFiltering?: boolean;
+  isEmployee?: boolean;
   updateLoading: boolean;
 }
 
@@ -40,6 +41,7 @@ export default function LotTable({
   byId,
   isLoading,
   isFiltering = false,
+  isEmployee = false,
   updateLoading,
   closeConfirmationModal,
   setFilterStatus,
@@ -75,7 +77,7 @@ export default function LotTable({
       />
 
       {/* Main container with proper responsive handling */}
-      <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         {isFiltering && <LoadingOverlay message="Filtering results..." />}
 
         {/* Horizontal scroll container */}
@@ -140,12 +142,14 @@ export default function LotTable({
                     Status
                   </TableCell>
 
-                  <TableCell
-                    isHeader
-                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap sticky right-0 bg-white dark:bg-gray-900 min-w-[80px]"
-                  >
-                    Actions
-                  </TableCell>
+                  {isEmployee && (
+                    <TableCell
+                      isHeader
+                      className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap sticky right-0 bg-white dark:bg-gray-900 min-w-[80px]"
+                    >
+                      Actions
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHeader>
 
@@ -236,23 +240,24 @@ export default function LotTable({
                               lot.status?.slice(1)}
                           </Badge>
                         </TableCell>
-
-                        <TableCell
-                          className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 
+                        {isEmployee && (
+                          <TableCell
+                            className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 
              sticky right-0 min-w-[80px] bg-white dark:bg-gray-900
              group-hover:bg-gray-50 dark:group-hover:bg-white/[0.02]"
-                        >
-                          <div className="flex gap-1 sm:gap-2 justify-center">
-                            <EditIcon
-                              className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                              onClick={() => editLot(lot)}
-                            />
-                            <DeleteIcon
-                              className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                              onClick={() => onDeleteHandler(lot)}
-                            />
-                          </div>
-                        </TableCell>
+                          >
+                            <div className="flex gap-1 sm:gap-2 justify-center">
+                              <EditIcon
+                                className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                onClick={() => editLot(lot)}
+                              />
+                              <DeleteIcon
+                                className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                onClick={() => onDeleteHandler(lot)}
+                              />
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })

@@ -31,7 +31,7 @@ export function SaleLotTable({ setSelectedLots, lots }: LotTableProp) {
     <>
       <ComponentCard
         title="Selected  Lots"
-        className="mb-7"
+        className=" p-5 border border-gray-200 rounded-2xl dark:bg-inherit lg:p-6 mb-7"
         actions={[
           <button
             key="add"

@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { useDispatch } from "react-redux";
+import { Routes, Route } from "react-router";
 import { ScrollToTop } from "../../components/common/ScrollToTop";
 import AppLayout from "../../layout/AppLayout";
 import { fetchLands } from "../../store/slices/landSlice";
-import { AppDispatch, RootState } from "../../store/store";
+import { AppDispatch } from "../../store/store";
 import Agents from "../Agents";
 import SignIn from "../AuthPages/SignIn";
 import SignUp from "../AuthPages/SignUp";
@@ -13,15 +13,14 @@ import Calendar from "../Calendar";
 import BarChart from "../Charts/BarChart";
 import LineChart from "../Charts/LineChart";
 import Client from "../Client";
-import Home from "../Dashboard/Home";
 import FormElements from "../Forms/FormElements";
-import LandForm from "../Forms/LandForm";
+
 import SaleForm from "../Forms/SaleForm";
 import NotFound from "../OtherPage/NotFound";
 import Land from "../projects/Land";
 import Lot from "../projects/Lot";
 import BasicTables from "../Tables/BasicTables";
-import Sale from "../transaction/Sale";
+
 import Alerts from "../UiElements/Alerts";
 import Avatars from "../UiElements/Avatars";
 import Badges from "../UiElements/Badges";
@@ -29,16 +28,20 @@ import Buttons from "../UiElements/Buttons";
 import Images from "../UiElements/Images";
 import Videos from "../UiElements/Videos";
 import AgentHome from "../Dashboard/AgentHome";
+import { fetchLots } from "../../store/slices/lotSlice";
+import Application from "../transaction/Application";
 import ApplicationForm from "../transaction/agent/ApplicationForm";
+import { getClients } from "../../store/slices/clientSlice";
 
 export default function AgentsApp() {
   const dispatch = useDispatch<AppDispatch>();
-  const { allIds } = useSelector((state: RootState) => state.land);
 
   useEffect(() => {
     const initialFetch = async () => {
       try {
         await dispatch(fetchLands());
+        await dispatch(fetchLots({}));
+        await dispatch(getClients());
       } catch (error) {}
     };
 
@@ -54,16 +57,16 @@ export default function AgentsApp() {
           <Route index path="/" element={<AgentHome />} />
 
           {/* {Projects} */}
-          <Route path="/land/add" element={<LandForm />} />
+
           <Route path="/land" element={<Land />} />
           <Route path="/lot" element={<Lot />} />
 
           {/* tansation */}
-          {/* agent */}
-          <Route path="/form-application" element={<ApplicationForm />} />
+          <Route path="/application" element={<Application />} />
+          <Route path="/application/form" element={<ApplicationForm />} />
 
           <Route path="/saleform" element={<SaleForm />} />
-          <Route path="/sale" element={<Sale />} />
+          {/* <Route path="/sale" element={<Sale />} /> */}
 
           {/* Client and agent management */}
           <Route path="/client" element={<Client />} />

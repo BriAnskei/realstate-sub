@@ -14,6 +14,8 @@ export class LandRepository {
 
     await this.db.exec("BEGIN TRANSACTION");
 
+    
+
     try {
       // Insert Land
       const landResult = await this.db.run(
