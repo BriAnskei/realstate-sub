@@ -1,18 +1,66 @@
-import { useState } from "react";
-import { LandTypes } from "../../../store/slices/landSlice";
+import { SetStateAction, useEffect, useRef, useState } from "react";
+import {
+  LandTypes,
+  resetLandFilter,
+  resetLands,
+  searchLand,
+} from "../../../store/slices/landSlice";
 import ComponentCard from "../../common/ComponentCard";
 import Button from "../../ui/button/Button";
 import Input from "../input/InputField";
 import Label from "../Label";
 import LandSelectionModal from "../../modal/saleModal/LandSelectionModal";
+import { ApplicationType } from "../../../store/slices/applicationSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../../store/store";
+import { useFilteredData } from "../../../hooks/useFilteredData";
+import { debouncer } from "../../../utils/debouncer";
 
 interface LandDetailProp {
-  setSelectedLand: React.Dispatch<React.SetStateAction<LandTypes>>;
-  data: LandTypes;
+  setApplication: React.Dispatch<React.SetStateAction<ApplicationType>>;
 }
 
-const LandDetails = ({ data, setSelectedLand }: LandDetailProp) => {
+const LandDetails = ({ setApplication }: LandDetailProp) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { byId, allIds, filterById, filterIds, filterLoading } = useSelector(
+    (state: RootState) => state.land
+  );
+  const [selectedLand, setSelectedLand] = useState<LandTypes | undefined>(
+    undefined
+  );
   const [isLandModalOpen, setIsLandModalOpen] = useState(false);
+
+  // filter
+  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined);
+
+  const [searchLoading, setSearchLoading] = useState(false);
+  const debouncedSearchRef = useRef<ReturnType<typeof debouncer> | null>(null);
+
+  debouceSearchHanlder();
+
+  const getData = useFilteredData({
+    originalData: { byId, allIds },
+    filteredData: { byId: filterById, allIds: filterIds },
+    filterOptions: {
+      searchInput: searchQuery,
+      filterLoading: filterLoading || searchLoading,
+    },
+  });
+  useEffect(() => {
+    if (searchQuery?.trim()) {
+      setSearchLoading(true);
+      debouncedSearchRef.current!(searchQuery);
+    } else {
+      dispatch(resetLandFilter());
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (selectedLand) {
+      setApplication((prev) => ({ ...prev, landdId: selectedLand._id }));
+    }
+  }, [selectedLand]);
+
   return (
     <>
       <ComponentCard
@@ -33,7 +81,7 @@ const LandDetails = ({ data, setSelectedLand }: LandDetailProp) => {
             <Input
               readonly
               type="text"
-              value={data && data.name}
+              value={selectedLand?.name ?? ""}
               name="name"
               placeholder="Land Name will display here"
             />
@@ -44,7 +92,7 @@ const LandDetails = ({ data, setSelectedLand }: LandDetailProp) => {
             <Input
               readonly
               type="text"
-              value={data && data.location}
+              value={selectedLand?.location ?? ""}
               name="name"
               placeholder="Land Location"
             />
@@ -55,9 +103,29 @@ const LandDetails = ({ data, setSelectedLand }: LandDetailProp) => {
         selectedData={setSelectedLand}
         isOpen={isLandModalOpen}
         onClose={() => setIsLandModalOpen(false)}
+        byId={getData.byId}
+        allIds={getData.allIds}
+        filterLoading={filterLoading || searchLoading}
+        setSearchQuery={setSearchQuery}
       />
     </>
   );
+
+  function debouceSearchHanlder() {
+    if (!debouncedSearchRef.current) {
+      debouncedSearchRef.current = debouncer(async (searchQuery: string) => {
+        try {
+          console.log("seartch landd: ", searchQuery);
+
+          await dispatch(searchLand(searchQuery));
+        } catch (error) {
+          console.log(error);
+        } finally {
+          setSearchLoading(false);
+        }
+      }, 400);
+    }
+  }
 };
 
 export default LandDetails;

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Checkbox from "../../form/input/Checkbox";
 import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
@@ -13,102 +13,40 @@ import Filter from "../../filter/Filter";
 import { LotType } from "../../../store/slices/lotSlice"; // ✅ import your lot type
 
 interface LotFormModalProp {
+  lotById: { [key: string]: LotType };
+  lotIds: string[];
   isOpen: boolean;
+  landId?: string;
   onClose: () => void;
   selectedData: (data: LotType[]) => void; // ✅ multiple lots
 }
 
 const LotSelectionModal = ({
+  lotById,
+  lotIds,
   isOpen,
+  landId,
   onClose,
   selectedData,
 }: LotFormModalProp) => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedLots, setSelectedLots] = useState<LotType[]>([]);
-  const [sortBy, setSortBy] = useState("");
 
-  // ✅ Mock Lots
-  const mockLots: LotType[] = [
-    {
-      _id: "lot_001",
-      landId: "land_001",
-      blockNumber: "1",
-      lotNumber: "A",
-      lotSize: "120",
-      pricePerSqm: "5000",
-      totalAmount: "600000",
-      lotType: "Residential",
-      status: "Available",
-      createdAt: "2025-01-10T08:30:00Z",
-    },
-    {
-      _id: "lot_002",
-      landId: "land_001",
-      blockNumber: "1",
-      lotNumber: "B",
-      lotSize: "150",
-      pricePerSqm: "4800",
-      totalAmount: "720000",
-      lotType: "Residential",
-      status: "Reserved",
-      createdAt: "2025-02-05T14:10:00Z",
-    },
-    {
-      _id: "lot_003",
-      landId: "land_002",
-      blockNumber: "2",
-      lotNumber: "C",
-      lotSize: "100",
-      pricePerSqm: "5200",
-      totalAmount: "520000",
-      lotType: "Commercial",
-      status: "Available",
-      createdAt: "2025-03-21T09:45:00Z",
-    },
-    {
-      _id: "lot_004",
-      landId: "land_002",
-      blockNumber: "2",
-      lotNumber: "D",
-      lotSize: "200",
-      pricePerSqm: "5500",
-      totalAmount: "1100000",
-      lotType: "Residential",
-      status: "Sold",
-      createdAt: "2025-04-15T13:20:00Z",
-    },
-  ];
+  useEffect(() => {
+    // reset the selected lots if landId changes
+    if (
+      landId &&
+      selectedLots.length > 0 &&
+      selectedLots[0].landId !== landId
+    ) {
+      setSelectedLots([]);
+    }
+  }, [landId, selectedLots]);
 
   const saveHandler = () => {
     if (selectedLots.length === 0) return;
     selectedData(selectedLots);
     onClose();
   };
-
-  const filteredLots = useMemo(() => {
-    let lots = mockLots.filter(
-      (lot) =>
-        (lot.blockNumber || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        (lot.lotNumber || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        (lot.lotType || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (sortBy === "size") {
-      lots = [...lots].sort(
-        (a, b) => parseFloat(b.lotSize || "0") - parseFloat(a.lotSize || "0")
-      );
-    } else if (sortBy === "price") {
-      lots = [...lots].sort(
-        (a, b) =>
-          parseFloat(b.pricePerSqm || "0") - parseFloat(a.pricePerSqm || "0")
-      );
-    }
-    return lots;
-  }, [searchQuery, sortBy]);
 
   // ✅ Handle checkbox (multi-select)
   const toggleSelection = (lot: LotType) => {
@@ -135,11 +73,11 @@ const LotSelectionModal = ({
           </div>
         </div>
 
-        <Filter
+        {/* <Filter
           onSearchChange={setSearchQuery}
           SearchPlaceholder="Search lot..."
           onSortChange={setSortBy}
-        />
+        /> */}
 
         {/* Fixed height table container */}
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -177,45 +115,48 @@ const LotSelectionModal = ({
 
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {filteredLots.length > 0 ? (
-                  filteredLots.map((lot) => (
-                    <TableRow
-                      key={lot._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    >
-                      {/* Block / Lot */}
-                      <TableCell className="px-3 py-4 text-start min-w-[100px]">
-                        <div>
-                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                            Block {lot.blockNumber} - Lot {lot.lotNumber}
-                          </span>
-                          <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
-                            {lot.lotType}
-                          </span>
-                        </div>
-                      </TableCell>
+                {lotIds.length > 0 ? (
+                  lotIds.map((id) => {
+                    const lot: LotType = lotById[id];
+                    return (
+                      <TableRow
+                        key={lot._id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      >
+                        {/* Block / Lot */}
+                        <TableCell className="px-3 py-4 text-start min-w-[100px]">
+                          <div>
+                            <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                              Block {lot.blockNumber} - Lot {lot.lotNumber}
+                            </span>
+                            <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
+                              {lot.lotType}
+                            </span>
+                          </div>
+                        </TableCell>
 
-                      {/* Size */}
-                      <TableCell className="px-3 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 min-w-[80px]">
-                        {lot.lotSize} sqm
-                      </TableCell>
+                        {/* Size */}
+                        <TableCell className="px-3 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 min-w-[80px]">
+                          {lot.lotSize} sqm
+                        </TableCell>
 
-                      {/* Price/Sqm */}
-                      <TableCell className="px-3 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 min-w-[100px]">
-                        ₱{lot.pricePerSqm}
-                      </TableCell>
+                        {/* Price/Sqm */}
+                        <TableCell className="px-3 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 min-w-[100px]">
+                          ₱{lot.pricePerSqm}
+                        </TableCell>
 
-                      {/* Checkbox */}
-                      <TableCell className="px-3 py-3 min-w-[80px]">
-                        <Checkbox
-                          checked={
-                            !!selectedLots.find((l) => l._id === lot._id)
-                          }
-                          onChange={() => toggleSelection(lot)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        {/* Checkbox */}
+                        <TableCell className="px-3 py-3 min-w-[80px]">
+                          <Checkbox
+                            checked={
+                              !!selectedLots.find((l) => l._id === lot._id)
+                            }
+                            onChange={() => toggleSelection(lot)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell className="px-3 py-6 text-center text-gray-500 dark:text-gray-400">

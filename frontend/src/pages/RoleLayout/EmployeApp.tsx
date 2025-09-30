@@ -1,10 +1,6 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
 import { Route, Routes } from "react-router-dom";
 import { ScrollToTop } from "../../components/common/ScrollToTop";
 import AppLayout from "../../layout/AppLayout";
-import { fetchLands } from "../../store/slices/landSlice";
-import { AppDispatch } from "../../store/store";
 import Agents from "../Agents";
 import Blank from "../Blank";
 import Calendar from "../Calendar";
@@ -14,7 +10,6 @@ import Client from "../Client";
 import Home from "../Dashboard/Home";
 import FormElements from "../Forms/FormElements";
 import LandForm from "../Forms/LandForm";
-import SaleForm from "../Forms/SaleForm";
 import Land from "../projects/Land";
 import Lot from "../projects/Lot";
 import BasicTables from "../Tables/BasicTables";
@@ -25,26 +20,9 @@ import Badges from "../UiElements/Badges";
 import Buttons from "../UiElements/Buttons";
 import Images from "../UiElements/Images";
 import Videos from "../UiElements/Videos";
-import { fetchLots } from "../../store/slices/lotSlice";
-import { getClients } from "../../store/slices/clientSlice";
 import Application from "../transaction/Application";
 
 export default function EmployeApp() {
-  const dispatch = useDispatch<AppDispatch>();
-  useEffect(() => {
-    const initialFetch = async () => {
-      try {
-        await dispatch(fetchLots({}));
-        await dispatch(fetchLands());
-        await dispatch(getClients());
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    initialFetch();
-  }, []);
-
   return (
     <>
       <ScrollToTop />

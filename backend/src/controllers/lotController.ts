@@ -23,6 +23,14 @@ export class LotController {
     res.json({ success: true, lot });
   };
 
+  findLotsByLandId = async (req: Request, res: Response) => {
+    const landId = req.params.landId;
+
+    const lots = await this.lotRepo.findLotsByLandId(parseInt(landId, 10));
+
+    res.json({ lots });
+  };
+
   getLots = async (req: Request, res: Response) => {
     const cursor = req.query.cursor as string | undefined;
     const lotStatus = req.query.status as string;

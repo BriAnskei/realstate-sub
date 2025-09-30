@@ -69,6 +69,21 @@ export const searchLotOnLandName = createAsyncThunk(
   }
 );
 
+export const getLotsByLandId = createAsyncThunk(
+  "lot/getByLandId",
+  async (landId: string, { rejectWithValue }) => {
+    try {
+      const res = await lotApi.findLotsByLandId(landId);
+
+      console.log("getting lots landId:", res);
+
+      return res.lots;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const editLot = createAsyncThunk(
   "lot/edit",
   async (
@@ -202,6 +217,21 @@ const lotSclice = createSlice({
         state.filterLoading = false;
       })
       .addCase(searchLotOnLandName.rejected, (state) => {
+        state.filterLoading = false;
+      })
+
+      .addCase(getLotsByLandId.pending, (state) => {
+        state.filterLoading = true;
+      })
+      .addCase(getLotsByLandId.fulfilled, (state, action) => {
+        const { byId, allIds } = normalizeResponse(action.payload);
+
+        state.allFilterIds = allIds;
+        state.filterById = byId;
+
+        state.filterLoading = false;
+      })
+      .addCase(getLotsByLandId.rejected, (state) => {
         state.filterLoading = false;
       });
   },

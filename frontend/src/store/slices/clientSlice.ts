@@ -65,6 +65,8 @@ export const getClients = createAsyncThunk(
   "client/fetch",
   async (_: void, { rejectWithValue }) => {
     try {
+      console.log("Fething clients: ");
+
       const res = await ClientApi.getClients();
 
       return res;

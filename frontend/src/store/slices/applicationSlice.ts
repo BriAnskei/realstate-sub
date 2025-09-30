@@ -1,5 +1,3 @@
-import { UserType } from "../../context/UserContext";
-
 export interface ApplicationType {
   _id: string;
   landdId?: string;
@@ -7,8 +5,8 @@ export interface ApplicationType {
   clientName?: string;
   lotIds?: string[];
   clientId?: string;
-  agentDealer?: UserType;
-  otherAgent?: UserType[];
+  agentDealerId?: string;
+  otherAgentIds?: string[];
   appointmentDate?: string;
   status?: string;
   createdAt?: string;

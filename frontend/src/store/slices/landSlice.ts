@@ -35,15 +35,13 @@ const initialState: LandState = {
 
 const landApi = new LandApi();
 
-// Fake API
-const fakeApi = <T>(data: T, delay = 800): Promise<T> =>
-  new Promise((resolve) => setTimeout(() => resolve(data), delay));
-
 export const searchLand = createAsyncThunk(
   "land/search",
   async (landName: string, { rejectWithValue }) => {
     try {
       const res = await landApi.search(landName);
+
+      console.log("search land: ", res);
 
       return res.lands;
     } catch (error) {
@@ -116,6 +114,11 @@ const landSlice = createSlice({
   initialState,
   reducers: {
     resetLands: () => initialState,
+
+    resetLandFilter: (state) => {
+      state.filterById = {};
+      state.filterIds = [];
+    },
 
     decrementLotsCount: (state, action) => {
       // this function will be used for deletion
@@ -200,5 +203,6 @@ const landSlice = createSlice({
   },
 });
 
-export const { resetLands, decrementLotsCount } = landSlice.actions;
+export const { resetLands, decrementLotsCount, resetLandFilter } =
+  landSlice.actions;
 export default landSlice.reducer;

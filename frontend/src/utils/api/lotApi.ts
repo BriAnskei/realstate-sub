@@ -24,6 +24,16 @@ export class LotApi {
     }
   };
 
+  findLotsByLandId = async (landId: string): Promise<{ lots: LotType[] }> => {
+    try {
+      const res = await api.post(`/api/lot/find/landId/${landId}`);
+      return res.data;
+    } catch (error) {
+      console.log("Error in findLotsByLandId", error);
+      throw error;
+    }
+  };
+
   getLots = async (payload: {
     cursor?: string;
     limit?: number;

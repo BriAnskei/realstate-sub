@@ -31,13 +31,10 @@ import AgentSelectionModal from "../../components/modal/saleModal/AgentSelection
 import { AgentType } from "../../store/slices/agentSlice";
 import ClientDetails from "../../components/form/agents/ClientDetails";
 import LandDetails from "../../components/form/agents/LandDetails";
-import { SaleLotTable } from "../../components/tables/saleForm/SaleLotTable";
+import { SaleLotTable } from "../../components/tables/application/AppLotTable";
+import { UserType } from "../../context/UserContext";
 
-interface LandFormProp {
-  data?: LotType;
-}
-
-const SaleForm = ({ data }: LandFormProp) => {
+const SaleForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { updateLoading: landLoading } = useSelector(
     (state: RootState) => state.land
@@ -49,7 +46,6 @@ const SaleForm = ({ data }: LandFormProp) => {
   // Selection Hooks
   const [landInputData, setLandInputData] = useState<LandTypes>({
     _id: "",
-
     name: "",
     location: "",
     totalArea: 0,
@@ -60,7 +56,7 @@ const SaleForm = ({ data }: LandFormProp) => {
     {} as ClientType
   );
   const [selectedLots, setSelectedLots] = useState<LotType[]>([]);
-  const [selectedAgents, setSelectedAgents] = useState<AgentType[]>([]);
+  const [selectedAgents, setSelectedAgents] = useState<UserType[]>([]);
 
   // Modal Hooks
   const [isLandModalOpen, setIsLandModalOpen] = useState(false);
@@ -77,15 +73,6 @@ const SaleForm = ({ data }: LandFormProp) => {
 
   const handleSave = async () => {
     try {
-      // mock initialization
-      const landData: LandTypes = {
-        ...landInputData,
-        _id: (Math.random() * Math.random()).toString(),
-        available: landInputData.totalLots,
-        lotsSold: 0,
-      };
-
-      await dispatch(createLand(landData!));
     } catch (error) {
       console.log(error);
     }
@@ -234,6 +221,8 @@ const SaleForm = ({ data }: LandFormProp) => {
         isOpen={isLotModalOpen}
         selectedData={setSelectedLots}
         onClose={() => setIsLotModalOpen(false)}
+        lotById={{}}
+        lotIds={[]}
       />
       <AgentSelectionModal
         isOpen={isAgentModalOpen}

@@ -18,6 +18,11 @@ const lotRouter = express.Router();
   );
 
   lotRouter.post(
+    "/find/landId/:landId",
+    asyncHandler(lotController.findLotsByLandId, "findLotsByLandId")
+  );
+
+  lotRouter.post(
     "/lots/:id",
     asyncHandler(lotController.deleteLot, "deleteLot")
   );

@@ -23,6 +23,7 @@ interface ContextValue {
     type?: string;
   };
   handleSignOut: () => void;
+  isUserLogged: boolean;
 }
 
 export enum Role {
@@ -41,7 +42,10 @@ const UserContext = createContext<ContextValue | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [curUser, setCurUser] = useState<UserType>();
+  const [curUser, setCurUser] = useState<UserType | undefined>(undefined);
+  const [isUserLogged, setIsUserLogged] = useState<boolean>(
+    Boolean(localStorage.getItem("user"))
+  );
 
   // mock users
   const users: UserType[] = [
@@ -183,6 +187,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
           user.passWord === data.password
         ) {
           setCurUser(user);
+          setIsUserLogged(true);
           return { success: true };
         }
       }
@@ -193,12 +198,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const handleSignOut = () => {
     setCurUser(undefined);
+
     localStorage.removeItem("user");
+    setIsUserLogged(false);
   };
 
   return (
     <UserContext.Provider
-      value={{ users, curUser, setCurUser, login, handleSignOut }}
+      value={{ users, curUser, setCurUser, login, handleSignOut, isUserLogged }}
     >
       {children}
     </UserContext.Provider>

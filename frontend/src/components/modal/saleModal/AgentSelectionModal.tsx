@@ -19,7 +19,7 @@ interface AgentFormModalProp {
   isOpen: boolean;
   dealerId?: string;
   onClose: () => void;
-  selectedData: React.Dispatch<React.SetStateAction<UserType[]>>;
+  selectedData: React.Dispatch<React.SetStateAction<UserType[] | undefined>>;
 }
 
 const AgentSelectionModal = ({
@@ -35,10 +35,7 @@ const AgentSelectionModal = ({
   const saveHandler = () => {
     if (selectedAgents.length === 0) return;
 
-    selectedData((prev) => {
-      console.log("new selectedData: ", ...prev, ...selectedAgents);
-      return [...prev, ...selectedAgents];
-    });
+    selectedData(selectedAgents);
     onClose();
   };
 
@@ -54,6 +51,7 @@ const AgentSelectionModal = ({
         (user.email || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // dont include the dealer id
     agents = agents?.filter((agent) => agent._id !== dealerId);
 
     return agents;
