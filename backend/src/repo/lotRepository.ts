@@ -12,44 +12,17 @@ export class LotRepository {
   constructor(private db: Database) {}
 
   async delete(id: number): Promise<void> {
-    await this.db.exec("BEGIN TRANSACTION");
-
-    try {
-      const lotData = await this.findById(id);
-
-      if (!lotData)
-        throw new Error("Error deleting lot, lot does not exist in DB");
-
-      await this.db.run(`DELETE FROM Lot WHERE _id = ?`, [id]);
-
-      // Case where the lot is marked as Sold(reserve/sold)
-      if (
-        lotData.status === Status.reserved ||
-        lotData.status === Status.sold
-      ) {
-        await this.db.run(
-          `UPDATE Land SET lotsSold = lotsSold - 1 WHERE _id = ?`,
-          [lotData.landId]
-        );
-      } else if (lotData.status === Status.available) {
-        await this.db.run(
-          `UPDATE Land SET available = available - 1 WHERE _id = ?`,
-          [lotData.landId]
-        );
-      }
-
-      await this.db.run(
-        `UPDATE Land SET totalLots = totalLots - 1 WHERE _id = ?`,
-        [lotData.landId]
-      );
-
-      await this.db.exec(`COMMIT`);
-    } catch (error) {
-      await this.db.exec("ROOLBACK");
-      throw error;
-    }
+    await this.db.run(`DELETE FROM Lot WHERE _id = ?`, [id]);
   }
 
+  /**
+   * Search lots by land name and/or status.
+   *
+   * @param payload - The search filters.
+   * @param payload.landName - (optional) The name of the land.
+   * @param payload.status - (optional) The status of the land.
+   * @returns A promise that resolves to an array of Land objects, or null if none found.
+   */
   async searchLotsByLandName(payload: {
     landName?: string;
     status?: string;
@@ -85,6 +58,11 @@ export class LotRepository {
     return this.db.all(query, params);
   }
 
+  /**
+   *
+   * @param id
+   * @returns A promise Lot
+   */
   async findById(id: number): Promise<Lot | null> {
     const row = await this.db.get<Lot>(`SELECT * FROM Lot WHERE _id = ?`, [id]);
     return row ?? null;
@@ -96,6 +74,23 @@ export class LotRepository {
       [id]
     );
     return rows ?? null;
+  }
+
+  async getLotsByIds(lotIds: number[]): Promise<Lot[]> {
+    if (lotIds.length === 0) return [];
+
+    console.log("data recieved: ", lotIds);
+
+    // Create placeholders (?, ?, ?) based on lotIds length
+    const placeholders = lotIds.map(() => "?").join(", ");
+
+    const query = `
+      SELECT * FROM Lot
+      WHERE _id IN (${placeholders})
+    `;
+
+    const rows = await this.db.all<Lot[]>(query, lotIds);
+    return rows;
   }
 
   async findAllPaginated(payload: {

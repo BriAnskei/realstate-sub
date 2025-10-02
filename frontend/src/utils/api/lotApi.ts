@@ -34,6 +34,16 @@ export class LotApi {
     }
   };
 
+  getLotsByIds = async (lotIds: number[]): Promise<{ lots: LotType[] }> => {
+    try {
+      const res = await api.post(`/api/lot/getLotsByIds`, { lotIds });
+      return res.data;
+    } catch (error) {
+      console.log("getLotsByIds, ", error);
+      throw error;
+    }
+  };
+
   getLots = async (payload: {
     cursor?: string;
     limit?: number;

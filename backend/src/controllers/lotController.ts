@@ -31,6 +31,14 @@ export class LotController {
     res.json({ lots });
   };
 
+  getLotsByIds = async (req: Request, res: Response) => {
+    const { lotsIds } = req.body;
+
+    const lotsRes: Lot[] = await this.lotRepo.getLotsByIds(lotsIds);
+
+    res.json({ lots: lotsIds });
+  };
+
   getLots = async (req: Request, res: Response) => {
     const cursor = req.query.cursor as string | undefined;
     const lotStatus = req.query.status as string;

@@ -1,9 +1,46 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ApplicationType } from "../../../store/slices/applicationSlice";
 import Label from "../../form/Label";
 import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
 import Badge from "../../ui/badge/Badge";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "../../ui/table";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../../store/store";
+import { getLotsByIds } from "../../../store/slices/lotSlice";
+
+export interface UserType {
+  _id?: string;
+  profilePicc?: string;
+  firstName?: string;
+  middleName: string;
+  lastName?: string;
+  email?: string;
+  userName?: string;
+  passWord?: string;
+  role?: string;
+  userRole?: string;
+}
+
+export interface LotType {
+  _id: string;
+  name?: string;
+  landId?: string;
+  blockNumber?: string;
+  lotNumber?: string;
+  lotSize?: string;
+  pricePerSqm?: string;
+  totalAmount?: string;
+  lotType?: string;
+  status?: string;
+  createdAt?: string;
+}
 
 interface ApplicationInfoModalProps {
   isOpen: boolean;
@@ -11,18 +48,115 @@ interface ApplicationInfoModalProps {
   application?: ApplicationType;
   clientName?: string;
   dealerName?: string;
-  otherAgentsNames?: string[];
+  otherAgents?: UserType[];
+  lots?: LotType[];
+  loading: boolean;
 }
+
+// Loading skeleton component
+const SkeletonBox: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <div
+    className={`animate-pulse rounded-md bg-gray-200 dark:bg-gray-700 ${className}`}
+  />
+);
+
+const LoadingContent: React.FC = () => (
+  <div className="flex flex-col">
+    <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+      {/* Land Information Skeleton */}
+      <div>
+        <SkeletonBox className="mb-5 h-6 w-40 lg:mb-6" />
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+          <div className="col-span-2 lg:col-span-1">
+            <SkeletonBox className="mb-2 h-4 w-24" />
+            <SkeletonBox className="h-10 w-full" />
+          </div>
+          <div className="col-span-2">
+            <SkeletonBox className="mb-2 h-4 w-16" />
+            <div className="rounded-md border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800">
+              <SkeletonBox className="mb-3 h-8 w-full" />
+              <SkeletonBox className="mb-3 h-12 w-full" />
+              <SkeletonBox className="mb-3 h-12 w-full" />
+              <SkeletonBox className="h-12 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Client and Agent Information Skeleton */}
+      <div className="mt-7">
+        <SkeletonBox className="mb-5 h-6 w-56 lg:mb-6" />
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+          <div className="col-span-2 lg:col-span-1">
+            <SkeletonBox className="mb-2 h-4 w-24" />
+            <SkeletonBox className="h-10 w-full" />
+          </div>
+          <div className="col-span-2 lg:col-span-1">
+            <SkeletonBox className="mb-2 h-4 w-28" />
+            <SkeletonBox className="h-10 w-full" />
+          </div>
+          <div className="col-span-2">
+            <SkeletonBox className="mb-2 h-4 w-28" />
+            <div className="rounded-md border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800">
+              <SkeletonBox className="mb-3 h-8 w-full" />
+              <SkeletonBox className="mb-3 h-12 w-full" />
+              <SkeletonBox className="h-12 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Application Details Skeleton */}
+      <div className="mt-7">
+        <SkeletonBox className="mb-5 h-6 w-44 lg:mb-6" />
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+          <div className="col-span-2 lg:col-span-1">
+            <SkeletonBox className="mb-2 h-4 w-28" />
+            <SkeletonBox className="h-10 w-full" />
+          </div>
+          <div className="col-span-2 lg:col-span-1">
+            <SkeletonBox className="mb-2 h-4 w-16" />
+            <SkeletonBox className="h-8 w-24" />
+          </div>
+          <div className="col-span-2 lg:col-span-1">
+            <SkeletonBox className="mb-2 h-4 w-36" />
+            <SkeletonBox className="h-10 w-full" />
+          </div>
+          <div className="col-span-2 lg:col-span-1">
+            <SkeletonBox className="mb-2 h-4 w-28" />
+            <SkeletonBox className="h-10 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+      <SkeletonBox className="h-9 w-20" />
+    </div>
+  </div>
+);
 
 const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
   isOpen,
+  loading,
   onClose,
   application,
   clientName,
   dealerName,
-  otherAgentsNames = [],
+  otherAgents = [],
+  lots = [],
 }) => {
-  if (!application) return null;
+  const dispatch = useDispatch<AppDispatch>();
+  useEffect(() => {
+    async function fetchRequredData() {
+      try {
+        await dispatch(getLotsByIds(application?.lotIds!));
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    fetchRequredData();
+  }, [isOpen]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
@@ -37,21 +171,15 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
     }
   };
 
-  const getStatusColor = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-        return "success";
-      case "pending":
-        return "warning";
-      case "rejected":
-        return "danger";
-      default:
-        return "secondary";
-    }
+  const getFullName = (user: UserType) => {
+    const parts = [user.firstName, user.middleName, user.lastName].filter(
+      Boolean
+    );
+    return parts.length > 0 ? parts.join(" ") : "N/A";
   };
 
   return (
-    <Modal isOpen={true} onClose={onClose} className="max-w-[700px] m-4">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-[700px] m-4">
       <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
         <div className="px-2 pr-14">
           <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
@@ -62,123 +190,210 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-col">
-          <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-            {/* Land Information */}
-            <div>
-              <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                Land Information
-              </h5>
+        {loading ? (
+          <LoadingContent />
+        ) : !application ? (
+          <div className="flex h-[450px] items-center justify-center">
+            <p className="text-gray-500 dark:text-gray-400">
+              No application data available
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+              {/* Land Information */}
+              <div>
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Land Information
+                </h5>
 
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                {application.landName && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Land Name</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {application.landName}
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  {application.landName && (
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Land Name</Label>
+                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        {application.landName}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {application.lotIds && application.lotIds.length > 0 && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Lot IDs</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {application.lotIds.join(", ")}
+                  {true && (
+                    <div className="col-span-2">
+                      <Label>Lots</Label>
+                      <div className="overflow-hidden rounded-md border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800">
+                        <div className="max-h-[240px] overflow-y-auto">
+                          <Table className="w-full border-collapse">
+                            <TableHeader className="sticky top-0 z-10 border-b border-gray-100 bg-white dark:border-white/[0.05] dark:bg-gray-900">
+                              <TableRow>
+                                <TableCell
+                                  isHeader
+                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                                >
+                                  Block No.
+                                </TableCell>
+                                <TableCell
+                                  isHeader
+                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                                >
+                                  Lot No.
+                                </TableCell>
+                                <TableCell
+                                  isHeader
+                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                                >
+                                  Lot Size
+                                </TableCell>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                              {lots.map((lot) => (
+                                <TableRow
+                                  key={lot._id}
+                                  className="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                                >
+                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                    {lot.blockNumber || "N/A"}
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                    {lot.lotNumber || "N/A"}
+                                  </TableCell>
+                                  <TableCell className="whitespace-nowrap px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                    {lot.lotSize ? `${lot.lotSize} Sqm` : "N/A"}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              </div>
+
+              {/* Client and Agent Information */}
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Client & Agent Information
+                </h5>
+
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  {application.clientName && (
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Client Name</Label>
+                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        {application.clientName}
+                      </div>
+                    </div>
+                  )}
+
+                  {dealerName && (
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Dealer Name</Label>
+                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        {dealerName}
+                      </div>
+                    </div>
+                  )}
+
+                  {true && (
+                    <div className="col-span-2">
+                      <Label>Other Agents</Label>
+                      <div className="overflow-hidden rounded-md border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800">
+                        <div className="max-h-[240px] overflow-y-auto">
+                          <Table className="w-full border-collapse">
+                            <TableHeader className="sticky top-0 z-10 border-b border-gray-100 bg-white dark:border-white/[0.05] dark:bg-gray-900">
+                              <TableRow>
+                                <TableCell
+                                  isHeader
+                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                                >
+                                  Full Name
+                                </TableCell>
+                                <TableCell
+                                  isHeader
+                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                                >
+                                  Email
+                                </TableCell>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                              {otherAgents.map((agent, index) => (
+                                <TableRow
+                                  key={agent._id || index}
+                                  className="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                                >
+                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                    {getFullName(agent)}
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                    {agent.email || "N/A"}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Application Information */}
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Application Details
+                </h5>
+
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  {application._id && (
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Application ID</Label>
+                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        #{application._id}
+                      </div>
+                    </div>
+                  )}
+
+                  {application.status && (
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Status</Label>
+                      <div className="flex items-center">
+                        <Badge>{application.status}</Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {application.appointmentDate && (
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Appointment Date</Label>
+                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        {formatDate(application.appointmentDate)}
+                      </div>
+                    </div>
+                  )}
+
+                  {application.createdAt && (
+                    <div className="col-span-2 lg:col-span-1">
+                      <Label>Date Created</Label>
+                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        {formatDate(application.createdAt)}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Client and Agent Information */}
-            <div className="mt-7">
-              <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                Client & Agent Information
-              </h5>
-
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                {application.clientName && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Client Name</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {application.clientName}
-                    </div>
-                  </div>
-                )}
-
-                {dealerName && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Dealer Name</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {dealerName}
-                    </div>
-                  </div>
-                )}
-
-                {otherAgentsNames.length > 0 && (
-                  <div className="col-span-2">
-                    <Label>Other Agents</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {otherAgentsNames.join(", ")}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Application Information */}
-            <div className="mt-7">
-              <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                Application Details
-              </h5>
-
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                {application._id && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Application ID</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      #{application._id}
-                    </div>
-                  </div>
-                )}
-
-                {application.status && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Status</Label>
-                    <div className="flex items-center">
-                      <Badge>{application.status}</Badge>
-                    </div>
-                  </div>
-                )}
-
-                {application.appointmentDate && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Appointment Date</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {formatDate(application.appointmentDate)}
-                    </div>
-                  </div>
-                )}
-
-                {application.createdAt && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Date Created</Label>
-                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {formatDate(application.createdAt)}
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+              <Button size="sm" variant="outline" onClick={onClose}>
+                Close
+              </Button>
             </div>
           </div>
-
-          <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-            <Button size="sm" variant="outline" onClick={onClose}>
-              Close
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     </Modal>
   );

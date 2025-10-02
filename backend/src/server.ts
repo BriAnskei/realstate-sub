@@ -8,7 +8,6 @@ import clientRouter from "./routes/clientRouter";
 import { UPLOAD_PATHS } from "./middleware/multer/UploadPaths";
 import applicationRouter from "./routes/appRouter";
 
-
 const app = express();
 const PORT = 4000;
 

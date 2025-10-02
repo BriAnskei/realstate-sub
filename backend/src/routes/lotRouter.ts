@@ -18,6 +18,11 @@ const lotRouter = express.Router();
   );
 
   lotRouter.post(
+    "getLotsByIds",
+    asyncHandler(lotController.getLotsByIds, "getLotsByIds")
+  );
+
+  lotRouter.post(
     "/find/landId/:landId",
     asyncHandler(lotController.findLotsByLandId, "findLotsByLandId")
   );

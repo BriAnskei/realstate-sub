@@ -21,6 +21,8 @@ import Badge from "../../ui/badge/Badge";
 import LoadingOverlay from "../../loading/LoadingOverlay";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
+import ApplicationInfoModal from "../../modal/applicationModal/ApplicationInfoModal";
+import { useEffect, useState } from "react";
 
 interface ApplicationTableProp {
   openConfirmationModal: () => void;
@@ -37,6 +39,142 @@ interface ApplicationTableProp {
   isEmployee: boolean;
 }
 
+function AppTable(payload: {
+  application: ApplicationType;
+  isEmployee: boolean;
+  openApplicationView: (data: ApplicationType) => void;
+}) {
+  const { application, isEmployee, openApplicationView } = payload;
+
+  // returns 2 wordsif there are 3 words of client name
+  function getName() {
+    const splitedName: string[] = application.clientName?.trim().split(" ")!;
+    let wordsLen = splitedName.length;
+
+    while (wordsLen > 2) {
+      splitedName.pop();
+      wordsLen--;
+    }
+
+    return splitedName.join(" ");
+  }
+
+  function getFirstName() {
+    return application.clientName?.trim().split(" ").pop();
+  }
+
+  function getDateInstance(date: string) {
+    return new Date(date);
+  }
+
+  function getFullDateFormat(date: string) {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(getDateInstance(date));
+  }
+
+  function getShortDateFormat(date: string) {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+    }).format(getDateInstance(date));
+  }
+
+  return (
+    <>
+      <TableRow
+        key={application._id}
+        className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+      >
+        <TableCell className="px-2 py-4 lg:px-4 text-start dark:text-gray-50">
+          <div className="font-medium text-gray-800 text-sm dark:text-white/90">
+            <span className="hidden lg:inline">{getName()}</span>
+            <span className="lg:hidden">{getFirstName()}</span>
+          </div>
+        </TableCell>
+
+        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+          <span className="truncate block max-w-[120px]">
+            {application.landName}
+          </span>
+        </TableCell>
+
+        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+          {/* add one for dealer count */}
+          {application.otherAgentIds?.length! + 1}
+        </TableCell>
+
+        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+          <div className="flex items-center gap-1">
+            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
+              {application.lotIds?.length}
+            </span>
+          </div>
+        </TableCell>
+
+        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+          {/* appointment date */}
+          <span
+            className="truncate block max-w-[100px]"
+            title={getFullDateFormat(application.appointmentDate!)}
+          >
+            <span className="hidden lg:inline">
+              {getFullDateFormat(application.appointmentDate!)}
+            </span>
+            <span className="lg:hidden">
+              {getShortDateFormat(application.appointmentDate!)}
+            </span>
+          </span>
+        </TableCell>
+
+        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+          <Badge size="sm">{application.status}</Badge>
+        </TableCell>
+
+        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+          {/* creation  date */}
+          <span
+            className="truncate block max-w-[100px]"
+            title={getFullDateFormat(application.createdAt!)}
+          >
+            <span className="hidden lg:inline">
+              {getFullDateFormat(application.createdAt!)}
+            </span>
+            <span className="lg:hidden">
+              {getShortDateFormat(application.createdAt!)}
+            </span>
+          </span>
+        </TableCell>
+
+        <TableCell className="px-2 py-4 lg:px-4">
+          <div className="flex gap-1 justify-center">
+            {isEmployee ? (
+              <>
+                <ApproveIcon className=" cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors" />
+                <RejectIcon className="cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors" />
+              </>
+            ) : (
+              <>
+                <ViewIcon
+                  className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  onClick={() => openApplicationView(application)}
+                />
+                <EditIcon className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" />
+                <DeleteIcon
+                  className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                  onClick={() => console.log("Delete clicked")}
+                />
+              </>
+            )}
+          </div>
+        </TableCell>
+      </TableRow>
+    </>
+  );
+}
+
 export default function ApplicationTable({
   search,
   searchLoading,
@@ -49,47 +187,24 @@ export default function ApplicationTable({
   openApplicationInfoModal,
   isEmployee,
 }: ApplicationTableProp) {
-  const deleteHandler = (data: ApplicationType) => {
-    setDeleteData(data);
-    openConfirmationModal();
+  const { fetchedLots, fetchingLoading } = useSelector(
+    (state: RootState) => state.lot
+  );
+  const { byId, allIds } = useSelector((state: RootState) => state.application);
+
+  // For application info view
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [applicationView, setApplicationView] = useState<
+    ApplicationType | undefined
+  >(undefined);
+
+  const openAppInfoHandler = (data: ApplicationType) => {
+    setApplicationView(data);
+    setIsModalOpen(true);
   };
 
   const resetFilter = () => {
     setSearch(undefined);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const getClientName = (clientId?: string) => {
-    if (!clientId) return "No Client";
-    // You'll need to get client data from your client store
-    const clientState = useSelector((state: RootState) => state.client);
-    const client = clientState.byId[clientId];
-    return client ? `${client.firstName} ${client.lastName}` : "Unknown Client";
-  };
-
-  const getAgentName = (agent?: UserType) => {
-    if (!agent) return "No Agent";
-    return agent.firstName && agent.lastName
-      ? `${agent.firstName} ${agent.lastName}`
-      : agent.email || "Unknown Agent";
-  };
-
-  const formatAppointmentDate = (dateString?: string) => {
-    if (!dateString) return "No Date";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   return (
@@ -121,18 +236,17 @@ export default function ApplicationTable({
                 <TableRow>
                   <TableCell
                     isHeader
-                    className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[120px]"
-                  >
-                    <span className="hidden md:inline">Land Name</span>
-                    <span className="md:hidden">Land</span>
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
                     className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[140px]"
                   >
                     <span className="hidden lg:inline">Client Name</span>
                     <span className="lg:hidden">Client</span>
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[120px]"
+                  >
+                    <span className="hidden md:inline">Land Name</span>
+                    <span className="md:hidden">Land</span>
                   </TableCell>
 
                   <TableCell
@@ -183,114 +297,28 @@ export default function ApplicationTable({
 
               {/* Table Body with sample data for demonstration */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {/* Sample rows - replace with your actual data mapping */}
-                {Array.from({ length: 5 }, (_, index) => (
-                  <TableRow
-                    key={index}
-                    className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
-                  >
-                    <TableCell className="px-2 py-4 lg:px-4 text-start dark:text-gray-50">
-                      <div className="font-medium text-gray-800 text-sm dark:text-white/90">
-                        <span
-                          className="truncate block max-w-[100px]"
-                          title={`LAND-${index + 1}`}
-                        >
-                          LAND-{index + 1}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-                      <span
-                        className="truncate block max-w-[120px]"
-                        title={`Client ${index + 1}`}
-                      >
-                        Client {index + 1}
-                      </span>
-                    </TableCell>
-
-                    <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-                      4
-                    </TableCell>
-
-                    <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
-                          {index + 2}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-                      <span
-                        className="truncate block max-w-[120px]"
-                        title="Dec 15, 2024, 10:00 AM"
-                      >
-                        <span className="hidden lg:inline">
-                          Dec 15, 2024, 10:00 AM
-                        </span>
-                        <span className="lg:hidden">Dec 15</span>
-                      </span>
-                    </TableCell>
-
-                    <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-                      <Badge
-                        size="sm"
-                        color={
-                          index % 3 === 0
-                            ? "success"
-                            : index % 3 === 1
-                            ? "error"
-                            : "warning"
-                        }
-                      >
-                        {index % 3 === 0
-                          ? "Approved"
-                          : index % 3 === 1
-                          ? "Rejected"
-                          : "Pending"}
-                      </Badge>
-                    </TableCell>
-
-                    <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-                      <span
-                        className="truncate block max-w-[100px]"
-                        title="Dec 10, 2024"
-                      >
-                        <span className="hidden lg:inline">Dec 10, 2024</span>
-                        <span className="lg:hidden">Dec 10</span>
-                      </span>
-                    </TableCell>
-
-                    <TableCell className="px-2 py-4 lg:px-4">
-                      <div className="flex gap-1 justify-center">
-                        {isEmployee ? (
-                          <>
-                            <ApproveIcon className=" cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors" />
-                            <RejectIcon className="cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors" />
-                          </>
-                        ) : (
-                          <>
-                            <ViewIcon
-                              className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                              onClick={() => console.log("View clicked")}
-                            />
-                            <EditIcon className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" />
-                            <DeleteIcon
-                              className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                              onClick={() => console.log("Delete clicked")}
-                            />
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {allIds.map((id) => {
+                  const app: ApplicationType = byId[id];
+                  return (
+                    <AppTable
+                      application={app}
+                      isEmployee={isEmployee}
+                      openApplicationView={openAppInfoHandler}
+                    />
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
         </div>
       </div>
+      <ApplicationInfoModal
+        lots={fetchedLots}
+        loading={fetchingLoading}
+        isOpen={isModalOpen}
+        application={applicationView}
+        onClose={() => setIsModalOpen(false)}
+      />
     </>
   );
 }

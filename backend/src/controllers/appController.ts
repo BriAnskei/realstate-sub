@@ -80,8 +80,6 @@ export class AppController {
   fetchAllApp = async (_: Request, res: Response): Promise<void> => {
     const response = await this.appRepo.getAll();
 
-    console.log("all data fretch:", response);
-
     res.json({ applications: response });
   };
 }

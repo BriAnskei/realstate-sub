@@ -24,6 +24,10 @@ interface LotState extends NormalizeState<LotType> {
   filterById: { [key: string]: LotType };
   allFilterIds: string[];
   filterLoading: boolean;
+
+  // shows in lot modal (application info)
+  fetchedLots: LotType[];
+  fetchingLoading: boolean;
 }
 
 const initialState: LotState = {
@@ -36,6 +40,9 @@ const initialState: LotState = {
   filterLoading: false,
   filterById: {},
   allFilterIds: [],
+
+  fetchedLots: [],
+  fetchingLoading: false,
 };
 
 const lotApi = new LotApi();
@@ -76,6 +83,19 @@ export const getLotsByLandId = createAsyncThunk(
       const res = await lotApi.findLotsByLandId(landId);
 
       console.log("getting lots landId:", res);
+
+      return res.lots;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getLotsByIds = createAsyncThunk(
+  "lot/getLotsByIds",
+  async (lotIds: number[], { rejectWithValue }) => {
+    try {
+      const res = await lotApi.getLotsByIds(lotIds);
 
       return res.lots;
     } catch (error) {
@@ -131,12 +151,8 @@ const lotSclice = createSlice({
     bulkSaveLots: (state, action) => {
       const { landName, lots } = action.payload;
 
-      console.log("payload in lot slice recioeved: ", action.payload);
-
-      // Initialize land name before normalizing data
-      for (let i = 0; i < lots.length; i++) {
+      for (let i = 0; i < lots.length; i++)
         lots[i] = { ...lots[i], name: landName };
-      }
 
       const { allIds, byId } = normalizeResponse(lots);
 
@@ -146,6 +162,9 @@ const lotSclice = createSlice({
     resetFilter: (state) => {
       state.allFilterIds = [];
       state.filterById = {};
+    },
+    resetFetchedLots: (state) => {
+      state.allFilterIds = [];
     },
   },
   extraReducers: (builder) => {
@@ -233,9 +252,20 @@ const lotSclice = createSlice({
       })
       .addCase(getLotsByLandId.rejected, (state) => {
         state.filterLoading = false;
+      })
+      .addCase(getLotsByIds.pending, (state) => {
+        state.fetchingLoading = true;
+      })
+      .addCase(getLotsByIds.fulfilled, (state, action) => {
+        state.fetchedLots = action.payload;
+        state.fetchingLoading = false;
+      })
+      .addCase(getLotsByIds.rejected, (state) => {
+        state.fetchingLoading = false;
       });
   },
 });
 
-export const { bulkSaveLots, resetFilter, updateName } = lotSclice.actions;
+export const { bulkSaveLots, resetFilter, updateName, resetFetchedLots } =
+  lotSclice.actions;
 export default lotSclice.reducer;
