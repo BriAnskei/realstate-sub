@@ -60,6 +60,7 @@ export default function LotTable({
     await dispatch(deleteLot(deleteData!));
   };
 
+  const handleSaveUpdate = async (lot: LotType) => {};
 
   return (
     <>

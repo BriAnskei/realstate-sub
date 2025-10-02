@@ -1,10 +1,11 @@
-import { SetStateAction } from "react";
+import { SetStateAction, useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ApplicationTable from "../../components/tables/transaction/applicationTable";
 import { ApplicationType } from "../../store/slices/applicationSlice";
-import { Role, userUser } from "../../context/UserContext";
+import { userUser } from "../../context/UserContext";
+import { Role } from "../../context/mockData";
 
 export default function Application() {
   const { curUser } = userUser();

@@ -1,4 +1,4 @@
-import { SetStateAction, use, useEffect, useMemo, useState } from "react";
+import { SetStateAction, useEffect, useMemo, useState } from "react";
 import { DeleteIcon } from "../../../icons";
 
 import ComponentCard from "../../common/ComponentCard";
@@ -10,9 +10,9 @@ import {
   TableCell,
   TableBody,
 } from "../../ui/table";
-import { Role, UserType, userUser } from "../../../context/UserContext";
-import { AgentType } from "../../../store/slices/agentSlice";
+import { UserType, userUser } from "../../../context/UserContext";
 import { ApplicationType } from "../../../store/slices/applicationSlice";
+import { Role } from "../../../context/mockData";
 
 interface AgentTableProp {
   setApplication: React.Dispatch<SetStateAction<ApplicationType>>;
@@ -43,7 +43,8 @@ export function AgentTable({ setApplication }: AgentTableProp) {
 
   useEffect(() => {
     if (selectedAgents) {
-      const agentsIds = selectedAgents.map((agent) => agent._id!);
+      const agentsIds = selectedAgents.map((agent) => parseInt(agent._id!, 10));
+
       setApplication((prev) => ({ ...prev, otherAgentIds: agentsIds }));
     }
   }, [selectedAgents]);

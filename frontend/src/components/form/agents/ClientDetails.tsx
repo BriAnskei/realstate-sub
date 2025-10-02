@@ -60,7 +60,11 @@ const ClientDetailsCard = ({ setApplication }: ClientDetailsCardProp) => {
   // setter
   useEffect(() => {
     if (selectedClient)
-      setApplication((prev) => ({ ...prev, clientId: selectedClient._id }));
+      setApplication((prev) => ({
+        ...prev,
+        clientId: selectedClient._id,
+        clientName: `${selectedClient.firstName} ${selectedClient.middleName} ${selectedClient.lastName}`,
+      }));
 
     if (appointmentDate) {
       setApplication((prev) => ({ ...prev, appointmentDate }));
@@ -73,6 +77,14 @@ const ClientDetailsCard = ({ setApplication }: ClientDetailsCardProp) => {
         <ComponentCard
           title="Client/Application Details"
           className="m-2 sm:m-4 lg:m-7"
+          actions={[
+            <Button
+              onClick={() => setIsSelectionnShow(true)}
+              className="flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg px-4 py-2.5 sm:py-3 text-sm font-medium text-white bg-brand-500 shadow-theme-xs hover:bg-brand-600 transition disabled:bg-brand-300 min-h-[44px] sm:min-w-[140px]"
+            >
+              Select Client
+            </Button>,
+          ]}
         >
           <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
             {/* Client Details Card */}
@@ -196,14 +208,9 @@ const ClientDetailsCard = ({ setApplication }: ClientDetailsCardProp) => {
                 </div>
 
                 {/* Select Client Button */}
-                <div className="flex justify-center sm:justify-start">
-                  <Button
-                    onClick={() => setIsSelectionnShow(true)}
-                    className="flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg px-4 py-2.5 sm:py-3 text-sm font-medium text-white bg-brand-500 shadow-theme-xs hover:bg-brand-600 transition disabled:bg-brand-300 min-h-[44px] sm:min-w-[140px]"
-                  >
-                    Select Client
-                  </Button>
-                </div>
+                {/* <div className="flex justify-center sm:justify-start">
+                  
+                </div> */}
               </div>
             </div>
 

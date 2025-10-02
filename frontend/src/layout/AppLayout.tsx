@@ -3,10 +3,11 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 
-import { Role, userUser } from "../context/UserContext";
+import { userUser } from "../context/UserContext";
 
 import EmployeeSlideBar from "./AppSlidebar/EmployeSidebar";
 import AgentSlidebar from "./AppSlidebar/AgentSlidebar";
+import { Role } from "../context/mockData";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();

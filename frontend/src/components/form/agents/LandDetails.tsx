@@ -57,7 +57,11 @@ const LandDetails = ({ setApplication }: LandDetailProp) => {
 
   useEffect(() => {
     if (selectedLand) {
-      setApplication((prev) => ({ ...prev, landdId: selectedLand._id }));
+      setApplication((prev) => ({
+        ...prev,
+        landId: selectedLand._id,
+        landName: selectedLand.name,
+      }));
     }
   }, [selectedLand]);
 

@@ -57,16 +57,16 @@ CREATE INDEX IF NOT EXISTS idx_client_email ON Client(email);
 
 
 CREATE TABLE IF NOT EXISTS Application (
-    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,               
     landId TEXT,
     landName TEXT,
     clientName TEXT,
-    lotIds TEXT,           
+    lotIds TEXT,                 
     clientId TEXT,
-    agentDealer TEXT,       
-    otherAgent TEXT,        
-    appointmentDate DATETIME,  
-    status TEXT NOT NULL,
+    agentDealerId TEXT,              
+    otherAgentIds TEXT,               
+    appointmentDate DATETIME,
+    status TEXT NOT NULL,                      
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

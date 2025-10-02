@@ -1,4 +1,4 @@
-import { useState, useEffect, SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
@@ -8,41 +8,78 @@ import LandDetails from "../../../components/form/agents/LandDetails";
 import { AgentTable } from "../../../components/tables/application/AgentTable";
 import Button from "../../../components/ui/button/Button";
 
-import { LandTypes, createLand } from "../../../store/slices/landSlice";
-import { LotType, bulkSaveLots } from "../../../store/slices/lotSlice";
 import { AppDispatch, RootState } from "../../../store/store";
-import { UserType, userUser } from "../../../context/UserContext";
+import { UserType } from "../../../context/UserContext";
 import backtoTop from "../../../icons/back-to-top-icon.svg";
-import { ApplicationType } from "../../../store/slices/applicationSlice";
-import LotTable from "../../../components/tables/projects/LotTable";
+import {
+  addNewApp,
+  ApplicationType,
+} from "../../../store/slices/applicationSlice";
 import { AppLotTable } from "../../../components/tables/application/AppLotTable";
+import { useNavigate } from "react-router";
 
 const ApplicationForm = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { updateLoading: landLoading } = useSelector(
-    (state: RootState) => state.land
-  );
-  const { updateLoading: lotLoading } = useSelector(
-    (state: RootState) => state.lot
-  );
+  const navigate = useNavigate();
+
+  const { loading } = useSelector((state: RootState) => state.application);
 
   // application data
-  const [application, setApplication] = useState<ApplicationType>(
-    {} as ApplicationType
-  );
+  const [application, setApplication] = useState<ApplicationType>({
+    _id: "",
+    landId: "",
+    landName: "",
+    clientName: "",
+    lotIds: [],
+    clientId: "",
+    agentDealerId: "",
+    otherAgentIds: [],
+    appointmentDate: "",
+    status: "pending",
+    createdAt: "",
+  });
 
-  const [selectedAgents, setSelectedAgents] = useState<UserType[]>([]);
+  const isAllInputValid = () => {
+    for (const [key, value] of Object.entries(application)) {
+      // skip validation for _id
+      if (key === "_id" || key === "createdAt") {
+        continue;
+      }
+
+      // validate strings
+      if (typeof value === "string" && value.trim() === "") {
+        console.log("no value in ", key, value);
+
+        return false;
+      }
+
+      // validate arrays
+      if (Array.isArray(value) && value.length === 0) {
+        console.log("no value in ", key, value);
+
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   const handleSave = async () => {
     try {
-      // mock initialization
+      if (!isAllInputValid()) {
+        alert("Kindly fill out all fields in the application form.");
+        return;
+      }
+
+      await dispatch(addNewApp(application));
+      navigate("/application");
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
-    console.log("Appliction update: ", application);
+    console.log("applicaiton update: ", application);
   }, [application]);
 
   return (
@@ -58,7 +95,7 @@ const ApplicationForm = () => {
             variant="primary"
             onClick={handleSave}
           >
-            {lotLoading || landLoading ? "Processing..." : "Submit "}
+            {loading ? "Processing..." : "Submit "}
           </Button>,
         ]}
       >
@@ -68,7 +105,7 @@ const ApplicationForm = () => {
           <LandDetails setApplication={setApplication} />
           <AppLotTable
             setApplication={setApplication}
-            landId={application.landdId}
+            landId={application.landId}
           />
           <AgentTable setApplication={setApplication} />
           <div className="flex  justify-center items-center">

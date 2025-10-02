@@ -9,8 +9,7 @@ import {
   TableCell,
   TableBody,
 } from "../../ui/table";
-import Filter from "../../filter/Filter";
-import { LotType } from "../../../store/slices/lotSlice"; // ✅ import your lot type
+import { LotType } from "../../../store/slices/lotSlice";
 
 interface LotFormModalProp {
   lotById: { [key: string]: LotType };
@@ -18,7 +17,7 @@ interface LotFormModalProp {
   isOpen: boolean;
   landId?: string;
   onClose: () => void;
-  selectedData: (data: LotType[]) => void; // ✅ multiple lots
+  selectedData: (data: LotType[]) => void;
 }
 
 const LotSelectionModal = ({
@@ -29,6 +28,9 @@ const LotSelectionModal = ({
   onClose,
   selectedData,
 }: LotFormModalProp) => {
+  const [availableLots, setAvailableLots] = useState<LotType[] | undefined>(
+    undefined
+  );
   const [selectedLots, setSelectedLots] = useState<LotType[]>([]);
 
   useEffect(() => {
@@ -41,6 +43,25 @@ const LotSelectionModal = ({
       setSelectedLots([]);
     }
   }, [landId, selectedLots]);
+
+  // filter available lots
+  useEffect(() => {
+    const filterAvailables = () => {
+      const lots: LotType[] = [];
+
+      for (let id of lotIds) {
+        const lot: LotType = lotById[id];
+
+        if (lot.status === "available") {
+          lots.push(lot);
+        }
+      }
+
+      setAvailableLots(lots);
+    };
+
+    filterAvailables();
+  }, [isOpen]);
 
   const saveHandler = () => {
     if (selectedLots.length === 0) return;
@@ -115,9 +136,8 @@ const LotSelectionModal = ({
 
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {lotIds.length > 0 ? (
-                  lotIds.map((id) => {
-                    const lot: LotType = lotById[id];
+                {availableLots && availableLots.length > 0 ? (
+                  availableLots.map((lot) => {
                     return (
                       <TableRow
                         key={lot._id}

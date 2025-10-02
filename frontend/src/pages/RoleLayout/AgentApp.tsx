@@ -26,8 +26,21 @@ import Videos from "../UiElements/Videos";
 import AgentHome from "../Dashboard/AgentHome";
 import Application from "../transaction/Application";
 import ApplicationForm from "../transaction/agent/ApplicationForm";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../store/store";
+import { fetchAllAPP } from "../../store/slices/applicationSlice";
 
 export default function AgentsApp() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      await dispatch(fetchAllAPP());
+    };
+    fetchApps();
+  }, []);
+
   return (
     <>
       <ScrollToTop />

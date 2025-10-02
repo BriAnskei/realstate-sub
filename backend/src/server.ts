@@ -6,6 +6,8 @@ import landRouter from "./routes/landRouter";
 import lotRouter from "./routes/lotRouter";
 import clientRouter from "./routes/clientRouter";
 import { UPLOAD_PATHS } from "./middleware/multer/UploadPaths";
+import applicationRouter from "./routes/appRouter";
+
 
 const app = express();
 const PORT = 4000;
@@ -23,7 +25,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/land", landRouter);
 app.use("/api/lot", lotRouter);
 app.use("/api/client", clientRouter);
-// app.use("/api/application, ");
+app.use("/api/application", applicationRouter);
 
 //  static routes(images)
 app.use("/uploads/clients", express.static(UPLOAD_PATHS.CLIENTS));

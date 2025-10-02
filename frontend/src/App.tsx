@@ -4,13 +4,14 @@ import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import AgentsApp from "./pages/RoleLayout/AgentApp";
 import EmployeApp from "./pages/RoleLayout/EmployeApp";
-import { Role, userUser } from "./context/UserContext";
+import { userUser } from "./context/UserContext";
 import { useEffect } from "react";
 import { fetchLands } from "./store/slices/landSlice";
 import { fetchLots } from "./store/slices/lotSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "./store/store";
 import { getClients } from "./store/slices/clientSlice";
+import { Role } from "./context/mockData";
 
 export default function App() {
   const dispatch = useDispatch<AppDispatch>();

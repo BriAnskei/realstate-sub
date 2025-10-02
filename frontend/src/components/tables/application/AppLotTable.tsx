@@ -50,6 +50,8 @@ export function AppLotTable({ setApplication, landId }: AppLotTableProp) {
     const fetchLotsByLand = async () => {
       try {
         if (!landId) return;
+
+        // reset the state first
         setApplication((prev) => ({
           ...prev,
           lotIds: undefined,
@@ -65,10 +67,10 @@ export function AppLotTable({ setApplication, landId }: AppLotTableProp) {
 
   useEffect(() => {
     if (selectedLots) {
-      const allLotsId = selectedLots.map((lot) => lot._id);
+      const allLotsId = selectedLots.map((lot) => parseInt(lot._id, 10));
+
       setApplication((prev) => ({ ...prev, lotIds: allLotsId }));
     }
-    console.log("selected lots updates: ", selectedLots);
   }, [selectedLots]);
 
   return (

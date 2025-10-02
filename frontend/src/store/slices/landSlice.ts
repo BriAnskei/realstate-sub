@@ -41,8 +41,6 @@ export const searchLand = createAsyncThunk(
     try {
       const res = await landApi.search(landName);
 
-      console.log("search land: ", res);
-
       return res.lands;
     } catch (error) {
       return rejectWithValue(error);

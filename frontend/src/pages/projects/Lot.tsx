@@ -15,7 +15,8 @@ import {
 } from "../../store/slices/lotSlice";
 import { debouncer } from "../../utils/debouncer";
 import { useFilteredData } from "../../hooks/useFilteredData";
-import { Role, userUser } from "../../context/UserContext";
+import { userUser } from "../../context/UserContext";
+import { Role } from "../../context/mockData";
 
 export default function Lot() {
   const dispatch = useDispatch<AppDispatch>();
