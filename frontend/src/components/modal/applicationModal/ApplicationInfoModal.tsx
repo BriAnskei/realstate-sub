@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ApplicationType } from "../../../store/slices/applicationSlice";
 import Label from "../../form/Label";
 import Button from "../../ui/button/Button";
@@ -14,6 +14,7 @@ import {
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../store/store";
 import { getLotsByIds } from "../../../store/slices/lotSlice";
+import { userUser } from "../../../context/UserContext";
 
 export interface UserType {
   _id?: string;
@@ -141,16 +142,24 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
   loading,
   onClose,
   application,
-  clientName,
-  dealerName,
-  otherAgents = [],
+
   lots = [],
 }) => {
+  const { getAppDealer } = userUser();
+  const [agents, setAgents] = useState<UserType[] | undefined>(undefined);
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
     async function fetchRequredData() {
       try {
+        if (!isOpen) return;
         await dispatch(getLotsByIds(application?.lotIds!));
+
+        setAgents(
+          getAppDealer([
+            ...application?.otherAgentIds?.map(String)!,
+            application?.agentDealerId!,
+          ])
+        );
       } catch (error) {
         console.log(error);
       }
@@ -176,6 +185,10 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
       Boolean
     );
     return parts.length > 0 ? parts.join(" ") : "N/A";
+  };
+
+  const isDealer = (agentId: string) => {
+    return application?.agentDealerId === agentId;
   };
 
   return (
@@ -217,57 +230,7 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
                     </div>
                   )}
 
-                  {true && (
-                    <div className="col-span-2">
-                      <Label>Lots</Label>
-                      <div className="overflow-hidden rounded-md border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800">
-                        <div className="max-h-[240px] overflow-y-auto">
-                          <Table className="w-full border-collapse">
-                            <TableHeader className="sticky top-0 z-10 border-b border-gray-100 bg-white dark:border-white/[0.05] dark:bg-gray-900">
-                              <TableRow>
-                                <TableCell
-                                  isHeader
-                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
-                                >
-                                  Block No.
-                                </TableCell>
-                                <TableCell
-                                  isHeader
-                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
-                                >
-                                  Lot No.
-                                </TableCell>
-                                <TableCell
-                                  isHeader
-                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
-                                >
-                                  Lot Size
-                                </TableCell>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                              {lots.map((lot) => (
-                                <TableRow
-                                  key={lot._id}
-                                  className="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-                                >
-                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
-                                    {lot.blockNumber || "N/A"}
-                                  </TableCell>
-                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
-                                    {lot.lotNumber || "N/A"}
-                                  </TableCell>
-                                  <TableCell className="whitespace-nowrap px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
-                                    {lot.lotSize ? `${lot.lotSize} Sqm` : "N/A"}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <LotTable Lots={lots} />
                 </div>
               </div>
 
@@ -278,23 +241,12 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
                 </h5>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  {application.clientName && (
-                    <div className="col-span-2 lg:col-span-1">
-                      <Label>Client Name</Label>
-                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                        {application.clientName}
-                      </div>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>Client Name</Label>
+                    <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                      {application.clientName}
                     </div>
-                  )}
-
-                  {dealerName && (
-                    <div className="col-span-2 lg:col-span-1">
-                      <Label>Dealer Name</Label>
-                      <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                        {dealerName}
-                      </div>
-                    </div>
-                  )}
+                  </div>
 
                   {true && (
                     <div className="col-span-2">
@@ -319,19 +271,31 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
                               </TableRow>
                             </TableHeader>
                             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                              {otherAgents.map((agent, index) => (
-                                <TableRow
-                                  key={agent._id || index}
-                                  className="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-                                >
-                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
-                                    {getFullName(agent)}
-                                  </TableCell>
-                                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
-                                    {agent.email || "N/A"}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                              {agents &&
+                                agents.map((agent, index) => (
+                                  <TableRow
+                                    key={agent._id || index}
+                                    className={`transition-colors ${
+                                      isDealer(agent._id!)
+                                        ? "hover:bg-blue-50  bg-blue-50 dark:bg-blue-900/20"
+                                        : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                                    }`}
+                                  >
+                                    <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                      <div className="flex items-center gap-2">
+                                        {getFullName(agent)}
+                                        {isDealer(agent._id!) && (
+                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300">
+                                            Dealer
+                                          </span>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                      {agent.email || "N/A"}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
                             </TableBody>
                           </Table>
                         </div>
@@ -400,3 +364,58 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
 };
 
 export default ApplicationInfoModal;
+
+const LotTable = (payload: { Lots: LotType[] }) => {
+  const { Lots } = payload;
+  return (
+    <div className="col-span-2">
+      <Label>Lots</Label>
+      <div className="overflow-hidden rounded-md border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800">
+        <div className="max-h-[240px] overflow-y-auto">
+          <Table className="w-full border-collapse">
+            <TableHeader className="sticky top-0 z-10 border-b border-gray-100 bg-white dark:border-white/[0.05] dark:bg-gray-900">
+              <TableRow>
+                <TableCell
+                  isHeader
+                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                >
+                  Block No.
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                >
+                  Lot No.
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                >
+                  Lot Size
+                </TableCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+              {Lots.map((lot) => (
+                <TableRow
+                  key={lot._id}
+                  className="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                >
+                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                    {lot.blockNumber || "N/A"}
+                  </TableCell>
+                  <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                    {lot.lotNumber || "N/A"}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                    {lot.lotSize ? `${lot.lotSize} Sqm` : "N/A"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+};

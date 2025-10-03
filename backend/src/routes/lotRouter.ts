@@ -1,14 +1,12 @@
+// lotRouter.ts
 import express from "express";
-
-import { initDB } from "../db"; // your db init
+import { Database } from "sqlite";
 import { LotController } from "../controllers/lotController";
 import { LotRepository } from "../repo/lotRepository";
 import { asyncHandler } from "../utils/asyncHandler";
 
-const lotRouter = express.Router();
-
-(async () => {
-  const db = await initDB();
+export function createLotRouter(db: Database) {
+  const lotRouter = express.Router();
   const lotRepo = new LotRepository(db);
   const lotController = new LotController(lotRepo);
 
@@ -18,7 +16,7 @@ const lotRouter = express.Router();
   );
 
   lotRouter.post(
-    "getLotsByIds",
+    "/getLotsByIds",
     asyncHandler(lotController.getLotsByIds, "getLotsByIds")
   );
 
@@ -27,15 +25,19 @@ const lotRouter = express.Router();
     asyncHandler(lotController.findLotsByLandId, "findLotsByLandId")
   );
 
-  lotRouter.post(
-    "/lots/:id",
-    asyncHandler(lotController.deleteLot, "deleteLot")
-  );
   lotRouter.get("/lots", asyncHandler(lotController.getLots, "getLots"));
+
   lotRouter.get(
     "/lots/search",
     asyncHandler(lotController.searchLotsByLandName, "searchLotsByLandName")
   );
-})();
 
-export default lotRouter;
+  lotRouter.post("/update/:_id", asyncHandler(lotController.update, "update"));
+
+  lotRouter.post(
+    "/lots/:id",
+    asyncHandler(lotController.deleteLot, "deleteLot")
+  );
+
+  return lotRouter;
+}

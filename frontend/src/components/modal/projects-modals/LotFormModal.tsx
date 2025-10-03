@@ -8,6 +8,7 @@ import { LotType } from "../../../store/slices/lotSlice";
 import Radio from "../../form/input/Radio";
 
 interface LotFormModalProp {
+  isLoading: boolean;
   isOpen: boolean;
   onClose: () => void;
   data?: LotType;
@@ -44,6 +45,7 @@ const initialErrors: ErrorState = {
 };
 
 const LotFormModal = ({
+  isLoading,
   isOpen,
   onClose,
   data,
@@ -324,7 +326,7 @@ const LotFormModal = ({
                 Close
               </Button>
               <Button size="sm" type="submit">
-                {data ? "Update Lot" : "Add Lot"}
+                {isLoading ? "Processing..." : "Save"}
               </Button>
             </div>
           </form>

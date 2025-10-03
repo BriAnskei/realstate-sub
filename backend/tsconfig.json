@@ -2,7 +2,7 @@
   // Specifies options for the TypeScript compiler
   "compilerOptions": {
     // Sets the ECMAScript target version to ES6, determining the JavaScript version the TypeScript code will compile into
-    "target": "ES6",
+    "target": "es2017",
 
     // Specifies the module system to use in the output files, in this case, CommonJS (used in Node.js)
     "module": "commonjs",

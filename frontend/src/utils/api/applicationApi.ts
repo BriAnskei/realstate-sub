@@ -31,4 +31,73 @@ export class AppApi {
       throw error;
     }
   };
+
+  /**
+   *
+   * @param agentId
+   * @returns returns the Applications of agents(dealer/other)
+   */
+  static getAllByAgentId = async (
+    agentId: string
+  ): Promise<{ applications: ApplicationType[] }> => {
+    try {
+      const res = await api.get(`/api/application/get/by-agents/${agentId}`);
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in  getAllByAgentId", error);
+      throw error;
+    }
+  };
+
+  static getFilteredApp = async (payload: {
+    agentId?: string;
+    filter: { searchQuery?: string; status?: string };
+  }): Promise<{ applications: ApplicationType[] }> => {
+    try {
+      const { agentId, filter } = payload;
+      console.log("filter payload: ", payload);
+      const res = await api.get(
+        `/api/application/filter/by-agents/${agentId}`,
+        {
+          params: filter,
+        }
+      );
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in getFilterByAgent ", error);
+      throw error;
+    }
+  };
+
+  static update = async (payload: {
+    applicationId: string;
+    status: string;
+  }): Promise<{ success: boolean }> => {
+    try {
+      const res = await api.post(
+        `/api/application/update/all/${payload.applicationId}`,
+        { status: payload.status }
+      );
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in update", error);
+      throw error;
+    }
+  };
+
+  static delete = async (
+    applicationId: string
+  ): Promise<{ success: boolean }> => {
+    try {
+      const res = await api.post(`/api/application/delete/${applicationId}`);
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in delete", error);
+      throw error;
+    }
+  };
 }

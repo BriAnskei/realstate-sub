@@ -4,7 +4,7 @@ import { renderImageOrDefault } from "../../../utils/api/ImageApiHelper";
 import Label from "../../form/Label";
 import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
-import Badge from "../../ui/badge/Badge";
+
 import Avatar from "../../ui/avatar/Avatar";
 
 interface ClientInfoModalProps {

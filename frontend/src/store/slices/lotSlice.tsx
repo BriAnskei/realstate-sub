@@ -82,8 +82,6 @@ export const getLotsByLandId = createAsyncThunk(
     try {
       const res = await lotApi.findLotsByLandId(landId);
 
-      console.log("getting lots landId:", res);
-
       return res.lots;
     } catch (error) {
       return rejectWithValue(error);
@@ -95,24 +93,27 @@ export const getLotsByIds = createAsyncThunk(
   "lot/getLotsByIds",
   async (lotIds: number[], { rejectWithValue }) => {
     try {
-      const res = await lotApi.getLotsByIds(lotIds);
-
-      return res.lots;
-    } catch (error) {
-      return rejectWithValue(error);
+      const response = await lotApi.getLotsByIds(lotIds); // or whatever your API call is
+      return response.lots;
+    } catch (error: any) {
+      // This is the fix for your 404 error
+      return rejectWithValue({
+        message: error?.message || "Failed to fetch lots",
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
     }
   }
 );
-
-export const editLot = createAsyncThunk(
+export const updateLot = createAsyncThunk(
   "lot/edit",
   async (
     { id, newData }: { id: string; newData: LotType },
     { rejectWithValue }
   ) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      return { id, newData };
+      await lotApi.updateLot(parseInt(id, 10), newData);
+      return newData;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -191,18 +192,19 @@ const lotSclice = createSlice({
         state.loading = false;
       })
 
-      .addCase(editLot.pending, (state) => {
+      .addCase(updateLot.pending, (state) => {
         state.updateLoading = true;
       })
-      .addCase(editLot.fulfilled, (state, action) => {
-        if (state.byId[action.payload.id]) {
-          state.byId[action.payload.id] = action.payload.newData;
+      .addCase(updateLot.fulfilled, (state, action) => {
+        if (state.byId[action.payload._id]) {
+          state.byId[action.payload._id] = action.payload;
         }
 
         state.updateLoading = false;
       })
-      .addCase(editLot.rejected, (state) => {
+      .addCase(updateLot.rejected, (state, action) => {
         state.updateLoading = false;
+        state.error = action.payload as string;
       })
 
       .addCase(deleteLot.pending, (state) => {

@@ -102,7 +102,7 @@ export default function LandTable({
                   {isEmployee && (
                     <TableCell
                       isHeader
-                      className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap sticky right-0 bg-white dark:bg-gray-900"
+                      className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap"
                     >
                       Actions
                     </TableCell>
@@ -169,7 +169,7 @@ export default function LandTable({
                         </TableCell>
 
                         {isEmployee && (
-                          <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 sticky right-0 bg-white dark:bg-gray-900 min-w-[80px]">
+                          <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
                             <div className="flex gap-1 sm:gap-2">
                               <EditIcon
                                 className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"

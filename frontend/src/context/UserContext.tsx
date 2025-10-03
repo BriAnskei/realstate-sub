@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { users } from "./mockData";
+import { Role, users } from "./mockData";
 
 export interface UserType {
   _id?: string;
@@ -25,6 +25,7 @@ interface ContextValue {
   };
   handleSignOut: () => void;
   isUserLogged: boolean;
+  getAppDealer: (payload: string[]) => UserType[];
 }
 
 const UserContext = createContext<ContextValue | undefined>(undefined);
@@ -84,6 +85,32 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     return { success: false, message: "there is no match for this username" };
   };
 
+  /**
+   *
+   * @param agentIds
+   * @returns UserType[]
+   */
+  const getAppDealer = (agentIds: string[]) => {
+    // Parse and sort descending
+    const sortedAgentsId = agentIds
+      .map((id) => parseInt(id, 10))
+      .sort((a, b) => b - a)
+      .map(String);
+
+    const applicationAgents: UserType[] = [];
+
+    for (let id of sortedAgentsId) {
+      const agent = users.find(
+        (user) => user.role === Role.Agent && user._id === id
+      );
+      if (agent) {
+        applicationAgents.push(agent);
+      }
+    }
+
+    return applicationAgents;
+  };
+
   const handleSignOut = () => {
     setCurUser(undefined);
 
@@ -93,7 +120,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <UserContext.Provider
-      value={{ users, curUser, setCurUser, login, handleSignOut, isUserLogged }}
+      value={{
+        users,
+        curUser,
+        setCurUser,
+        login,
+        handleSignOut,
+        isUserLogged,
+        getAppDealer,
+      }}
     >
       {children}
     </UserContext.Provider>

@@ -20,6 +20,29 @@ const applicationRouter = express.Router();
     "/get/all",
     asyncHandler(appController.fetchAllApp, "fetchAllApp")
   );
+
+  applicationRouter.get(
+    "/filter/by-agents/:_id",
+    asyncHandler(
+      appController.getFilteredAppsByAgents,
+      "getFilteredAppsByAgents"
+    )
+  );
+
+  applicationRouter.get(
+    "/get/by-agents/:_id",
+    asyncHandler(appController.getAppByAgent, "getAppByAgent")
+  );
+
+  applicationRouter.post(
+    "/update/:_id",
+    asyncHandler(appController.updateStats, "updateStats")
+  );
+
+  applicationRouter.post(
+    "/delete/:_id",
+    asyncHandler(appController.delete, "delete")
+  );
 })();
 
 export default applicationRouter;

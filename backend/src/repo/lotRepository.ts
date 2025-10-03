@@ -79,10 +79,8 @@ export class LotRepository {
   async getLotsByIds(lotIds: number[]): Promise<Lot[]> {
     if (lotIds.length === 0) return [];
 
-    console.log("data recieved: ", lotIds);
-
     // Create placeholders (?, ?, ?) based on lotIds length
-    const placeholders = lotIds.map(() => "?").join(", ");
+    const placeholders = lotIds?.map(() => "?").join(", ");
 
     const query = `
       SELECT * FROM Lot
@@ -134,17 +132,25 @@ export class LotRepository {
   async update(payload: { _id: number; lot: Partial<Lot> }): Promise<void> {
     const { _id, lot } = payload;
 
-    // filter primary props
-    const fields = Object.keys(lot)
-      .filter((key) => key !== "_id" && key !== "createdAt")
-      .map((key) => `${key} = ?`);
+    console.log("recieved payload:", payload);
 
-    const values = Object.values(lot);
+    // filter both keys and values
+    const entries = Object.entries(lot).filter(
+      ([key]) => key !== "_id" && key !== "createdAt"
+    );
 
-    // no value to change
+    const fields = entries.map(([key]) => `${key} = ?`);
+    const values = entries.map(([_, value]) => value);
+
+    console.log(
+      "generated query:",
+      `UPDATE Lot SET ${fields.join(", ")} WHERE _id = ?`,
+      [...values, _id]
+    );
+
     if (fields.length === 0) return;
 
-    await this.db.run(`UPDATE Lot SET  ${fields.join(", ")} WHERE _id = ?`, [
+    await this.db.run(`UPDATE Lot SET ${fields.join(", ")} WHERE _id = ?`, [
       ...values,
       _id,
     ]);

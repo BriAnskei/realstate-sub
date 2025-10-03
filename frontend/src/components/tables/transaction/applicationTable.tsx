@@ -5,8 +5,10 @@ import {
   RejectIcon,
   ViewIcon,
 } from "../../../icons";
-import { ApplicationType } from "../../../store/slices/applicationSlice";
-import { UserType } from "../../../context/UserContext";
+import {
+  ApplicationType,
+  Status,
+} from "../../../store/slices/applicationSlice";
 
 import {
   Table,
@@ -23,19 +25,14 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import ApplicationInfoModal from "../../modal/applicationModal/ApplicationInfoModal";
 import { useEffect, useState } from "react";
+import { useFilteredData } from "../../../hooks/useFilteredData";
 
 interface ApplicationTableProp {
-  openConfirmationModal: () => void;
-  editApplication: (data: ApplicationType) => void;
-  setDeleteData: (data: ApplicationType) => void;
   setSearch: React.Dispatch<React.SetStateAction<string | undefined>>;
   setFilterStatus?: React.Dispatch<React.SetStateAction<string | undefined>>;
-  search: string | undefined;
-  searchLoading: boolean;
-  isLoading: boolean;
-  filterLoading: boolean;
-  status?: string;
-  openApplicationInfoModal: (applicationData: ApplicationType) => void;
+  search?: string;
+  filter?: string;
+  isFiltering?: boolean;
   isEmployee: boolean;
 }
 
@@ -83,114 +80,121 @@ function AppTable(payload: {
   }
 
   return (
-    <>
-      <TableRow
-        key={application._id}
-        className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
-      >
-        <TableCell className="px-2 py-4 lg:px-4 text-start dark:text-gray-50">
-          <div className="font-medium text-gray-800 text-sm dark:text-white/90">
-            <span className="hidden lg:inline">{getName()}</span>
-            <span className="lg:hidden">{getFirstName()}</span>
-          </div>
-        </TableCell>
+    <TableRow
+      key={application._id}
+      className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+    >
+      <TableCell className="px-2 py-4 lg:px-4 text-start dark:text-gray-50">
+        <div className="font-medium text-gray-800 text-sm dark:text-white/90">
+          <span className="hidden lg:inline">{getName()}</span>
+          <span className="lg:hidden">{getFirstName()}</span>
+        </div>
+      </TableCell>
 
-        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-          <span className="truncate block max-w-[120px]">
-            {application.landName}
+      <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+        <span className="truncate block max-w-[120px]">
+          {application.landName}
+        </span>
+      </TableCell>
+
+      <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+        {/* add one to include dealer */}
+        {application.otherAgentIds?.length! + 1}
+      </TableCell>
+
+      <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+        <div className="flex items-center gap-1">
+          <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
+            {application.lotIds?.length}
           </span>
-        </TableCell>
+        </div>
+      </TableCell>
 
-        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-          {/* add one for dealer count */}
-          {application.otherAgentIds?.length! + 1}
-        </TableCell>
-
-        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-          <div className="flex items-center gap-1">
-            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
-              {application.lotIds?.length}
-            </span>
-          </div>
-        </TableCell>
-
-        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-          {/* appointment date */}
-          <span
-            className="truncate block max-w-[100px]"
-            title={getFullDateFormat(application.appointmentDate!)}
-          >
-            <span className="hidden lg:inline">
-              {getFullDateFormat(application.appointmentDate!)}
-            </span>
-            <span className="lg:hidden">
-              {getShortDateFormat(application.appointmentDate!)}
-            </span>
+      <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+        {/* appointment date */}
+        <span
+          className="truncate block max-w-[100px]"
+          title={getFullDateFormat(application.appointmentDate!)}
+        >
+          <span className="hidden lg:inline">
+            {getFullDateFormat(application.appointmentDate!)}
           </span>
-        </TableCell>
-
-        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-          <Badge size="sm">{application.status}</Badge>
-        </TableCell>
-
-        <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-          {/* creation  date */}
-          <span
-            className="truncate block max-w-[100px]"
-            title={getFullDateFormat(application.createdAt!)}
-          >
-            <span className="hidden lg:inline">
-              {getFullDateFormat(application.createdAt!)}
-            </span>
-            <span className="lg:hidden">
-              {getShortDateFormat(application.createdAt!)}
-            </span>
+          <span className="lg:hidden">
+            {getShortDateFormat(application.appointmentDate!)}
           </span>
-        </TableCell>
+        </span>
+      </TableCell>
 
-        <TableCell className="px-2 py-4 lg:px-4">
-          <div className="flex gap-1 justify-center">
-            {isEmployee ? (
-              <>
-                <ApproveIcon className=" cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors" />
-                <RejectIcon className="cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors" />
-              </>
-            ) : (
-              <>
-                <ViewIcon
-                  className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  onClick={() => openApplicationView(application)}
-                />
-                <EditIcon className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" />
-                <DeleteIcon
-                  className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                  onClick={() => console.log("Delete clicked")}
-                />
-              </>
-            )}
-          </div>
-        </TableCell>
-      </TableRow>
-    </>
+      <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+        <Badge
+          size="sm"
+          color={
+            application.status === Status.pending
+              ? undefined
+              : application.status === Status.approved
+              ? "success"
+              : "warning"
+          }
+        >
+          {application.status}
+        </Badge>
+      </TableCell>
+
+      <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+        {/* creation  date */}
+        <span
+          className="truncate block max-w-[100px]"
+          title={getFullDateFormat(application.createdAt!)}
+        >
+          <span className="hidden lg:inline">
+            {getFullDateFormat(application.createdAt!)}
+          </span>
+          <span className="lg:hidden">
+            {getShortDateFormat(application.createdAt!)}
+          </span>
+        </span>
+      </TableCell>
+
+      <TableCell className="px-2 py-4 lg:px-4">
+        <div className="flex gap-1 justify-center">
+          {isEmployee ? (
+            <>
+              <ApproveIcon className=" cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors" />
+              <RejectIcon className="cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors" />
+            </>
+          ) : (
+            <>
+              <ViewIcon
+                className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                onClick={() => openApplicationView(application)}
+              />
+              <EditIcon className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" />
+              <DeleteIcon
+                className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                onClick={() => console.log("Delete clicked")}
+              />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 
 export default function ApplicationTable({
-  search,
-  searchLoading,
-  status,
-  openConfirmationModal,
-  editApplication,
-  setDeleteData,
   setSearch,
   setFilterStatus,
-  openApplicationInfoModal,
+  search,
+  isFiltering,
+  filter,
   isEmployee,
 }: ApplicationTableProp) {
+  // used in application info modal
   const { fetchedLots, fetchingLoading } = useSelector(
     (state: RootState) => state.lot
   );
-  const { byId, allIds } = useSelector((state: RootState) => state.application);
+  const { byId, allIds, loading, filterLoading, filterById, filterIds } =
+    useSelector((state: RootState) => state.application);
 
   // For application info view
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -206,6 +210,16 @@ export default function ApplicationTable({
   const resetFilter = () => {
     setSearch(undefined);
   };
+
+  const getDisplayData = useFilteredData({
+    originalData: { byId, allIds },
+    filteredData: { allIds: filterIds, byId: filterById },
+    filterOptions: {
+      searchInput: search,
+      filterStatus: filter,
+      filterLoading: loading || isFiltering,
+    },
+  });
 
   return (
     <>
@@ -224,7 +238,9 @@ export default function ApplicationTable({
 
       {/* Main container with proper responsive handling */}
       <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        {false && <LoadingOverlay message="Filtering results..." />}
+        {(loading || filterLoading || isFiltering) && (
+          <LoadingOverlay message="Loading...." />
+        )}
 
         {/* Horizontal scroll container with proper width constraints */}
         <div className="w-full overflow-x-auto">
@@ -297,10 +313,11 @@ export default function ApplicationTable({
 
               {/* Table Body with sample data for demonstration */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {allIds.map((id) => {
-                  const app: ApplicationType = byId[id];
+                {getDisplayData.allIds.map((id) => {
+                  const app: ApplicationType = getDisplayData.byId[id];
                   return (
                     <AppTable
+                      key={app._id}
                       application={app}
                       isEmployee={isEmployee}
                       openApplicationView={openAppInfoHandler}

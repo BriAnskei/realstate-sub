@@ -1,15 +1,10 @@
 import { Request, Response } from "express";
 import { Lot } from "../model/lotModel";
 import { LotRepository } from "../repo/lotRepository";
+import { LotService } from "../service/lot.service";
 
 export class LotController {
   constructor(private lotRepo: LotRepository) {}
-
-  deleteLot = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id, 10);
-    await this.lotRepo.delete(id);
-    res.json({ success: true, message: `Lot ${id} deleted successfully` });
-  };
 
   finLotById = async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -32,11 +27,12 @@ export class LotController {
   };
 
   getLotsByIds = async (req: Request, res: Response) => {
-    const { lotsIds } = req.body;
+    const { lotIds } = req.body;
+    let parsedData = LotService.parseArrayIfNeeded(lotIds);
 
-    const lotsRes: Lot[] = await this.lotRepo.getLotsByIds(lotsIds);
+    const lotsRes: Lot[] = await this.lotRepo.getLotsByIds(parsedData);
 
-    res.json({ lots: lotsIds });
+    res.json({ lots: lotsRes });
   };
 
   getLots = async (req: Request, res: Response) => {
@@ -77,7 +73,18 @@ export class LotController {
 
   update = async (req: Request, res: Response) => {
     const _id = req.params._id;
-    await this.lotRepo.update({ _id: parseInt(_id, 10), lot: req.body });
+    const lotData = LotService.filterOutProp({
+      data: req.body,
+      keys: ["name"],
+    });
+
+    await this.lotRepo.update({ _id: parseInt(_id, 10), lot: lotData });
     res.json({ success: true });
+  };
+
+  deleteLot = async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id, 10);
+    await this.lotRepo.delete(id);
+    res.json({ success: true, message: `Lot ${id} deleted successfully` });
   };
 }

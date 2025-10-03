@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
@@ -8,11 +8,7 @@ import { AppDispatch, RootState } from "../../store/store";
 
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import LotTable from "../../components/tables/projects/LotTable";
-import {
-  fetchLots,
-  resetFilter,
-  searchLotOnLandName,
-} from "../../store/slices/lotSlice";
+import { resetFilter, searchLotOnLandName } from "../../store/slices/lotSlice";
 import { debouncer } from "../../utils/debouncer";
 import { useFilteredData } from "../../hooks/useFilteredData";
 import { userUser } from "../../context/UserContext";

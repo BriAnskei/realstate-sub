@@ -8,15 +8,16 @@ import {
   TableRow,
 } from "../../ui/table";
 import Filter from "../../filter/Filter";
-import { deleteLot, LotType } from "../../../store/slices/lotSlice";
+import { deleteLot, LotType, updateLot } from "../../../store/slices/lotSlice";
 import { useState } from "react";
 import Badge from "../../ui/badge/Badge";
 import ConfirmtionModal from "../../modal/ConfirmtionModal";
-import { AppDispatch } from "../../../store/store";
+import { AppDispatch, RootState } from "../../../store/store";
 import LotFormModal from "../../modal/projects-modals/LotFormModal";
 import useLotModal from "../../../hooks/projects-hooks/modal/useLotModal";
 import LoadingOverlay from "../../loading/LoadingOverlay";
 import TableRowSkeleton from "../../loading/TableRowSkeleton";
+import { useDispatch, useSelector } from "react-redux";
 
 interface LotTableProp {
   dispatch: AppDispatch;
@@ -60,7 +61,9 @@ export default function LotTable({
     await dispatch(deleteLot(deleteData!));
   };
 
-  const handleSaveUpdate = async (lot: LotType) => {};
+  const handleSaveUpdate = async (lot: LotType) => {
+    await dispatch(updateLot({ id: lot._id, newData: lot }));
+  };
 
   return (
     <>
@@ -142,10 +145,18 @@ export default function LotTable({
                     Status
                   </TableCell>
 
+                  <TableCell
+                    isHeader
+                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-[80px]"
+                  >
+                    <span className="hidden sm:inline">Lot Type</span>
+                    <span className="sm:hidden">Type</span>
+                  </TableCell>
+
                   {isEmployee && (
                     <TableCell
                       isHeader
-                      className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap sticky right-0 bg-white dark:bg-gray-900 min-w-[80px]"
+                      className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-[80px]"
                     >
                       Actions
                     </TableCell>
@@ -156,109 +167,19 @@ export default function LotTable({
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {isLoading ? (
-                  <>
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                    <TableRowSkeleton />
-                  </>
+                  <RenderSkeletonLoading />
                 ) : (
-                  allIds.map((id, index) => {
+                  allIds.map((id) => {
                     const lot: LotType = byId[id];
 
                     return (
-                      <TableRow
+                      <LotTableRow
                         key={id}
-                        className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
-                      >
-                        <TableCell className="px-3 py-4 sm:px-5 text-start dark:text-gray-50 min-w-[120px]">
-                          <div
-                            className="font-medium truncate max-w-[150px]"
-                            title={lot.name}
-                          >
-                            <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                              {lot.name}
-                            </span>
-                            <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
-                              {lot.lotType}
-                            </span>
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[80px]">
-                          {lot.blockNumber}
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[70px]">
-                          {lot.lotNumber}
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 whitespace-nowrap min-w-[90px]">
-                          <span className="hidden sm:inline">
-                            {lot.lotSize} Sqm
-                          </span>
-                          <span className="sm:hidden">{lot.lotSize}</span>
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[100px]">
-                          <span
-                            className="truncate"
-                            title={lot.pricePerSqm?.toString()}
-                          >
-                            {lot.pricePerSqm}
-                          </span>
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[110px]">
-                          <div
-                            className="truncate max-w-[100px]"
-                            title={lot.totalAmount?.toString()}
-                          >
-                            {lot.totalAmount?.toLocaleString()}
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[80px]">
-                          <Badge
-                            size="sm"
-                            color={
-                              lot.status === "available"
-                                ? "success"
-                                : lot.status === "reserved"
-                                ? "warning"
-                                : "error"
-                            }
-                          >
-                            {lot.status?.charAt(0).toUpperCase()! +
-                              lot.status?.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        {isEmployee && (
-                          <TableCell
-                            className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 
-             sticky right-0 min-w-[80px] bg-white dark:bg-gray-900
-             group-hover:bg-gray-50 dark:group-hover:bg-white/[0.02]"
-                          >
-                            <div className="flex gap-1 sm:gap-2 justify-center">
-                              <EditIcon
-                                className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                onClick={() => editLot(lot)}
-                              />
-                              <DeleteIcon
-                                className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                                onClick={() => onDeleteHandler(lot)}
-                              />
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
+                        lot={lot}
+                        isEmployee={isEmployee}
+                        editLot={editLot}
+                        onDeleteHandler={onDeleteHandler}
+                      />
                     );
                   })
                 )}
@@ -270,6 +191,7 @@ export default function LotTable({
 
       {/* Modals */}
       <LotFormModal
+        isLoading={updateLoading}
         isOpen={isLotModalOpen}
         onClose={closeLotModal}
         data={editData}
@@ -284,6 +206,111 @@ export default function LotTable({
         onClose={closeConfirmationModal}
         onConfirm={handleDelete}
       />
+    </>
+  );
+}
+
+function RenderSkeletonLoading() {
+  return (
+    <>
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+      <TableRowSkeleton />
+    </>
+  );
+}
+
+function LotTableRow(payload: {
+  lot: LotType;
+  isEmployee: boolean;
+  editLot: (data: LotType) => void;
+  onDeleteHandler: (data: LotType) => void;
+}) {
+  const { lot, isEmployee, editLot, onDeleteHandler } = payload;
+  return (
+    <>
+      <TableRow className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+        <TableCell className="px-3 py-4 sm:px-5 text-start dark:text-gray-50 min-w-[120px]">
+          <div className="font-medium truncate max-w-[150px]" title={lot.name}>
+            <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+              {lot.name}
+            </span>
+            <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
+              {lot.lotType}
+            </span>
+          </div>
+        </TableCell>
+
+        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[80px]">
+          {lot.blockNumber}
+        </TableCell>
+
+        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[70px]">
+          {lot.lotNumber}
+        </TableCell>
+
+        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 whitespace-nowrap min-w-[90px]">
+          <span className="hidden sm:inline">{lot.lotSize} Sqm</span>
+          <span className="sm:hidden">{lot.lotSize}</span>
+        </TableCell>
+
+        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[100px]">
+          <span className="truncate" title={lot.pricePerSqm?.toString()}>
+            {lot.pricePerSqm}
+          </span>
+        </TableCell>
+
+        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[110px]">
+          <div
+            className="truncate max-w-[100px]"
+            title={lot.totalAmount?.toString()}
+          >
+            {lot.totalAmount?.toLocaleString()}
+          </div>
+        </TableCell>
+
+        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[80px]">
+          <Badge
+            size="sm"
+            color={
+              lot.status === "available"
+                ? "success"
+                : lot.status === "reserved"
+                ? "warning"
+                : "error"
+            }
+          >
+            {lot.status?.charAt(0).toUpperCase()! + lot.status?.slice(1)}
+          </Badge>
+        </TableCell>
+
+        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[70px]">
+          {lot.lotType}
+        </TableCell>
+
+        {isEmployee && (
+          <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[70px]">
+            <div className="flex gap-1 sm:gap-2 justify-center">
+              <EditIcon
+                className="dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                onClick={() => editLot(lot)}
+              />
+              <DeleteIcon
+                className="text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                onClick={() => onDeleteHandler(lot)}
+              />
+            </div>
+          </TableCell>
+        )}
+      </TableRow>
     </>
   );
 }

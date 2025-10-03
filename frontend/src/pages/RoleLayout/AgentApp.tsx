@@ -29,14 +29,15 @@ import ApplicationForm from "../transaction/agent/ApplicationForm";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store/store";
-import { fetchAllAPP } from "../../store/slices/applicationSlice";
+import { fetchAllAPP, fetchByAgent } from "../../store/slices/applicationSlice";
+import { userUser } from "../../context/UserContext";
 
 export default function AgentsApp() {
   const dispatch = useDispatch<AppDispatch>();
-
+  const { curUser } = userUser();
   useEffect(() => {
     const fetchApps = async () => {
-      await dispatch(fetchAllAPP());
+      await dispatch(fetchByAgent(curUser?._id!));
     };
     fetchApps();
   }, []);

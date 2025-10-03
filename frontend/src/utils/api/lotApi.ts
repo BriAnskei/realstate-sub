@@ -79,9 +79,10 @@ export class LotApi {
     }
   };
 
-  updateLot = async (id: number, lot: Partial<LotType>) => {
+  updateLot = async (id: number, lot: Partial<LotType>): Promise<void> => {
     try {
-      const res = await api.post(`/api/lot/update/${id}`, { lot });
+      console.log("updateing lot: ", id, lot);
+      const res = await api.post(`/api/lot/update/${id}`, lot);
       return res.data;
     } catch (error) {
       console.error("Error in updateLot:", error);

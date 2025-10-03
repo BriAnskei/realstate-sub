@@ -30,12 +30,82 @@ export class ApplicationRepo {
 
     const createdApp = await this.findById(appId!);
 
-    console.log("creation result: ", createdApp);
-
     return createdApp;
   }
 
-  // Find by ID
+  /**
+   *
+   * @param agentId
+   * @returns returns all the applications, by dealer or other agents that are part of the specific application
+   */
+  async getApplicationsByAgent(agentId: string): Promise<ApplicationType[]> {
+    const query = `
+    SELECT *
+    FROM Application
+    WHERE agentDealerId = ?
+       OR EXISTS (
+          SELECT 1
+          FROM json_each(Application.otherAgentIds)
+          WHERE json_each.value = CAST(? AS INTEGER)
+             OR json_each.value = CAST(? AS TEXT)
+       )
+  `;
+    return this.db.all<ApplicationType[]>(query, [agentId, agentId, agentId]);
+  }
+
+  /**
+   *
+   * @param agentId
+   * @param filters
+   * @returns returns the filtered application of corresponding agents or all applications
+   */
+  async getFilteredData(payload: {
+    agentId?: string;
+    filters: { search?: string; status?: string };
+  }): Promise<ApplicationType[]> {
+    const { agentId, filters } = payload;
+
+    // Base query - no agent filter initially
+    let query = `SELECT * FROM Application WHERE 1=1`;
+    const params: any[] = [];
+
+    // Add agent filter only if agentId is provided
+    if (agentId) {
+      query += ` AND (
+        agentDealerId = ?
+        OR EXISTS (
+          SELECT 1
+          FROM json_each(Application.otherAgentIds)
+          WHERE json_each.value = CAST(? AS INTEGER)
+             OR json_each.value = CAST(? AS TEXT)
+        )
+      )`;
+      params.push(agentId, agentId, agentId);
+    }
+
+    // Add status filter
+    if (filters.status) {
+      query += ` AND status = ?`;
+      params.push(filters.status);
+    }
+
+    // Add search filter (example: search in landName or clientName)
+    if (filters.search) {
+      query += ` AND (landName LIKE ? OR clientName LIKE ?)`;
+      const searchTerm = `%${filters.search}%`;
+      params.push(searchTerm, searchTerm);
+    }
+
+    query += ` ORDER BY createdAt DESC`;
+
+    return this.db.all<ApplicationType[]>(query, params);
+  }
+
+  /**
+   *
+   * @param id
+   * @returns return specific application based on id
+   */
   async findById(id: number): Promise<ApplicationType | null> {
     const row = await this.db.get<ApplicationType>(
       `SELECT * FROM Application WHERE _id = ?`,
@@ -58,7 +128,7 @@ export class ApplicationRepo {
   async updateStatus(payload: {
     applicationId: number;
     newStatus: string;
-  }): Promise<void> {
+  }): Promise<boolean> {
     const { applicationId, newStatus } = payload;
     await this.db.run(
       `
@@ -68,5 +138,12 @@ export class ApplicationRepo {
   `,
       [newStatus, applicationId]
     );
+
+    return true;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    await this.db.run(`DELETE FROM Application WHERE _id = ? `, [id]);
+    return true;
   }
 }
