@@ -24,6 +24,7 @@ const ApplicationForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
+  const { editApplication } = useApplication();
   const { loading } = useSelector((state: RootState) => state.application);
 
   // application data
