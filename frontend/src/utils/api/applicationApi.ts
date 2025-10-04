@@ -21,6 +21,41 @@ export class AppApi {
     }
   };
 
+  static update = async (payload: {
+    applicationId: string;
+    updateData: Partial<ApplicationType>;
+  }): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const { applicationId, updateData } = payload;
+      const res = await api.post(
+        `/api/application/update/${applicationId}`,
+        updateData
+      );
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in update", error);
+      throw error;
+    }
+  };
+
+  static updateStatus = async (payload: {
+    applicationId: string;
+    status: string;
+  }): Promise<{ success: boolean }> => {
+    try {
+      const res = await api.post(
+        `/api/application/status-update/${payload.applicationId}`,
+        { status: payload.status }
+      );
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in update", error);
+      throw error;
+    }
+  };
+
   static getAll = async (): Promise<{ applications: ApplicationType[] }> => {
     try {
       const res = await api.get("/api/application/get/all");
@@ -57,33 +92,13 @@ export class AppApi {
     try {
       const { agentId, filter } = payload;
       console.log("filter payload: ", payload);
-      const res = await api.get(
-        `/api/application/filter/by-agents/${agentId}`,
-        {
-          params: filter,
-        }
-      );
+      const res = await api.get(`/api/application/filter/${agentId}`, {
+        params: filter,
+      });
 
       return res.data;
     } catch (error) {
       console.log("Error in getFilterByAgent ", error);
-      throw error;
-    }
-  };
-
-  static update = async (payload: {
-    applicationId: string;
-    status: string;
-  }): Promise<{ success: boolean }> => {
-    try {
-      const res = await api.post(
-        `/api/application/update/all/${payload.applicationId}`,
-        { status: payload.status }
-      );
-
-      return res.data;
-    } catch (error) {
-      console.log("Error in update", error);
       throw error;
     }
   };

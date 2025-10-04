@@ -155,10 +155,10 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
         await dispatch(getLotsByIds(application?.lotIds!));
 
         setAgents(
-          getAppDealer([
-            ...application?.otherAgentIds?.map(String)!,
-            application?.agentDealerId!,
-          ])
+          getAppDealer({
+            otherAgents: application?.otherAgentIds!.map(String)!,
+            dealerId: application?.agentDealerId!,
+          })
         );
       } catch (error) {
         console.log(error);

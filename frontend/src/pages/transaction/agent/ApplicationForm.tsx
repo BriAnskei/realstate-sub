@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
@@ -9,25 +9,27 @@ import { AgentTable } from "../../../components/tables/application/AgentTable";
 import Button from "../../../components/ui/button/Button";
 
 import { AppDispatch, RootState } from "../../../store/store";
-import { UserType } from "../../../context/UserContext";
+
 import backtoTop from "../../../icons/back-to-top-icon.svg";
 import {
   addNewApp,
   ApplicationType,
+  updateApplication,
 } from "../../../store/slices/applicationSlice";
 import { AppLotTable } from "../../../components/tables/application/AppLotTable";
 import { useNavigate } from "react-router";
 import useConfirmationModal from "../../../hooks/useConfirmationModal";
 import ConfirmationModal from "../../../components/modal/ConfirmtionModal";
+import { useApplication } from "../../../context/ApplicationContext";
 
 const ApplicationForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const { editApplication } = useApplication();
+  const { editApplication, setEditApplication } = useApplication();
   const { loading } = useSelector((state: RootState) => state.application);
 
-  // application data
+  // application input
   const [application, setApplication] = useState<ApplicationType>({
     _id: "",
     landId: "",
@@ -44,30 +46,16 @@ const ApplicationForm = () => {
   const { isConfirmationOpen, openConfirmationModal, closeConfirmationModal } =
     useConfirmationModal();
 
-  const isAllInputValid = () => {
-    for (const [key, value] of Object.entries(application)) {
-      // skip validation for _id
-      if (key === "_id" || key === "createdAt") {
-        continue;
-      }
-
-      // validate strings
-      if (typeof value === "string" && value.trim() === "") {
-        console.log("no value in ", key, value);
-
-        return false;
-      }
-
-      // validate arrays
-      if (Array.isArray(value) && value.length === 0) {
-        console.log("no value in ", key, value);
-
-        return false;
-      }
+  useEffect(() => {
+    if (editApplication) {
+      setApplication(editApplication);
     }
 
-    return true;
-  };
+    // reset when unrendering
+    return () => setEditApplication(undefined);
+  }, [editApplication]);
+
+  const isAllInputValid = checkInputs(application);
 
   const openConfirmationHandler = () => {
     if (!isAllInputValid()) {
@@ -80,26 +68,49 @@ const ApplicationForm = () => {
 
   const handleSave = async () => {
     try {
+      await dispatch(addNewApp(application)).unwrap();
+    } catch (error) {
+      console.log("Failed to add application");
+    }
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const updateObject = extractUpdateInputs(application, editApplication);
+
+      await dispatch(
+        updateApplication({
+          applicationId: editApplication?._id!,
+          updateData: updateObject,
+        })
+      );
+    } catch (error) {
+      console.log("Failed to update application", error);
+    }
+  };
+
+  const handleSubmition = async () => {
+    try {
       if (!isAllInputValid()) {
         alert("Kindly fill out all fields in the application form.");
         return;
       }
 
-      await dispatch(addNewApp(application));
+      if (editApplication) {
+        await handleUpdate();
+      } else {
+        await handleSave();
+      }
       navigate("/application");
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
-
-  useEffect(() => {
-    console.log("applicaiton update: ", application);
-  }, [application]);
 
   return (
     <>
-      <PageMeta title="Sale Form" description="Transaction-form" />
-      <PageBreadcrumb pageTitle="New Application" />
+      <PageMeta title="Application Form" description="Transaction-form" />
+      <PageBreadcrumb
+        pageTitle={editApplication ? "Update Application" : "New Application"}
+      />
       <ComponentCard
         title="Application Form"
         actions={[
@@ -157,7 +168,7 @@ const ApplicationForm = () => {
         bgButton="bg-blue-600 hover:bg-blue-700"
         isOpen={isConfirmationOpen}
         onClose={closeConfirmationModal}
-        onConfirm={handleSave}
+        onConfirm={handleSubmition}
         loading={loading}
       />
     </>
@@ -165,3 +176,51 @@ const ApplicationForm = () => {
 };
 
 export default ApplicationForm;
+
+function extractUpdateInputs(
+  application: ApplicationType,
+  data: ApplicationType | undefined
+) {
+  const updateChanges = new Map<
+    keyof ApplicationType,
+    ApplicationType[keyof ApplicationType]
+  >();
+  for (const key in application) {
+    const typedKey = key as keyof ApplicationType;
+    if (
+      application.hasOwnProperty(key) &&
+      application[typedKey] !== data?.[typedKey]
+    ) {
+      updateChanges.set(typedKey, application[typedKey]);
+    }
+  }
+
+  return Object.fromEntries(updateChanges);
+}
+
+function checkInputs(application: ApplicationType) {
+  return () => {
+    for (const [key, value] of Object.entries(application)) {
+      // skip validation for _id
+      if (key === "_id" || key === "createdAt") {
+        continue;
+      }
+
+      // validate strings
+      if (typeof value === "string" && value.trim() === "") {
+        console.log("no value in ", key, value);
+
+        return false;
+      }
+
+      // validate arrays
+      if (Array.isArray(value) && value.length === 0) {
+        console.log("no value in ", key, value);
+
+        return false;
+      }
+    }
+
+    return true;
+  };
+}

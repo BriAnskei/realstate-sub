@@ -16,13 +16,19 @@ const applicationRouter = express.Router();
     asyncHandler(appController.addNewApp, "addNewApp")
   );
 
+  applicationRouter.post(
+    "/update:_id",
+    asyncHandler(appController.updateApplication, "updateApplication")
+  );
+
   applicationRouter.get(
     "/get/all",
     asyncHandler(appController.fetchAllApp, "fetchAllApp")
   );
 
+  // Id is for agent, might be optional if the user is employee
   applicationRouter.get(
-    "/filter/by-agents/:_id",
+    "/filter/:_id",
     asyncHandler(
       appController.getFilteredAppsByAgents,
       "getFilteredAppsByAgents"
@@ -35,7 +41,7 @@ const applicationRouter = express.Router();
   );
 
   applicationRouter.post(
-    "/update/:_id",
+    "/status-update/:_id",
     asyncHandler(appController.updateStats, "updateStats")
   );
 

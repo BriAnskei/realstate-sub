@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 import Logo from "../../icons/logo.svg";
 import LogoDark from "../../icons/logo-dark.svg";
 import LogoIcon from "../../icons/logo-icon.svg";
@@ -15,6 +15,7 @@ import {
   HorizontaLDots,
   ProjectIcon,
 } from "../../icons";
+import { useApplication } from "../../context/ApplicationContext";
 
 type NavItem = {
   name: string;
@@ -66,6 +67,7 @@ const navItems: NavItem[] = [
 const othersItems: NavItem[] = [];
 
 const AgentSlidebar: React.FC = () => {
+  const { editApplication } = useApplication();
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
@@ -84,6 +86,28 @@ const AgentSlidebar: React.FC = () => {
     (path: string) => location.pathname === path,
     [location.pathname]
   );
+
+  // update application
+  useEffect(() => {
+    const subItems = navItems[2].subItems;
+    if (editApplication) {
+      if (subItems) {
+        console.log("update application");
+        subItems[0] = {
+          ...subItems[0],
+          name: "update",
+          path: "/application/update",
+        };
+      }
+    } else {
+      if (subItems)
+        subItems[0] = {
+          ...subItems[0],
+          name: "new",
+          path: "/application/form",
+        };
+    }
+  }, [editApplication]);
 
   useEffect(() => {
     let submenuMatched = false;

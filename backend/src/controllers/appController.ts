@@ -26,6 +26,17 @@ export class AppController {
     });
   };
 
+  updateApplication = async (req: Request, res: Response): Promise<void> => {
+    const _id = req.params._id;
+    const ApplicationData = req.body;
+    const isSuccess: boolean = await this.appRepo.update({
+      applicationId: _id,
+      data: ApplicationData,
+    });
+
+    res.json({ success: isSuccess });
+  };
+
   getAppByAgent = async (req: Request, res: Response): Promise<void> => {
     const agentId = req.params._id;
 
@@ -48,21 +59,13 @@ export class AppController {
   ): Promise<void> => {
     const agentId = req.params._id;
     const { searchQuery, status } = req.query;
-    const response = await this.appRepo.getFilteredData({
+
+    const filterResult = await this.appRepo.getFilteredData({
       agentId: agentId,
       filters: { search: searchQuery as string, status: status as string },
     });
 
-    console.log(
-      "request recieved: ",
-      agentId,
-      searchQuery,
-      status,
-      "response: ",
-      response
-    );
-
-    res.json({ applications: response });
+    res.json({ applications: filterResult });
   };
 
   getAppById = async (req: Request, res: Response): Promise<void> => {

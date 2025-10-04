@@ -55,6 +55,15 @@ export default function AvailableLots() {
         isOpen={isClientModalOpen}
         onClose={closeClientModal}
         data={editData}
+        handleNewClient={function (payload: FormData): Promise<void> {
+          throw new Error("Function not implemented.");
+        }}
+        handleEditClient={function (payload: {
+          data: FormData;
+          clientId: number;
+        }): Promise<void> {
+          throw new Error("Function not implemented.");
+        }}
       />
       <ConfirmtionModal
         loading={updateLoading}

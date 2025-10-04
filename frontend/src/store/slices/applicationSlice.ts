@@ -19,7 +19,27 @@ export const addNewApp = createAsyncThunk(
   }
 );
 
-// use for employee
+export const updateApplication = createAsyncThunk(
+  "application/update",
+  async (
+    payload: { applicationId: string; updateData: Partial<ApplicationType> },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await AppApi.update(payload);
+
+      if (!res.success) {
+        return rejectWithValue(res.message || "failed to update application");
+      }
+
+      return payload;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+// employee only
 export const fetchAllAPP = createAsyncThunk(
   "application/fetchAll",
   async (_: void, { rejectWithValue }) => {
@@ -43,6 +63,8 @@ export const filterApplication = createAsyncThunk(
   ) => {
     try {
       const res = await AppApi.getFilteredApp(payload);
+
+      console.log("api response: ", res);
       return res.applications;
     } catch (error) {
       return rejectWithValue(error);
@@ -56,6 +78,23 @@ export const fetchByAgent = createAsyncThunk(
     try {
       const res = await AppApi.getAllByAgentId(agentId);
       return res.applications;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteApplication = createAsyncThunk(
+  "application/delete",
+  async (applicationId: string, { rejectWithValue }) => {
+    try {
+      const isSuccess = await AppApi.delete(applicationId);
+
+      if (!isSuccess) {
+        return rejectWithValue("Failed to delete applicaiton");
+      }
+
+      return applicationId;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -86,6 +125,7 @@ interface ApplicationState extends NormalizeState<ApplicationType> {
   filterById: { [key: string]: ApplicationType };
   filterIds: string[];
   filterLoading: boolean;
+  updateLoading: boolean;
 }
 
 const initialState: ApplicationState = {
@@ -95,6 +135,7 @@ const initialState: ApplicationState = {
   allIds: [],
   error: null,
   loading: false,
+  updateLoading: false,
   filterLoading: false,
 };
 
@@ -167,6 +208,58 @@ const applicationSlice = createSlice({
     });
     builder.addCase(filterApplication.rejected, (state, action) => {
       state.filterLoading = false;
+      state.error = action.payload as string;
+    });
+    builder.addCase(deleteApplication.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(deleteApplication.fulfilled, (state, action) => {
+      const applicationId = action.payload;
+
+      function filterId(ids: string[]) {
+        return ids.filter((id) => id !== applicationId);
+      }
+
+      state.allIds = filterId(state.allIds);
+      delete state.byId[applicationId];
+
+      if (state.filterById[applicationId]) {
+        delete state.filterById[applicationId];
+        state.filterIds = filterId(state.filterIds);
+      }
+
+      state.loading = false;
+    });
+    builder.addCase(deleteApplication.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+
+    builder.addCase(updateApplication.pending, (state) => {
+      state.updateLoading = true;
+    });
+    builder.addCase(updateApplication.fulfilled, (state, action) => {
+      const { applicationId, updateData } = action.payload;
+
+      const existingApp = state.byId[applicationId];
+      const existingFilteredApp = state.filterById[applicationId];
+
+      if (existingApp) {
+        state.byId[applicationId] = { ...existingApp, ...updateData };
+      }
+
+      // save changes if it is in the filtered state
+      if (existingFilteredApp) {
+        state.filterById[applicationId] = {
+          ...existingFilteredApp,
+          ...updateData,
+        };
+      }
+
+      state.updateLoading = false;
+    });
+    builder.addCase(updateApplication.rejected, (state, action) => {
+      state.updateLoading = false;
       state.error = action.payload as string;
     });
   },

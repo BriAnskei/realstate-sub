@@ -25,7 +25,10 @@ interface ContextValue {
   };
   handleSignOut: () => void;
   isUserLogged: boolean;
-  getAppDealer: (payload: string[]) => UserType[];
+  getAppDealer: (payload: {
+    otherAgents: string[];
+    dealerId: string;
+  }) => UserType[];
 }
 
 const UserContext = createContext<ContextValue | undefined>(undefined);
@@ -88,18 +91,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   /**
    *
    * @param agentIds
-   * @returns UserType[]
+   * @returns UserType[] - dealer and other agents
    */
-  const getAppDealer = (agentIds: string[]) => {
-    // Parse and sort descending
-    const sortedAgentsId = agentIds
-      .map((id) => parseInt(id, 10))
-      .sort((a, b) => b - a)
-      .map(String);
+  const getAppDealer = (payload: {
+    otherAgents: string[];
+    dealerId: string;
+  }) => {
+    const { otherAgents, dealerId } = payload;
 
-    const applicationAgents: UserType[] = [];
+    let applicationAgents: UserType[] = [];
 
-    for (let id of sortedAgentsId) {
+    for (let id of otherAgents) {
       const agent = users.find(
         (user) => user.role === Role.Agent && user._id === id
       );
@@ -107,6 +109,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
         applicationAgents.push(agent);
       }
     }
+
+    const dealer = users.find(
+      (user) => user.role === Role.Agent && user._id === dealerId
+    );
+
+    applicationAgents = [dealer!, ...applicationAgents];
 
     return applicationAgents;
   };
@@ -142,3 +150,4 @@ export const userUser = () => {
   }
   return context;
 };
+("");

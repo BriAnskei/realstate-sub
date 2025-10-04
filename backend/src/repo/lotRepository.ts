@@ -132,8 +132,6 @@ export class LotRepository {
   async update(payload: { _id: number; lot: Partial<Lot> }): Promise<void> {
     const { _id, lot } = payload;
 
-    console.log("recieved payload:", payload);
-
     // filter both keys and values
     const entries = Object.entries(lot).filter(
       ([key]) => key !== "_id" && key !== "createdAt"
@@ -141,12 +139,6 @@ export class LotRepository {
 
     const fields = entries.map(([key]) => `${key} = ?`);
     const values = entries.map(([_, value]) => value);
-
-    console.log(
-      "generated query:",
-      `UPDATE Lot SET ${fields.join(", ")} WHERE _id = ?`,
-      [...values, _id]
-    );
 
     if (fields.length === 0) return;
 

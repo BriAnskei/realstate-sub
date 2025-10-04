@@ -9,7 +9,10 @@ import { Role } from "../../context/mockData";
 import { useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store/store";
-import { filterApplication } from "../../store/slices/applicationSlice";
+import {
+  deleteApplication,
+  filterApplication,
+} from "../../store/slices/applicationSlice";
 import { debouncer } from "../../utils/debouncer";
 
 export default function Application() {
@@ -23,8 +26,16 @@ export default function Application() {
 
   const debounceFilter = useRef<ReturnType<typeof debouncer> | null>(null);
 
-  filterDebounceHanlder();
+  const deleteHanler = async (applicationId: string) => {
+    try {
+      await dispatch(deleteApplication(applicationId)).unwrap();
+    } catch (error) {
+      console.log("Failed to delete application, ", error);
+    }
+  };
 
+  // filter hanlder
+  filterDebounceHanlder();
   useEffect(() => {
     if (search?.trim() || filter) {
       setSearchLoading(true);
@@ -55,9 +66,14 @@ export default function Application() {
           }
         >
           <ApplicationTable
+            navigate={navigate}
+            deleteApplicationHanlder={deleteHanler}
             isEmployee={curUser?.role === Role.Employee}
             setSearch={setSearch}
+            filter={filter}
+            search={search}
             setFilterStatus={setFilter}
+            isFiltering={searchLoading}
           />
         </ComponentCard>
       </div>

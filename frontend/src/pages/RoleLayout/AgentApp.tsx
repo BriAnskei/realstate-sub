@@ -31,9 +31,11 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store/store";
 import { fetchAllAPP, fetchByAgent } from "../../store/slices/applicationSlice";
 import { userUser } from "../../context/UserContext";
+import { useApplication } from "../../context/ApplicationContext";
 
 export default function AgentsApp() {
   const dispatch = useDispatch<AppDispatch>();
+  const { editApplication } = useApplication();
   const { curUser } = userUser();
   useEffect(() => {
     const fetchApps = async () => {
@@ -57,7 +59,10 @@ export default function AgentsApp() {
 
           {/* tansation */}
           <Route path="/application" element={<Application />} />
-          <Route path="/application/form" element={<ApplicationForm />} />
+          <Route
+            path={editApplication ? "/application/update" : "/application/form"}
+            element={<ApplicationForm />}
+          />
 
           {/* <Route path="/sale" element={<Sale />} /> */}
 

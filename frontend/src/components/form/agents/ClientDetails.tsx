@@ -17,9 +17,13 @@ import { ApplicationType } from "../../../store/slices/applicationSlice";
 
 interface ClientDetailsCardProp {
   setApplication: React.Dispatch<React.SetStateAction<ApplicationType>>;
+  selectedClientId?: string; // this will be field if form is updatting
 }
 
-const ClientDetailsCard = ({ setApplication }: ClientDetailsCardProp) => {
+const ClientDetailsCard = ({
+  setApplication,
+  selectedClientId,
+}: ClientDetailsCardProp) => {
   const dispatch = useDispatch<AppDispatch>();
   const { byId, filterById, allIds, filterIds, filterLoading } = useSelector(
     (state: RootState) => state.client
@@ -38,6 +42,9 @@ const ClientDetailsCard = ({ setApplication }: ClientDetailsCardProp) => {
 
   // for client selection modal
   searchQueryHanlder();
+
+  // fetch the selected client
+  useEffect(() => {}, [selectedClientId]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
