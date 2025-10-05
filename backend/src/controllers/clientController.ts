@@ -37,9 +37,9 @@ export class ClientController {
   }
 
   getClientById = async (req: Request, res: Response) => {
-    const client = await this.clientRepo.findById(Number(req.params.id));
-    if (!client) return res.json({ message: "Client not found" });
-    res.json(client);
+    const response = await this.clientRepo.findById(Number(req.params.id));
+
+    res.json({ ...response });
   };
 
   getClients = async (_req: Request, res: Response) => {

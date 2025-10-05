@@ -73,7 +73,13 @@ export class ClientRepository {
       id,
     ]);
 
-    return { success: true, client: await this.findById(id) };
+    const clientDataRes = await this.findById(id);
+
+    if (!clientDataRes.success) {
+      return { success: false, message: "Failed to find client after adding" };
+    }
+
+    return { success: true, client: clientDataRes.client };
   }
 
   async doesEmailExist(email: string): Promise<boolean> {
@@ -128,10 +134,19 @@ export class ClientRepository {
     await this.db.run("DELETE FROM Client WHERE _id = ?", [id]);
   }
 
-  async findById(id: number): Promise<Client | undefined> {
-    return await this.db.get<Client>("SELECT * FROM Client WHERE _id = ?", [
-      id,
-    ]);
+  async findById(
+    id: number
+  ): Promise<{ success: boolean; client?: Client; message?: string }> {
+    const clientData = await this.db.get<Client>(
+      "SELECT * FROM Client WHERE _id = ?",
+      [id]
+    );
+
+    if (!clientData) {
+      return { success: false, message: "Cannot find client" };
+    }
+
+    return { success: true, client: clientData };
   }
 
   async findAll(): Promise<Client[]> {

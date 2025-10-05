@@ -14,8 +14,6 @@ export class LandRepository {
 
     await this.db.exec("BEGIN TRANSACTION");
 
-    
-
     try {
       // Insert Land
       const landResult = await this.db.run(
@@ -32,7 +30,7 @@ export class LandRepository {
       );
 
       const landId = landResult.lastID!;
-      const createdLand = await this.findById(landId);
+      const createdLand = (await this.findById(landId)).land!;
 
       // Insert Lots (linked to landId)
       const stmt = await this.db.prepare(`
@@ -79,11 +77,14 @@ export class LandRepository {
     );
   }
 
-  async findById(id: number): Promise<Land | null> {
+  async findById(
+    id: number
+  ): Promise<{ success: boolean; message?: string; land?: Land }> {
     const row = await this.db.get<Land>(`SELECT * FROM Land WHERE _id = ?`, [
       id,
     ]);
-    return row ?? null;
+
+    return { success: true, land: row ?? undefined };
   }
 
   async findAll(): Promise<Land[]> {
@@ -94,7 +95,7 @@ export class LandRepository {
     const fields = Object.keys(land);
     const values = Object.values(land);
 
-    if (fields.length === 0) return this.findById(id);
+    if (fields.length === 0) return (await this.findById(id)).land!;
 
     const setClause = fields.map((f) => `${f} = ?`).join(", ");
 
@@ -105,7 +106,7 @@ export class LandRepository {
       id,
     ]);
 
-    return this.findById(id);
+    return (await this.findById(id)).land!;
   }
 
   async delete(id: number): Promise<boolean> {

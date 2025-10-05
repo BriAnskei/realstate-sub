@@ -93,15 +93,10 @@ export const getLotsByIds = createAsyncThunk(
   "lot/getLotsByIds",
   async (lotIds: number[], { rejectWithValue }) => {
     try {
-      const response = await lotApi.getLotsByIds(lotIds); // or whatever your API call is
+      const response = await lotApi.getLotsByIds(lotIds);
       return response.lots;
-    } catch (error: any) {
-      // This is the fix for your 404 error
-      return rejectWithValue({
-        message: error?.message || "Failed to fetch lots",
-        status: error?.response?.status,
-        data: error?.response?.data,
-      });
+    } catch (error) {
+      return rejectWithValue("Failed to dinf lots: " + error);
     }
   }
 );

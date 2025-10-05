@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { DeleteIcon } from "../../../icons";
-import { getLotsByLandId, LotType } from "../../../store/slices/lotSlice";
+import {
+  getLotsByIds,
+  getLotsByLandId,
+  LotType,
+} from "../../../store/slices/lotSlice";
 import ComponentCard from "../../common/ComponentCard";
 import LotSelectionModal from "../../modal/saleModal/LotSelectionModal";
 import {
@@ -10,16 +14,22 @@ import {
   TableCell,
   TableBody,
 } from "../../ui/table";
-import { UseDispatch, useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../store/store";
 import { ApplicationType } from "../../../store/slices/applicationSlice";
 
 interface AppLotTableProp {
   setApplication: React.Dispatch<React.SetStateAction<ApplicationType>>;
   landId?: string;
+
+  selectedLotsId?: number[]; // contained the selected lots if we are eding applicaiton
 }
 
-export function AppLotTable({ setApplication, landId }: AppLotTableProp) {
+export function AppLotTable({
+  setApplication,
+  landId,
+  selectedLotsId,
+}: AppLotTableProp) {
   const dispatch = useDispatch<AppDispatch>();
   const [selectedLots, setSelectedLots] = useState<LotType[] | undefined>(
     undefined
@@ -29,6 +39,48 @@ export function AppLotTable({ setApplication, landId }: AppLotTableProp) {
   );
 
   const [isLotModalOpen, setIsLotModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchLotsByLand = async () => {
+      try {
+        if (!landId) return;
+        // reset the state first
+        setApplication((prev) => ({
+          ...prev,
+          lotIds: undefined,
+        }));
+
+        await dispatch(getLotsByLandId(landId));
+      } catch (error) {
+        console.log("Failt to fetch lots:", error);
+      }
+    };
+    fetchLotsByLand();
+  }, [landId]);
+
+  useEffect(() => {
+    async function fetchSelectedLots() {
+      try {
+        if (!selectedLotsId) return;
+        const fetchedLotsData = await dispatch(
+          getLotsByIds(selectedLotsId)
+        ).unwrap();
+        console.log("Fetched lots:", fetchedLotsData);
+        setSelectedLots(fetchedLotsData);
+      } catch (error) {
+        console.log("Failed to getch lots:", error);
+      }
+    }
+    fetchSelectedLots();
+  }, [selectedLotsId]);
+
+  useEffect(() => {
+    if (selectedLots) {
+      const allLotsId = selectedLots.map((lot) => parseInt(lot._id, 10));
+
+      setApplication((prev) => ({ ...prev, lotIds: allLotsId }));
+    }
+  }, [selectedLots]);
 
   const deleteHanlder = (lotId: string) => {
     setSelectedLots((prev) => {
@@ -45,33 +97,6 @@ export function AppLotTable({ setApplication, landId }: AppLotTableProp) {
     }
     setIsLotModalOpen(true);
   };
-
-  useEffect(() => {
-    const fetchLotsByLand = async () => {
-      try {
-        if (!landId) return;
-
-        // reset the state first
-        setApplication((prev) => ({
-          ...prev,
-          lotIds: undefined,
-        }));
-        setSelectedLots(undefined);
-        await dispatch(getLotsByLandId(landId));
-      } catch (error) {
-        console.log("Failt to fetch lots:", error);
-      }
-    };
-    fetchLotsByLand();
-  }, [landId]);
-
-  useEffect(() => {
-    if (selectedLots) {
-      const allLotsId = selectedLots.map((lot) => parseInt(lot._id, 10));
-
-      setApplication((prev) => ({ ...prev, lotIds: allLotsId }));
-    }
-  }, [selectedLots]);
 
   return (
     <>
@@ -186,6 +211,7 @@ export function AppLotTable({ setApplication, landId }: AppLotTableProp) {
         </div>
       </ComponentCard>
       <LotSelectionModal
+        selectedLotsData={selectedLots}
         landId={landId}
         lotById={filterById}
         lotIds={allFilterIds}

@@ -46,7 +46,9 @@ export class LandApi {
     }
   };
 
-  findLandById = async (id: number) => {
+  findLandById = async (
+    id: string
+  ): Promise<{ success: boolean; message?: string; land?: LandTypes }> => {
     try {
       const res = await api.get(`/api/land/find/${id}`);
       return res.data;

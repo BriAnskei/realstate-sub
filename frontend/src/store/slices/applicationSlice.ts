@@ -34,7 +34,7 @@ export const updateApplication = createAsyncThunk(
 
       return payload;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue("Failed to update appliction:" + error);
     }
   }
 );

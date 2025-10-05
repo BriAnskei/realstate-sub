@@ -26,7 +26,7 @@ const ApplicationForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const { editApplication, setEditApplication } = useApplication();
+  const { editApplication, clearUpdateContext } = useApplication();
   const { loading } = useSelector((state: RootState) => state.application);
 
   // application input
@@ -52,7 +52,7 @@ const ApplicationForm = () => {
     }
 
     // reset when unrendering
-    return () => setEditApplication(undefined);
+    return () => clearUpdateContext();
   }, [editApplication]);
 
   const isAllInputValid = checkInputs(application);
@@ -70,7 +70,7 @@ const ApplicationForm = () => {
     try {
       await dispatch(addNewApp(application)).unwrap();
     } catch (error) {
-      console.log("Failed to add application");
+      throw new Error("faild on adding application " + error);
     }
   };
 
@@ -85,7 +85,7 @@ const ApplicationForm = () => {
         })
       );
     } catch (error) {
-      console.log("Failed to update application", error);
+      throw new Error("Failed on updating appliction:" + error);
     }
   };
 
@@ -102,8 +102,19 @@ const ApplicationForm = () => {
         await handleSave();
       }
       navigate("/application");
-    } catch (error) {}
+    } catch (error) {
+      console.log("Error: ", error);
+    }
   };
+
+  useEffect(() => {
+    console.log("Edit applcitiomnL:");
+    console.table(editApplication);
+  }, [editApplication]);
+
+  useEffect(() => {
+    console.table(application);
+  }, [application]);
 
   return (
     <>
@@ -120,19 +131,37 @@ const ApplicationForm = () => {
             variant="primary"
             onClick={openConfirmationHandler}
           >
-            {loading ? "Processing..." : "Submit "}
+            {editApplication ? "Update" : loading ? "Processing..." : "Submit"}
           </Button>,
         ]}
       >
         <div className="p-4 sm:p-6 dark:border-gray-800">
           {/* Client Input */}
-          <ClientDetails setApplication={setApplication} />
-          <LandDetails setApplication={setApplication} />
+          <ClientDetails
+            settedApointmentDate={application.appointmentDate}
+            setApplication={setApplication}
+            selectedClientId={editApplication?.clientId ?? undefined}
+          />
+          <LandDetails
+            setApplication={setApplication}
+            selectedLandId={editApplication?.landId ?? undefined}
+          />
           <AppLotTable
+            selectedLotsId={editApplication?.lotIds ?? undefined}
             setApplication={setApplication}
             landId={application.landId}
           />
-          <AgentTable setApplication={setApplication} />
+          <AgentTable
+            setApplication={setApplication}
+            dealersData={
+              editApplication
+                ? {
+                    otherAgentsId: editApplication.otherAgentIds?.map(String),
+                    agentDealer: editApplication.agentDealerId,
+                  }
+                : undefined
+            }
+          />
           <div className="flex  justify-center items-center">
             <img
               src={backtoTop}

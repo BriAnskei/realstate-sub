@@ -1,5 +1,6 @@
 import { SetStateAction, useEffect, useRef, useState } from "react";
 import {
+  getLandById,
   LandTypes,
   resetLandFilter,
   resetLands,
@@ -18,9 +19,12 @@ import { debouncer } from "../../../utils/debouncer";
 
 interface LandDetailProp {
   setApplication: React.Dispatch<React.SetStateAction<ApplicationType>>;
+
+  // form update prop
+  selectedLandId?: string;
 }
 
-const LandDetails = ({ setApplication }: LandDetailProp) => {
+const LandDetails = ({ setApplication, selectedLandId }: LandDetailProp) => {
   const dispatch = useDispatch<AppDispatch>();
   const { byId, allIds, filterById, filterIds, filterLoading } = useSelector(
     (state: RootState) => state.land
@@ -32,28 +36,26 @@ const LandDetails = ({ setApplication }: LandDetailProp) => {
 
   // filter
   const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined);
-
   const [searchLoading, setSearchLoading] = useState(false);
   const debouncedSearchRef = useRef<ReturnType<typeof debouncer> | null>(null);
 
-  debouceSearchHanlder();
-
-  const getData = useFilteredData({
-    originalData: { byId, allIds },
-    filteredData: { byId: filterById, allIds: filterIds },
-    filterOptions: {
-      searchInput: searchQuery,
-      filterLoading: filterLoading || searchLoading,
-    },
-  });
   useEffect(() => {
-    if (searchQuery?.trim()) {
-      setSearchLoading(true);
-      debouncedSearchRef.current!(searchQuery);
-    } else {
-      dispatch(resetLandFilter());
+    async function fetchSelectedLand() {
+      try {
+        if (selectedLandId) {
+          const response = await dispatch(getLandById(selectedLandId)).unwrap();
+
+          if (!response.success) {
+            console.log(response.message ?? "Failed to fetch land");
+          }
+          setSelectedLand(response.land!);
+        }
+      } catch (error) {
+        console.log("Failed to fetch land:", error);
+      }
     }
-  }, [searchQuery]);
+    fetchSelectedLand();
+  }, [selectedLandId]);
 
   useEffect(() => {
     if (selectedLand) {
@@ -64,6 +66,25 @@ const LandDetails = ({ setApplication }: LandDetailProp) => {
       }));
     }
   }, [selectedLand]);
+
+  debouceSearchHanlder();
+  useEffect(() => {
+    if (searchQuery?.trim()) {
+      setSearchLoading(true);
+      debouncedSearchRef.current!(searchQuery);
+    } else {
+      dispatch(resetLandFilter());
+    }
+  }, [searchQuery]);
+
+  const getData = useFilteredData<LandTypes>({
+    originalData: { byId, allIds },
+    filteredData: { byId: filterById, allIds: filterIds },
+    filterOptions: {
+      searchInput: searchQuery,
+      filterLoading: filterLoading || searchLoading,
+    },
+  });
 
   return (
     <>
@@ -111,6 +132,7 @@ const LandDetails = ({ setApplication }: LandDetailProp) => {
         allIds={getData.allIds}
         filterLoading={filterLoading || searchLoading}
         setSearchQuery={setSearchQuery}
+        selectedLandData={selectedLand}
       />
     </>
   );

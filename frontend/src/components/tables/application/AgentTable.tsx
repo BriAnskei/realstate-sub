@@ -16,49 +16,85 @@ import { Role } from "../../../context/mockData";
 
 interface AgentTableProp {
   setApplication: React.Dispatch<SetStateAction<ApplicationType>>;
+  dealersData?: { otherAgentsId?: string[]; agentDealer?: string };
 }
 
-export function AgentTable({ setApplication }: AgentTableProp) {
-  const [selectedAgents, setSelectedAgents] = useState<UserType[] | undefined>(
-    undefined
-  );
+export function AgentTable({ setApplication, dealersData }: AgentTableProp) {
   const { curUser, users } = userUser();
-
+  const [selectedAgents, setSelectedAgents] = useState<UserType[]>([]);
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    console.table(dealersData);
+  }, [dealersData]);
+
+  // Initialize selected agents from dealersData on mount/when dealersData changes
+  useEffect(() => {
+    if (dealersData?.otherAgentsId && !isInitialized) {
+      // Find all agents that match the otherAgentsId
+      const existingAgents = users.filter((user) =>
+        dealersData.otherAgentsId?.includes(user._id!)
+      );
+
+      console.log("Initializing agents from dealersData:", existingAgents);
+      setSelectedAgents(existingAgents);
+      setIsInitialized(true);
+    } else if (!dealersData && !isInitialized) {
+      // If no dealersData (new application), just mark as initialized
+      setIsInitialized(true);
+    }
+  }, [dealersData, users, isInitialized]);
+
+  // Update application state whenever selectedAgents changes
+  useEffect(() => {
+    if (!isInitialized) return; // Don't update until initialized
+
+    const dealerId = dealersData?.agentDealer || curUser?._id;
+
+    setApplication((prev) => ({
+      ...prev,
+      agentDealerId: dealerId,
+      otherAgentIds: selectedAgents.map((agent) => parseInt(agent._id!, 10)),
+    }));
+
+    console.log("Updated application with agents:", {
+      dealerId,
+      otherAgentIds: selectedAgents.map((agent) => agent._id),
+    });
+  }, [selectedAgents, isInitialized]);
 
   const deleteHandler = (agentId: string) => {
-    // Filter out the agent to delete, but keep dealers
-    setSelectedAgents((prev) => prev?.filter((agent) => agent._id !== agentId));
+    setSelectedAgents((prev) => prev.filter((agent) => agent._id !== agentId));
   };
 
-  const isDealer = (agent: UserType) => {
-    return agent._id === curUser?._id;
+  const isDealer = (agent: UserType): boolean => {
+    const dealerId = dealersData?.agentDealer || curUser?._id;
+    return agent._id === dealerId;
   };
 
-  useEffect(() => {
-    if (curUser) {
-      setApplication((prev) => ({ ...prev, agentDealerId: curUser?._id }));
-    }
-  }, [curUser]);
-
-  useEffect(() => {
-    if (selectedAgents) {
-      const agentsIds = selectedAgents.map((agent) => parseInt(agent._id!, 10));
-
-      setApplication((prev) => ({ ...prev, otherAgentIds: agentsIds }));
-    }
-  }, [selectedAgents]);
-
+  // Filter users to get only agents (for modal selection)
   const agents = useMemo(() => {
-    // We only need agents
     return users.filter((user) => user.role !== Role.Employee);
   }, [users]);
 
-  // For agents selected table
+  // Combine dealer with selected agents for display
   const allAgents = useMemo(() => {
-    const selected: UserType[] = selectedAgents ?? [];
-    return [curUser!, ...selected];
-  }, [selectedAgents]);
+    const dealerId = dealersData?.agentDealer || curUser?._id;
+    const dealer = users.find((user) => user._id === dealerId);
+
+    if (!dealer) {
+      console.warn("Cannot find dealer with ID:", dealerId);
+      return selectedAgents;
+    }
+
+    // Remove dealer from selectedAgents if they're there (shouldn't happen, but just in case)
+    const filteredSelectedAgents = selectedAgents.filter(
+      (agent) => agent._id !== dealerId
+    );
+
+    return [dealer, ...filteredSelectedAgents];
+  }, [selectedAgents, curUser, dealersData, users]);
 
   return (
     <>
@@ -106,13 +142,13 @@ export function AgentTable({ setApplication }: AgentTableProp) {
 
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {allAgents &&
+                {allAgents.length > 0 ? (
                   allAgents.map((agent, index) => {
                     const dealerStatus = isDealer(agent);
 
                     return (
                       <TableRow
-                        key={index}
+                        key={agent._id || index}
                         className={
                           dealerStatus ? "bg-blue-50 dark:bg-blue-900/20" : ""
                         }
@@ -149,7 +185,14 @@ export function AgentTable({ setApplication }: AgentTableProp) {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell className="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                      No agents assigned. Click "Add" to select agents.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
@@ -157,11 +200,12 @@ export function AgentTable({ setApplication }: AgentTableProp) {
       </ComponentCard>
 
       <AgentSelectionModal
-        dealerId={curUser?._id}
+        dealerId={dealersData?.agentDealer || curUser?._id}
         users={agents}
         isOpen={isAgentModalOpen}
         onClose={() => setIsAgentModalOpen(false)}
         selectedData={setSelectedAgents}
+        initialSelectedAgents={selectedAgents}
       />
     </>
   );

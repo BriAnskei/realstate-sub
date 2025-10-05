@@ -17,7 +17,6 @@ import LotFormModal from "../../modal/projects-modals/LotFormModal";
 import useLotModal from "../../../hooks/projects-hooks/modal/useLotModal";
 import LoadingOverlay from "../../loading/LoadingOverlay";
 import TableRowSkeleton from "../../loading/TableRowSkeleton";
-import { useDispatch, useSelector } from "react-redux";
 
 interface LotTableProp {
   dispatch: AppDispatch;

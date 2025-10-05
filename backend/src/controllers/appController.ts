@@ -29,6 +29,7 @@ export class AppController {
   updateApplication = async (req: Request, res: Response): Promise<void> => {
     const _id = req.params._id;
     const ApplicationData = req.body;
+    console.log("Updating appliction: ", ApplicationData);
     const isSuccess: boolean = await this.appRepo.update({
       applicationId: _id,
       data: ApplicationData,

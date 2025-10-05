@@ -28,9 +28,12 @@ export class ClientApi {
     }
   };
 
-  static getClientById = async (id: number): Promise<ClientType> => {
+  static getClientById = async (
+    id: string
+  ): Promise<{ success: boolean; client?: ClientType; message?: string }> => {
     try {
       const res = await api.get(`/api/client/find/${id}`);
+
       return res.data;
     } catch (error) {
       console.error("Error in getClientById:", error);

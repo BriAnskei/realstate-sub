@@ -18,6 +18,9 @@ interface LotFormModalProp {
   landId?: string;
   onClose: () => void;
   selectedData: (data: LotType[]) => void;
+
+  // updataing applciation
+  selectedLotsData?: LotType[];
 }
 
 const LotSelectionModal = ({
@@ -25,6 +28,7 @@ const LotSelectionModal = ({
   lotIds,
   isOpen,
   landId,
+  selectedLotsData,
   onClose,
   selectedData,
 }: LotFormModalProp) => {
@@ -43,6 +47,12 @@ const LotSelectionModal = ({
       setSelectedLots([]);
     }
   }, [landId, selectedLots]);
+
+  useEffect(() => {
+    if (selectedLotsData) {
+      setSelectedLots(selectedLotsData);
+    }
+  }, [selectedLotsData]);
 
   // filter available lots
   useEffect(() => {

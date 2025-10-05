@@ -5,9 +5,9 @@ import cors from "cors";
 import { createLotRouter } from "./routes/lotRouter";
 // Do the same for other routers
 import landRouter from "./routes/landRouter";
-import clientRouter from "./routes/clientRouter";
+import { createClientRouter } from "./routes/clientRouter";
 import { UPLOAD_PATHS } from "./middleware/multer/UploadPaths";
-import applicationRouter from "./routes/appRouter";
+import { createApplictionRouter } from "./routes/appRouter";
 
 const app = express();
 const PORT = 4000;
@@ -42,8 +42,8 @@ async function startServer() {
     // THEN register routes (after DB is ready)
     app.use("/api/land", landRouter);
     app.use("/api/lot", createLotRouter(db)); // Pass db to factory
-    app.use("/api/client", clientRouter);
-    app.use("/api/application", applicationRouter);
+    app.use("/api/client", createClientRouter(db));
+    app.use("/api/application", createApplictionRouter(db));
 
     // Static routes (images)
     app.use("/uploads/clients", express.static(UPLOAD_PATHS.CLIENTS));

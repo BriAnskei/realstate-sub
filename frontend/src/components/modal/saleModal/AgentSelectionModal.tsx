@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Checkbox from "../../form/input/Checkbox";
 import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
@@ -19,7 +19,8 @@ interface AgentFormModalProp {
   isOpen: boolean;
   dealerId?: string;
   onClose: () => void;
-  selectedData: React.Dispatch<React.SetStateAction<UserType[] | undefined>>;
+  selectedData: React.Dispatch<React.SetStateAction<UserType[]>>;
+  initialSelectedAgents?: UserType[];
 }
 
 const AgentSelectionModal = ({
@@ -28,14 +29,34 @@ const AgentSelectionModal = ({
   isOpen,
   onClose,
   selectedData,
+  initialSelectedAgents = [],
 }: AgentFormModalProp) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAgents, setSelectedAgents] = useState<UserType[]>([]);
 
+  // Initialize selectedAgents when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedAgents(initialSelectedAgents);
+    }
+  }, [isOpen, initialSelectedAgents]);
+
   const saveHandler = () => {
-    if (selectedAgents.length === 0) return;
+    if (selectedAgents.length === 0) {
+      // Allow saving with no agents selected (will clear the list)
+      selectedData([]);
+      onClose();
+      return;
+    }
 
     selectedData(selectedAgents);
+    onClose();
+  };
+
+  const cancelHandler = () => {
+    // Reset to initial state on cancel
+    setSelectedAgents(initialSelectedAgents);
+    setSearchQuery("");
     onClose();
   };
 
@@ -51,11 +72,11 @@ const AgentSelectionModal = ({
         (user.email || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // dont include the dealer id
+    // Don't include the dealer id
     agents = agents?.filter((agent) => agent._id !== dealerId);
 
-    return agents;
-  }, [searchQuery]);
+    return agents || [];
+  }, [searchQuery, users, dealerId]);
 
   const toggleSelection = (agent: UserType) => {
     setSelectedAgents((prev) => {
@@ -68,7 +89,11 @@ const AgentSelectionModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-[700px] m-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={cancelHandler}
+      className="max-w-[700px] m-4"
+    >
       <div className="relative w-full p-4 overflow-y-auto bg-white rounded-3xl dark:bg-gray-900 lg:p-11">
         <div className="px-2 pr-14">
           <div>
@@ -110,8 +135,8 @@ const AgentSelectionModal = ({
 
               {/* Table Body */}
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {filteredAgents?.length || 0 > 0 ? (
-                  filteredAgents?.map((user) => (
+                {filteredAgents.length > 0 ? (
+                  filteredAgents.map((user) => (
                     <TableRow
                       key={user._id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
@@ -141,7 +166,7 @@ const AgentSelectionModal = ({
                           checked={
                             !!selectedAgents.find((u) => u._id === user._id)
                           }
-                          onChange={() => toggleSelection(user!)}
+                          onChange={() => toggleSelection(user)}
                         />
                       </TableCell>
                     </TableRow>
@@ -160,11 +185,11 @@ const AgentSelectionModal = ({
 
         {/* Actions */}
         <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-          <Button size="sm" variant="outline" onClick={onClose}>
-            Close
+          <Button size="sm" variant="outline" onClick={cancelHandler}>
+            Cancel
           </Button>
           <Button size="sm" type="submit" onClick={saveHandler}>
-            Save({selectedAgents.length})
+            Save ({selectedAgents.length})
           </Button>
         </div>
       </div>

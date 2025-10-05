@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Checkbox from "../../form/input/Checkbox";
 import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
@@ -10,7 +10,9 @@ import {
   TableBody,
 } from "../../ui/table";
 import Filter from "../../filter/Filter";
-import { ClientType } from "../../../store/slices/clientSlice"; // ✅ import your client type
+import LoadingOverlay from "../../loading/LoadingOverlay";
+import { ClientType } from "../../../store/slices/clientSlice";
+import { useClientById } from "../../../hooks/client/useClientSelector";
 
 interface ClientFormModalProp {
   byId: { [key: string]: ClientType };
@@ -20,6 +22,7 @@ interface ClientFormModalProp {
   onClose: () => void;
   selectedData: (data: ClientType) => void;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  selectedIdForUpdate?: string;
 }
 
 const ClientSelectionModal = ({
@@ -30,11 +33,31 @@ const ClientSelectionModal = ({
   onClose,
   selectedData,
   setSearchQuery,
+  selectedIdForUpdate,
 }: ClientFormModalProp) => {
   const [selectedClient, setSelectedClient] = useState<ClientType>();
+  const selectedClientForUpdate = useClientById(
+    selectedIdForUpdate ?? undefined
+  );
+
+  useEffect(() => {
+    const selectCurrentSelectedClient = () => {
+      if (!isOpen) return;
+      if (selectedIdForUpdate && selectedClientForUpdate) {
+        setSelectedClient(selectedClientForUpdate);
+      }
+    };
+
+    selectCurrentSelectedClient();
+  }, [selectedIdForUpdate, isOpen, selectedClientForUpdate]);
 
   const saveHandler = () => {
     if (!selectedClient) return;
+    if (selectedClient && selectedClient._id === selectedIdForUpdate) {
+      onClose();
+      return;
+    }
+
     selectedData(selectedClient);
     onClose();
   };
@@ -70,8 +93,10 @@ const ClientSelectionModal = ({
           SearchPlaceholder="Search client..."
         />
 
-        {/* Fixed height table container */}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+        {/* Fixed height table container with loading overlay */}
+        <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+          {filterLoading && <LoadingOverlay message="Filtering results..." />}
+
           <div className="h-80 overflow-y-auto custom-scrollbar">
             <Table className="min-w-full">
               <TableHeader className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-white/[0.05]">

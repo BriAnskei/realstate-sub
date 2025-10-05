@@ -1,16 +1,15 @@
 import express from "express";
-import { initDB } from "../db";
 import { ClientRepository } from "../repo/clientRepository";
 import { ClientController } from "../controllers/clientController";
 import { asyncHandler } from "../utils/asyncHandler";
 import { UploadService } from "../service/UploadService";
+import { Database } from "sqlite";
 
-const clientRouter = express.Router();
-
-(async () => {
-  const db = await initDB();
+export function createClientRouter(db: Database) {
+  const clientRouter = express.Router();
   const clientRepo = new ClientRepository(db);
   const clientController = new ClientController(clientRepo);
+  console.log("initializing client db", db);
 
   clientRouter.post(
     "/create",
@@ -39,6 +38,5 @@ const clientRouter = express.Router();
   );
 
   clientRouter.get("/search", asyncHandler(clientController.search, "search"));
-})();
-
-export default clientRouter;
+  return clientRouter;
+}

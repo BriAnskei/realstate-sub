@@ -29,7 +29,7 @@ import ApplicationForm from "../transaction/agent/ApplicationForm";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store/store";
-import { fetchAllAPP, fetchByAgent } from "../../store/slices/applicationSlice";
+import { fetchByAgent } from "../../store/slices/applicationSlice";
 import { userUser } from "../../context/UserContext";
 import { useApplication } from "../../context/ApplicationContext";
 

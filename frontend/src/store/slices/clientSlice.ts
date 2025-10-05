@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { NormalizeState } from "../../types/TypesHelper";
 import { normalizeResponse } from "../../utils/normalizeResponse";
 import { ClientApi } from "../../utils/api/clientApi";
+import { RootState } from "../store";
 
 export const addClient = createAsyncThunk(
   "client/add",
@@ -18,6 +19,58 @@ export const addClient = createAsyncThunk(
       }
 
       return res;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const searchClient = createAsyncThunk(
+  "client/search",
+  async (payload: { query?: string; status?: string }, { rejectWithValue }) => {
+    try {
+      const { query, status } = payload;
+      const res = await ClientApi.search({ name: query, status });
+
+      return res.clients;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getClients = createAsyncThunk(
+  "client/fetch",
+  async (_: void, { rejectWithValue }) => {
+    try {
+      const res = await ClientApi.getClients();
+
+      return res;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getClientById = createAsyncThunk(
+  "client/get-byId",
+  async (clientId: string, { rejectWithValue, getState }) => {
+    try {
+      // check in state if the client exist before fetching
+      const state = getState() as RootState;
+      const { byId } = state.client;
+      if (byId[clientId]) {
+        return byId[clientId];
+      }
+
+      const response = await ClientApi.getClientById(clientId);
+      const { success, client, message } = response;
+
+      if (!success) {
+        return rejectWithValue(message || "Failed to find client");
+      }
+
+      return client!;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -50,40 +103,9 @@ export const deleteClient = createAsyncThunk(
   "client/delete",
   async (data: ClientType, { rejectWithValue }) => {
     try {
-      console.log("deleting client paylaod in slice: ", data);
-
       await ClientApi.deleteClient(parseInt(data._id, 10));
 
       return data;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
-  }
-);
-
-export const getClients = createAsyncThunk(
-  "client/fetch",
-  async (_: void, { rejectWithValue }) => {
-    try {
-      console.log("Fething clients: ");
-
-      const res = await ClientApi.getClients();
-
-      return res;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
-  }
-);
-
-export const searchClient = createAsyncThunk(
-  "client/search",
-  async (payload: { query?: string; status?: string }, { rejectWithValue }) => {
-    try {
-      const { query, status } = payload;
-      const res = await ClientApi.search({ name: query, status });
-
-      return res.clients;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -207,6 +229,23 @@ const clientSlice = createSlice({
         state.filterLoading = false;
       })
       .addCase(searchClient.rejected, (state, action) => {
+        state.filterLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(getClientById.pending, (state) => {
+        state.filterLoading = true;
+      })
+      .addCase(getClientById.fulfilled, (state, action) => {
+        const { allIds, byId } = normalizeResponse(action.payload);
+
+        if (!state.byId[action.payload?._id]) {
+          state.allIds = [...state.allIds, ...allIds];
+          state.byId = { ...state.byId, ...byId };
+        }
+
+        state.filterLoading = false;
+      })
+      .addCase(getClientById.rejected, (state, action) => {
         state.filterLoading = false;
         state.error = action.payload as string;
       }),

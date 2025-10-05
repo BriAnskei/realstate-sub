@@ -36,8 +36,8 @@ export class LandController {
 
   findOne = async (req: Request, res: Response) => {
     const id = parseInt(req.params._id, 10);
-    const land = await this.landRepo.findById(id);
-    res.json(land);
+    const response = await this.landRepo.findById(id);
+    res.json({ ...response });
   };
 
   delete = async (req: Request, res: Response) => {

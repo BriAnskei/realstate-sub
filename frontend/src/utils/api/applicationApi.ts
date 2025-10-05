@@ -27,10 +27,12 @@ export class AppApi {
   }): Promise<{ success: boolean; message?: string }> => {
     try {
       const { applicationId, updateData } = payload;
+      console.log("appliction data: ", updateData);
       const res = await api.post(
         `/api/application/update/${applicationId}`,
         updateData
       );
+      console.log("udpate appliction response; ", res);
 
       return res.data;
     } catch (error) {
@@ -39,6 +41,7 @@ export class AppApi {
     }
   };
 
+  //
   static updateStatus = async (payload: {
     applicationId: string;
     status: string;

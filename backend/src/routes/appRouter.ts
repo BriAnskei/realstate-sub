@@ -3,11 +3,10 @@ import { initDB } from "../db";
 import { ApplicationRepo } from "../repo/appRepository";
 import { AppController } from "../controllers/appController";
 import { asyncHandler } from "../utils/asyncHandler";
+import { Database } from "sqlite";
 
-const applicationRouter = express.Router();
-
-(async () => {
-  const db = await initDB();
+export function createApplictionRouter(db: Database) {
+  const applicationRouter = express.Router();
   const appRepo = new ApplicationRepo(db);
   const appController = new AppController(appRepo);
 
@@ -17,7 +16,7 @@ const applicationRouter = express.Router();
   );
 
   applicationRouter.post(
-    "/update:_id",
+    "/update/:_id",
     asyncHandler(appController.updateApplication, "updateApplication")
   );
 
@@ -49,6 +48,6 @@ const applicationRouter = express.Router();
     "/delete/:_id",
     asyncHandler(appController.delete, "delete")
   );
-})();
 
-export default applicationRouter;
+  return applicationRouter;
+}

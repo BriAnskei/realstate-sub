@@ -21,6 +21,9 @@ interface ClientFormModalProp {
   onClose: () => void;
   selectedData: (data: LandTypes) => void;
   setSearchQuery: React.Dispatch<React.SetStateAction<string | undefined>>;
+
+  selectedLandData?: LandTypes;
+  // this prop will only be field if appliction is updating
 }
 
 const LandSelectionModal = ({
@@ -31,12 +34,15 @@ const LandSelectionModal = ({
   setSearchQuery,
   onClose,
   selectedData,
+  selectedLandData,
 }: ClientFormModalProp) => {
   const [selectedLand, setSelectedLand] = useState<LandTypes>();
 
   useEffect(() => {
-    console.log("filter update: ", filterLoading);
-  }, [filterLoading]);
+    if (selectedLandData) {
+      setSelectedLand(selectedLandData);
+    }
+  }, [selectedLandData]);
 
   // ✅ Handle checkbox
   const toggleSelection = (data: LandTypes) => {

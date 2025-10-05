@@ -52,9 +52,9 @@ export function useFilteredData<T>({
     return hasActiveFilters;
   }, [filterOptions]);
 
-  const displayData = useMemo(() => {
+  const data = useMemo(() => {
     return shouldShowFiltered ? filteredData : originalData;
   }, [shouldShowFiltered, filteredData, originalData]);
 
-  return displayData;
+  return data;
 }
