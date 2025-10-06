@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
@@ -55,11 +55,29 @@ const ApplicationForm = () => {
     return () => clearUpdateContext();
   }, [editApplication]);
 
+  // for messagesconfirmation moddal when submiting
+  const confirmationMessage = useMemo(() => {
+    return editApplication
+      ? {
+          tittle: "Update Application",
+          message:
+            "Are you sure you want to update this application? This will modify the existing application details and notify the assigned agent of the changes.",
+          buttonText: "Update Application",
+        }
+      : {
+          tittle: "Save Application",
+          message:
+            "Are you sure you want to save this application? This will create a new application in the system and notify the assigned agent.",
+          buttonText: "Save Application",
+        };
+  }, [editApplication]);
+
   const isAllInputValid = checkInputs(application);
 
   const openConfirmationHandler = () => {
-    if (!isAllInputValid()) {
-      alert("Kindly fill out all fields in the application form.");
+    const { valid, message } = isAllInputValid;
+    if (!valid) {
+      alert(message);
       return;
     }
 
@@ -70,7 +88,7 @@ const ApplicationForm = () => {
     try {
       await dispatch(addNewApp(application)).unwrap();
     } catch (error) {
-      throw new Error("faild on adding application " + error);
+      alert(error);
     }
   };
 
@@ -78,43 +96,28 @@ const ApplicationForm = () => {
     try {
       const updateObject = extractUpdateInputs(application, editApplication);
 
+      if (!updateObject) return;
+
       await dispatch(
         updateApplication({
           applicationId: editApplication?._id!,
           updateData: updateObject,
         })
       );
+      navigate("/application");
     } catch (error) {
-      throw new Error("Failed on updating appliction:" + error);
+      console.log("Failed updateding applicaiton");
     }
   };
 
   const handleSubmition = async () => {
-    try {
-      if (!isAllInputValid()) {
-        alert("Kindly fill out all fields in the application form.");
-        return;
-      }
-
-      if (editApplication) {
-        await handleUpdate();
-      } else {
-        await handleSave();
-      }
-      navigate("/application");
-    } catch (error) {
-      console.log("Error: ", error);
+    if (editApplication) {
+      await handleUpdate();
+    } else {
+      await handleSave();
     }
+    navigate("/application");
   };
-
-  useEffect(() => {
-    console.log("Edit applcitiomnL:");
-    console.table(editApplication);
-  }, [editApplication]);
-
-  useEffect(() => {
-    console.table(application);
-  }, [application]);
 
   return (
     <>
@@ -126,10 +129,20 @@ const ApplicationForm = () => {
         title="Application Form"
         actions={[
           <Button
-            className="bg-green-500"
+            className={`
+        ${
+          editApplication
+            ? "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+            : "bg-green-600 hover:bg-green-700 focus:ring-green-500"
+        }
+        text-white font-medium transition-colors duration-200 
+        disabled:opacity-50 disabled:cursor-not-allowed
+        focus:outline-none focus:ring-2 focus:ring-offset-2
+      `}
             size="sm"
             variant="primary"
             onClick={openConfirmationHandler}
+            disabled={loading}
           >
             {editApplication ? "Update" : loading ? "Processing..." : "Submit"}
           </Button>,
@@ -173,9 +186,9 @@ const ApplicationForm = () => {
       </ComponentCard>
 
       <ConfirmationModal
-        title="Save Application"
-        message="Are you sure you want to save this application? This will create a new application in the system and notify the assigned agent."
-        buttonText="Save Application"
+        title={confirmationMessage.tittle}
+        message={confirmationMessage.message}
+        buttonText={confirmationMessage.buttonText}
         cancelText="Cancel"
         variant="success"
         icon={
@@ -208,48 +221,90 @@ export default ApplicationForm;
 
 function extractUpdateInputs(
   application: ApplicationType,
-  data: ApplicationType | undefined
+  originalData: ApplicationType | undefined
 ) {
   const updateChanges = new Map<
     keyof ApplicationType,
     ApplicationType[keyof ApplicationType]
   >();
+
   for (const key in application) {
     const typedKey = key as keyof ApplicationType;
-    if (
-      application.hasOwnProperty(key) &&
-      application[typedKey] !== data?.[typedKey]
-    ) {
-      updateChanges.set(typedKey, application[typedKey]);
+
+    if (!application.hasOwnProperty(key)) continue;
+
+    const newValue = application[typedKey];
+    const oldValue = originalData?.[typedKey];
+
+    // Deep equality check (handles primitives, arrays, objects)
+    const isEqual = (() => {
+      if (Array.isArray(newValue) && Array.isArray(oldValue)) {
+        return JSON.stringify(newValue) === JSON.stringify(oldValue);
+      }
+
+      if (
+        typeof newValue === "object" &&
+        newValue !== null &&
+        typeof oldValue === "object" &&
+        oldValue !== null
+      ) {
+        return JSON.stringify(newValue) === JSON.stringify(oldValue);
+      }
+
+      return newValue == oldValue;
+    })();
+
+    if (!isEqual) {
+      updateChanges.set(typedKey, newValue);
     }
   }
 
+  if (updateChanges.size === 0) return undefined;
   return Object.fromEntries(updateChanges);
 }
 
-function checkInputs(application: ApplicationType) {
-  return () => {
-    for (const [key, value] of Object.entries(application)) {
-      // skip validation for _id
-      if (key === "_id" || key === "createdAt") {
-        continue;
-      }
+function checkInputs(application: ApplicationType): {
+  message?: string;
+  valid: boolean;
+} {
+  for (const [key, value] of Object.entries(application)) {
+    if (key === "_id" || key === "createdAt") continue;
 
-      // validate strings
-      if (typeof value === "string" && value.trim() === "") {
-        console.log("no value in ", key, value);
-
-        return false;
-      }
-
-      // validate arrays
-      if (Array.isArray(value) && value.length === 0) {
-        console.log("no value in ", key, value);
-
-        return false;
-      }
+    if (typeof value === "string" && value.trim() === "") {
+      return { message: `Please ${formatFieldName(key)}.`, valid: false };
     }
 
-    return true;
+    if (Array.isArray(value) && value.length === 0) {
+      return { message: `Please ${formatFieldName(key)}.`, valid: false };
+    }
+  }
+
+  return { valid: true };
+}
+
+// Helper function to make field names more human-readable
+function formatFieldName(field: string): string {
+  const friendlyLabels: Record<string, string> = {
+    landId: "select a land",
+    landName: "enter the land name",
+    clientName: "enter the client’s name",
+    clientId: "select a client",
+    lotIds: "select at least one lot",
+    agentDealerId: "select an agent or dealer",
+    otherAgentIds: "select more agents for this appliction",
+    appointmentDate: "set the appointment date",
+    status: "choose a status",
   };
+
+  // Return predefined label if available
+  if (friendlyLabels[field]) {
+    return friendlyLabels[field];
+  }
+
+  // Otherwise, fallback to generic formatting
+  return field
+    .replace(/([A-Z])/g, " $1")
+    .replace(/([a-z])Id$/, "$1")
+    .trim()
+    .toLowerCase();
 }

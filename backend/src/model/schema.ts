@@ -66,13 +66,14 @@ CREATE TABLE IF NOT EXISTS Application (
     agentDealerId TEXT,              
     otherAgentIds TEXT,               
     appointmentDate DATETIME,
-    status TEXT NOT NULL,                      
+    status TEXT NOT NULL, 
+    rejectionNote TEXT,                     
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_application_landName ON Application(landName);
-CREATE INDEX IF NOT EXISTS idx_application_clientName ON Application(clientName);
-CREATE INDEX IF NOT EXISTS idx_application_status ON Application(status);
+CREATE INDEX IF NOT EXISTS idx_application_landId ON Application(landId);
+CREATE INDEX IF NOT EXISTS idx_application_appointmentDate ON Application(appointmentDate);
 
 
 `;

@@ -6,8 +6,9 @@ export interface ApplicationType {
   lotIds: string[];
   clientId: string;
   agentDealerId: string;
-  otherAgentIds: string[] ;
+  otherAgentIds: string[];
   appointmentDate: string;
+  rejectionNote?: string;
   status: string;
   createdAt: string;
 }

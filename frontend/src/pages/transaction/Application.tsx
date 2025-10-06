@@ -1,4 +1,4 @@
-import { SetStateAction, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -46,7 +46,7 @@ export default function Application() {
   return (
     <>
       <PageMeta title="Project-land" description="Land Management" />
-      <PageBreadcrumb pageTitle="Land" />
+      <PageBreadcrumb pageTitle="Application" />
       <div className="space-y-6">
         <ComponentCard
           title="Applications"
@@ -66,7 +66,9 @@ export default function Application() {
           }
         >
           <ApplicationTable
+            dispatch={dispatch}
             navigate={navigate}
+            agentData={curUser?.role === Role.Agent ? curUser : undefined}
             deleteApplicationHanlder={deleteHanler}
             isEmployee={curUser?.role === Role.Employee}
             setSearch={setSearch}

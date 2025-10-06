@@ -11,21 +11,31 @@ export class AppController {
 
     const createdApp = await this.appRepo.create(applicationData);
 
-    if (!createdApp) {
-      res.json({
-        success: false,
-        message: "Failed to create application",
-      });
-      return;
-    }
-
     res.json({
-      success: true,
-      message: "Application created successfully",
-      data: createdApp,
+      ...createdApp,
     });
   };
 
+  getRejectedApplictionByAgentId = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const agentId = req.body.agentId;
+    console.log("agentId,d", agentId);
+    const fetchedApplication =
+      await this.appRepo.getRejectedApplicationsByAgentId(agentId);
+
+    res.json({
+      application: fetchedApplication,
+    });
+  };
+
+  /**
+   *
+   * @enum agents users
+   * @param req
+   * @param res
+   */
   updateApplication = async (req: Request, res: Response): Promise<void> => {
     const _id = req.params._id;
     const ApplicationData = req.body;
@@ -34,10 +44,30 @@ export class AppController {
       applicationId: _id,
       data: ApplicationData,
     });
-
     res.json({ success: isSuccess });
   };
 
+  updateApplicationStatus = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const { status, rejectionNote } = req.body;
+
+    await this.appRepo.updateStatus({
+      applicationId: req.params._id,
+      status: status,
+      rejectionNote: rejectionNote,
+    });
+
+    res.json({ success: true });
+  };
+
+  /**
+   *
+   * @param req
+   * @param res
+   * @eturns application dedicated to agent via application dealer or other agents
+   */
   getAppByAgent = async (req: Request, res: Response): Promise<void> => {
     const agentId = req.params._id;
 
@@ -54,6 +84,11 @@ export class AppController {
     res.json({ applications: parsedData });
   };
 
+  /**
+   *
+   * @param req
+   * @returnes filtered(on search) application for agents types user
+   */
   getFilteredAppsByAgents = async (
     req: Request,
     res: Response
@@ -62,7 +97,7 @@ export class AppController {
     const { searchQuery, status } = req.query;
 
     const filterResult = await this.appRepo.getFilteredData({
-      agentId: agentId,
+      ...(agentId !== "undefined" && { agentId }),
       filters: { search: searchQuery as string, status: status as string },
     });
 
@@ -100,16 +135,6 @@ export class AppController {
   fetchAllApp = async (_: Request, res: Response): Promise<void> => {
     const response = await this.appRepo.getAll();
     res.json({ applications: response });
-  };
-
-  updateStats = async (req: Request, res: Response): Promise<void> => {
-    const { status } = req.body;
-    const response = await this.appRepo.updateStatus({
-      applicationId: parseInt(req.params._id, 10),
-      newStatus: status,
-    });
-
-    res.json({ success: response });
   };
 
   delete = async (req: Request, res: Response): Promise<void> => {

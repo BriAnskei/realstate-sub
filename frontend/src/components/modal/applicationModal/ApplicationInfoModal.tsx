@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { ApplicationType } from "../../../store/slices/applicationSlice";
+import {
+  ApplicationType,
+  Status,
+} from "../../../store/slices/applicationSlice";
 import Label from "../../form/Label";
 import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
@@ -325,7 +328,18 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
                     <div className="col-span-2 lg:col-span-1">
                       <Label>Status</Label>
                       <div className="flex items-center">
-                        <Badge>{application.status}</Badge>
+                        <Badge
+                          size="sm"
+                          color={
+                            application.status === Status.pending
+                              ? undefined
+                              : application.status === Status.approved
+                              ? "success"
+                              : "warning"
+                          }
+                        >
+                          {application.status}
+                        </Badge>
                       </div>
                     </div>
                   )}

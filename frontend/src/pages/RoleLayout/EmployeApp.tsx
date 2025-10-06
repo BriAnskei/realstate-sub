@@ -21,8 +21,24 @@ import Buttons from "../UiElements/Buttons";
 import Images from "../UiElements/Images";
 import Videos from "../UiElements/Videos";
 import Application from "../transaction/Application";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../store/store";
+import { fetchAllAPP } from "../../store/slices/applicationSlice";
 
 export default function EmployeApp() {
+  const dispatch = useDispatch<AppDispatch>();
+  useEffect(() => {
+    async function fetchEmployeeStates() {
+      try {
+        await dispatch(fetchAllAPP());
+      } catch (error) {
+        console.log("Error in fetchEmployeeStates", error);
+      }
+    }
+    fetchEmployeeStates();
+  }, []);
+
   return (
     <>
       <ScrollToTop />

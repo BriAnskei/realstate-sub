@@ -32,6 +32,7 @@ import { AppDispatch } from "../../store/store";
 import { fetchByAgent } from "../../store/slices/applicationSlice";
 import { userUser } from "../../context/UserContext";
 import { useApplication } from "../../context/ApplicationContext";
+import RejectedApplication from "../report/RejectedApplication";
 
 export default function AgentsApp() {
   const dispatch = useDispatch<AppDispatch>();
@@ -64,7 +65,8 @@ export default function AgentsApp() {
             element={<ApplicationForm />}
           />
 
-          {/* <Route path="/sale" element={<Sale />} /> */}
+          {/* Report */}
+          <Route path="/report/appliction" element={<RejectedApplication />} />
 
           {/* Client and agent management */}
           <Route path="/client" element={<Client />} />

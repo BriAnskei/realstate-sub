@@ -8,6 +8,7 @@ export const addNewApp = createAsyncThunk(
   async (payload: ApplicationType, { rejectWithValue }) => {
     try {
       const res = await AppApi.add(payload);
+      console.log("adding response: ", res);
 
       if (!res.success)
         return rejectWithValue(res.message || "Failed to add appl");
@@ -31,6 +32,22 @@ export const updateApplication = createAsyncThunk(
       if (!res.success) {
         return rejectWithValue(res.message || "failed to update application");
       }
+
+      return payload;
+    } catch (error) {
+      return rejectWithValue("Failed to update appliction:" + error);
+    }
+  }
+);
+
+export const updateApplicationStatus = createAsyncThunk(
+  "application/status/update",
+  async (
+    payload: { applicationId: string; status: string; rejectionNote?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      await AppApi.updateStatus(payload);
 
       return payload;
     } catch (error) {
@@ -117,7 +134,8 @@ export interface ApplicationType {
   agentDealerId?: string;
   otherAgentIds?: number[];
   appointmentDate?: string;
-  status?: Status.pending;
+  rejectionNotes?: string;
+  status?: string;
   createdAt?: string;
 }
 
@@ -148,13 +166,18 @@ const applicationSlice = createSlice({
       state.filterById = {};
       state.filterIds = [];
     },
+    clearApplicationState: () => ({
+      ...initialState,
+      byId: { ...initialState.byId },
+      filterById: { ...initialState.filterById },
+    }),
   },
   extraReducers: (builder) => {
     builder.addCase(addNewApp.pending, (state) => {
       state.loading = true;
     });
     builder.addCase(addNewApp.fulfilled, (state, action) => {
-      const { byId, allIds } = normalizeResponse(action.payload.data);
+      const { byId, allIds } = normalizeResponse(action.payload.application);
 
       state.byId = { ...state.byId, ...byId };
       state.allIds = [allIds[0], ...state.allIds];
@@ -262,8 +285,31 @@ const applicationSlice = createSlice({
       state.updateLoading = false;
       state.error = action.payload as string;
     });
+
+    builder.addCase(updateApplicationStatus.pending, (state) => {
+      state.updateLoading = true;
+    });
+    builder.addCase(updateApplicationStatus.fulfilled, (state, action) => {
+      const { applicationId, status } = action.payload;
+
+      state.byId[applicationId] = {
+        ...state.byId[applicationId],
+        status,
+      };
+
+      state.filterById[applicationId] = {
+        ...state.filterById[applicationId],
+        status,
+      };
+
+      state.updateLoading = false;
+    });
+    builder.addCase(updateApplicationStatus.rejected, (state, action) => {
+      state.updateLoading = false;
+      state.error = action.payload as string;
+    });
   },
 });
 
-export const { resetFilters } = applicationSlice.actions;
+export const { resetFilters, clearApplicationState } = applicationSlice.actions;
 export default applicationSlice.reducer;

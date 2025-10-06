@@ -5,7 +5,23 @@ import { AppController } from "../controllers/appController";
 export class ApplicationRepo {
   constructor(private db: Database) {}
 
-  async create(application: ApplicationType): Promise<ApplicationType | null> {
+  async create(application: ApplicationType): Promise<{
+    success: boolean;
+    message?: string;
+    application?: ApplicationType;
+  }> {
+    // check if clienAppliction exist(landIdd, appointment)
+    const doesApplicationApointmentExist =
+      await this.findByClientLandAndDateIfExist(application);
+
+    if (doesApplicationApointmentExist) {
+      return {
+        success: false,
+        message:
+          "A record with the specified land ID, client ID, and appointment date already exists in the system. Please update the existing application if modifications are required.",
+      };
+    }
+
     const res = await this.db.run(
       `
       INSERT INTO Application (
@@ -31,7 +47,30 @@ export class ApplicationRepo {
 
     const createdApp = await this.findById(appId!);
 
-    return createdApp;
+    return { success: true, application: createdApp! };
+  }
+
+  async findByClientLandAndDateIfExist(
+    application: ApplicationType
+  ): Promise<boolean> {
+    const { clientId, landId, appointmentDate } = application;
+
+    const query = `
+    SELECT *
+    FROM Application
+    WHERE clientId = ?
+      AND landId = ?
+      AND appointmentDate = ?
+    LIMIT 1
+  `;
+
+    return Boolean(
+      await this.db.get<ApplicationType>(query, [
+        clientId,
+        landId,
+        appointmentDate,
+      ])
+    );
   }
 
   async update(payload: {
@@ -65,6 +104,61 @@ export class ApplicationRepo {
     return true;
   }
 
+  async updateStatus(payload: {
+    status: string;
+    applicationId: string;
+    rejectionNote?: string;
+  }) {
+    const { status, applicationId, rejectionNote } = payload;
+
+    if (status === "rejected") {
+      if (!rejectionNote) {
+        throw new Error(
+          "Rejection note is required when rejecting an application"
+        );
+      }
+      await this.db.run(
+        `
+      UPDATE Application 
+      SET status = 'rejected', rejectionNote = ? 
+      WHERE _id = ?
+    `,
+        [rejectionNote, applicationId]
+      );
+    } else if (status === "approved") {
+      await this.db.run(
+        `
+      UPDATE Application 
+      SET status = 'approved', rejectionNote = NULL 
+      WHERE _id = ?
+    `,
+        [applicationId]
+      );
+    } else {
+      // For other status updates, just update the status
+      await this.db.run(
+        `
+      UPDATE Application 
+      SET status = ? 
+      WHERE _id = ?
+    `,
+        [status, applicationId]
+      );
+    }
+  }
+
+  async getAll(): Promise<ApplicationType[]> {
+    const rows = await this.db.all<any[]>(
+      `SELECT * FROM Application WHERE status != 'rejected'`
+    );
+
+    return rows.map((row) => ({
+      ...row,
+      lotIds: row.lotIds ? JSON.parse(row.lotIds) : [],
+      otherAgentIds: row.otherAgentIds ? JSON.parse(row.otherAgentIds) : [],
+    }));
+  }
+
   /**
    *
    * @param agentId
@@ -89,7 +183,8 @@ export class ApplicationRepo {
    *
    * @param agentId
    * @param filters
-   * @returns returns the filtered application of corresponding agents or all applications
+   * @returns returns the filtered application of corresponding agent(if it exist)s or all applications
+   * this fucntion is useable for employee for filtering
    */
   async getFilteredData(payload: {
     agentId?: string;
@@ -103,7 +198,8 @@ export class ApplicationRepo {
     const params: any[] = [];
 
     // Add agent filter only if agentId is provided
-    if (agentId) {
+    if (agentId && agentId !== undefined) {
+      console.log("agnet iD, ", agentId);
       query += ` AND (
         agentDealerId = ?
         OR EXISTS (
@@ -131,7 +227,37 @@ export class ApplicationRepo {
 
     query += ` ORDER BY createdAt DESC`;
 
+    console.log("emplement query: ", query);
+
     return this.db.all<ApplicationType[]>(query, params);
+  }
+
+  async getRejectedApplicationsByAgentId(
+    agentId: string
+  ): Promise<ApplicationType[]> {
+    const query = `
+    SELECT *
+    FROM Application
+    WHERE status = 'rejected'
+      AND (
+        agentDealerId = ?
+        OR EXISTS (
+          SELECT 1
+          FROM json_each(Application.otherAgentIds)
+          WHERE json_each.value = CAST(? AS TEXT)
+             OR json_each.value = CAST(? AS INTEGER)
+        )
+      )
+    ORDER BY createdAt DESC
+  `;
+
+    const rows = await this.db.all(query, [agentId, agentId, agentId]);
+
+    return rows.map((row) => ({
+      ...row,
+      lotIds: row.lotIds ? JSON.parse(row.lotIds) : [],
+      otherAgentIds: row.otherAgentIds ? JSON.parse(row.otherAgentIds) : [],
+    }));
   }
 
   /**
@@ -146,33 +272,6 @@ export class ApplicationRepo {
     );
 
     return row ?? null;
-  }
-
-  async getAll(): Promise<ApplicationType[]> {
-    const rows = await this.db.all<any[]>(`SELECT * FROM Application`);
-
-    return rows.map((row) => ({
-      ...row,
-      lotIds: row.lotIds ? JSON.parse(row.lotIds) : [],
-      otherAgentIds: row.otherAgentIds ? JSON.parse(row.otherAgentIds) : [],
-    }));
-  }
-
-  async updateStatus(payload: {
-    applicationId: number;
-    newStatus: string;
-  }): Promise<boolean> {
-    const { applicationId, newStatus } = payload;
-    await this.db.run(
-      `
-    UPDATE Application
-    SET status = ?
-    WHERE _id = ?;
-  `,
-      [newStatus, applicationId]
-    );
-
-    return true;
   }
 
   async delete(id: string): Promise<boolean> {

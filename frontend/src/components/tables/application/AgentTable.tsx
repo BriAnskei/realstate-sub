@@ -23,11 +23,8 @@ export function AgentTable({ setApplication, dealersData }: AgentTableProp) {
   const { curUser, users } = userUser();
   const [selectedAgents, setSelectedAgents] = useState<UserType[]>([]);
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    console.table(dealersData);
-  }, [dealersData]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize selected agents from dealersData on mount/when dealersData changes
   useEffect(() => {
@@ -37,7 +34,6 @@ export function AgentTable({ setApplication, dealersData }: AgentTableProp) {
         dealersData.otherAgentsId?.includes(user._id!)
       );
 
-      console.log("Initializing agents from dealersData:", existingAgents);
       setSelectedAgents(existingAgents);
       setIsInitialized(true);
     } else if (!dealersData && !isInitialized) {
@@ -57,11 +53,6 @@ export function AgentTable({ setApplication, dealersData }: AgentTableProp) {
       agentDealerId: dealerId,
       otherAgentIds: selectedAgents.map((agent) => parseInt(agent._id!, 10)),
     }));
-
-    console.log("Updated application with agents:", {
-      dealerId,
-      otherAgentIds: selectedAgents.map((agent) => agent._id),
-    });
   }, [selectedAgents, isInitialized]);
 
   const deleteHandler = (agentId: string) => {
@@ -83,17 +74,12 @@ export function AgentTable({ setApplication, dealersData }: AgentTableProp) {
     const dealerId = dealersData?.agentDealer || curUser?._id;
     const dealer = users.find((user) => user._id === dealerId);
 
-    if (!dealer) {
-      console.warn("Cannot find dealer with ID:", dealerId);
-      return selectedAgents;
-    }
-
     // Remove dealer from selectedAgents if they're there (shouldn't happen, but just in case)
     const filteredSelectedAgents = selectedAgents.filter(
       (agent) => agent._id !== dealerId
     );
 
-    return [dealer, ...filteredSelectedAgents];
+    return [dealer!, ...filteredSelectedAgents];
   }, [selectedAgents, curUser, dealersData, users]);
 
   return (
@@ -144,7 +130,7 @@ export function AgentTable({ setApplication, dealersData }: AgentTableProp) {
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {allAgents.length > 0 ? (
                   allAgents.map((agent, index) => {
-                    const dealerStatus = isDealer(agent);
+                    const dealerStatus = isDealer(agent!);
 
                     return (
                       <TableRow

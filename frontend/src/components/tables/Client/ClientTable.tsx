@@ -47,7 +47,7 @@ export default function ClientTable({
   const { allIds, byId, filterLoading, filterById, filterIds, loading } =
     useSelector((state: RootState) => state.client);
 
-  const getData = useFilteredData({
+  const getData = useFilteredData<ClientType>({
     originalData: { byId, allIds },
     filteredData: { byId: filterById, allIds: filterIds },
     filterOptions: {

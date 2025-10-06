@@ -8,6 +8,7 @@ import {
 import {
   ApplicationType,
   Status,
+  updateApplicationStatus,
 } from "../../../store/slices/applicationSlice";
 
 import {
@@ -24,22 +25,28 @@ import LoadingOverlay from "../../loading/LoadingOverlay";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import ApplicationInfoModal from "../../modal/applicationModal/ApplicationInfoModal";
-import { useEffect, useState } from "react";
+import { Dispatch, useEffect, useState } from "react";
 import { useFilteredData } from "../../../hooks/useFilteredData";
 import ConfirmationModal from "../../modal/ConfirmtionModal";
 import useConfirmationModal from "../../../hooks/useConfirmationModal";
 import { NavigateFunction } from "react-router";
 import { useApplication } from "../../../context/ApplicationContext";
+import { UserType } from "../../../context/UserContext";
+import ApplicationRejectionModal from "../../modal/applicationModal/ApplicationRejectionModal";
+import { useRejectApplicationModal } from "../../../hooks/projects-hooks/modal/useRejectApplicationModal";
+import { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 
 function AppTable(payload: {
   application: ApplicationType;
   isEmployee: boolean;
+  agentId?: string; // filed only if user is agent
   openApplicationView: (data: ApplicationType) => void;
   openDeleteConfirmation: () => void;
   setApplicationIdDelete: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
   editApplication: (application: ApplicationType) => void;
+  openAppRejectionModal: (applicationToReject: ApplicationType) => void; // only be filed if user is employee
 }) {
   const {
     application,
@@ -48,6 +55,8 @@ function AppTable(payload: {
     openDeleteConfirmation,
     setApplicationIdDelete,
     editApplication,
+    agentId,
+    openAppRejectionModal,
   } = payload;
 
   const onDeleteAppllication = () => {
@@ -171,8 +180,15 @@ function AppTable(payload: {
         <div className="flex gap-1 justify-center">
           {isEmployee ? (
             <>
-              <ApproveIcon className=" cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors" />
-              <RejectIcon className="cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors" />
+              <ViewIcon
+                className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                onClick={() => openApplicationView(application)}
+              />
+              <ApproveIcon className="w-3.5 h-3.5 cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors" />
+              <RejectIcon
+                className="w-3.5 h-3.5 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                onClick={() => openAppRejectionModal(application)}
+              />
             </>
           ) : (
             <>
@@ -180,14 +196,18 @@ function AppTable(payload: {
                 className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 onClick={() => openApplicationView(application)}
               />
-              <EditIcon
-                className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                onClick={() => editApplication(application)}
-              />
-              <DeleteIcon
-                className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                onClick={onDeleteAppllication}
-              />
+              {agentId && agentId === application.agentDealerId && (
+                <EditIcon
+                  className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  onClick={() => editApplication(application)}
+                />
+              )}
+              {agentId && agentId === application.agentDealerId && (
+                <DeleteIcon
+                  className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                  onClick={onDeleteAppllication}
+                />
+              )}
             </>
           )}
         </div>
@@ -201,21 +221,26 @@ interface ApplicationTableProp {
   deleteApplicationHanlder: (appId: string) => Promise<void>;
   setSearch: React.Dispatch<React.SetStateAction<string | undefined>>;
   setFilterStatus?: React.Dispatch<React.SetStateAction<string | undefined>>;
+  agentData?: UserType; // only filed when user is agent
   search?: string;
   filter?: string;
   isFiltering?: boolean;
   isEmployee: boolean;
+  dispatch: ThunkDispatch<any, undefined, UnknownAction> &
+    Dispatch<UnknownAction>;
 }
 
 export default function ApplicationTable({
   navigate,
   setSearch,
   deleteApplicationHanlder,
+  agentData,
   setFilterStatus,
   search,
   isFiltering,
   filter,
   isEmployee,
+  dispatch,
 }: ApplicationTableProp) {
   // used in application info modal
   const { fetchedLots, fetchingLoading } = useSelector(
@@ -223,12 +248,30 @@ export default function ApplicationTable({
   );
 
   const { setEditApplication } = useApplication();
-  const { byId, allIds, loading, filterLoading, filterById, filterIds } =
-    useSelector((state: RootState) => state.application);
+  const {
+    byId,
+    allIds,
+    loading,
+    filterLoading,
+    filterById,
+    filterIds,
+    updateLoading,
+  } = useSelector((state: RootState) => state.application);
 
   // confirmation modal for deletion
   const { isConfirmationOpen, openConfirmationModal, closeConfirmationModal } =
     useConfirmationModal();
+
+  const {
+    appToReject,
+    isAppRejectionOpen,
+    openAppRejectionModal,
+    closeAppRejectionModal,
+  } = useRejectApplicationModal();
+
+  useEffect(() => {
+    console.log("opening rejection modal;: ", isAppRejectionOpen);
+  }, [isAppRejectionOpen]);
 
   // For application info modal view
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -253,11 +296,24 @@ export default function ApplicationTable({
     navigate("/application/update");
   };
 
+  const rejectionHanlder = async (payload: {
+    applicationId: string;
+    rejectionNote: string;
+  }) => {
+    try {
+      await dispatch(
+        updateApplicationStatus({ ...payload, status: "rejected" })
+      );
+    } catch (error) {
+      console.log("Error in rejectionHanlder", error);
+    }
+  };
+
   const resetFilter = () => {
     setSearch(undefined);
   };
 
-  const getDisplayData = useFilteredData({
+  const getDisplayData = useFilteredData<ApplicationType>({
     originalData: { byId, allIds },
     filteredData: { allIds: filterIds, byId: filterById },
     filterOptions: {
@@ -276,7 +332,7 @@ export default function ApplicationTable({
         onSortChange={setFilterStatus}
         sortOptions={[
           { label: "Approved", value: "approved" },
-          { label: "Rejected", value: "rejected" },
+          ...(!isEmployee ? [{ label: "Rejected", value: "rejected" }] : []),
           { label: "Pending", value: "pending" },
         ]}
         onClearFilters={resetFilter}
@@ -361,14 +417,17 @@ export default function ApplicationTable({
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {getDisplayData.allIds.map((id) => {
                   const app: ApplicationType = getDisplayData.byId[id];
+
                   return (
                     <AppTable
                       key={app._id}
                       application={app}
+                      agentId={agentData?._id ?? undefined}
                       isEmployee={isEmployee}
                       setApplicationIdDelete={setApplicationIdDelete}
                       openApplicationView={openAppInfoHandler}
                       openDeleteConfirmation={openConfirmationModal}
+                      openAppRejectionModal={openAppRejectionModal}
                       editApplication={editApplicationHanlder}
                     />
                   );
@@ -385,33 +444,42 @@ export default function ApplicationTable({
         application={applicationView}
         onClose={() => setIsModalOpen(false)}
       />
-      <ConfirmationModal
-        title="Delete Application"
-        message="Are you sure you want to delete this application? This action cannot be undone and will permanently remove all associated data from the system."
-        buttonText="Delete Application"
-        cancelText="Cancel"
-        variant="danger"
-        icon={
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            className="w-6 h-6 text-red-600"
-          >
-            <path
-              d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        }
-        bgIcon="bg-red-100"
-        bgButton="bg-red-600 hover:bg-red-700"
-        loading={loading}
-        isOpen={isConfirmationOpen}
-        onConfirm={() => deleteApplicationHanlder(applicationIdDelete!)}
-        onClose={closeConfirmationModal}
+      {agentData && (
+        <ConfirmationModal
+          title="Delete Application"
+          message="Are you sure you want to delete this application? This action cannot be undone and will permanently remove all associated data from the system."
+          buttonText="Delete Application"
+          cancelText="Cancel"
+          variant="danger"
+          icon={
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="w-6 h-6 text-red-600"
+            >
+              <path
+                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          }
+          bgIcon="bg-red-100"
+          bgButton="bg-red-600 hover:bg-red-700"
+          loading={loading}
+          isOpen={isConfirmationOpen}
+          onConfirm={() => deleteApplicationHanlder(applicationIdDelete!)}
+          onClose={closeConfirmationModal}
+        />
+      )}
+      <ApplicationRejectionModal
+        updateLoading={updateLoading}
+        isOpen={isAppRejectionOpen}
+        onClose={closeAppRejectionModal}
+        application={appToReject ?? undefined}
+        onSubmit={rejectionHanlder}
       />
     </>
   );

@@ -77,17 +77,13 @@ export function AppLotTable({
   useEffect(() => {
     if (selectedLots) {
       const allLotsId = selectedLots.map((lot) => parseInt(lot._id, 10));
-
+      // set updates inthe appliciton input state
       setApplication((prev) => ({ ...prev, lotIds: allLotsId }));
     }
   }, [selectedLots]);
 
   const deleteHanlder = (lotId: string) => {
-    setSelectedLots((prev) => {
-      return prev?.filter((lot) => {
-        lot._id !== lotId;
-      });
-    });
+    setSelectedLots((prev) => prev?.filter((lot) => lot._id !== lotId));
   };
 
   const openLotModal = () => {

@@ -9,7 +9,7 @@ export class AppApi {
   ): Promise<{
     success: boolean;
     message: string;
-    data: ApplicationType;
+    application: ApplicationType;
   }> => {
     try {
       const res = await api.post("/api/application/add", payload);
@@ -41,15 +41,26 @@ export class AppApi {
     }
   };
 
-  //
+  /**
+   * Updates the status of an application.
+   *
+   * ⚠️ **Access Restriction:** Only users with type "Employee" can call this method.
+   *
+   * @param payload - The data needed to update the status.
+   * @param payload.applicationId - The ID of the application to update.
+   * @param payload.newStatus - The new status value.
+   *
+   */
   static updateStatus = async (payload: {
     applicationId: string;
     status: string;
+    rejectionNote?: string;
   }): Promise<{ success: boolean }> => {
+    const { applicationId, status, rejectionNote } = payload;
     try {
       const res = await api.post(
-        `/api/application/status-update/${payload.applicationId}`,
-        { status: payload.status }
+        `/api/application/update/status/${applicationId}`,
+        { status: status, ...(status === "rejected" && { rejectionNote }) }
       );
 
       return res.data;

@@ -15,17 +15,12 @@ export function createApplictionRouter(db: Database) {
     asyncHandler(appController.addNewApp, "addNewApp")
   );
 
-  applicationRouter.post(
-    "/update/:_id",
-    asyncHandler(appController.updateApplication, "updateApplication")
-  );
-
   applicationRouter.get(
     "/get/all",
     asyncHandler(appController.fetchAllApp, "fetchAllApp")
   );
 
-  // Id is for agent, might be optional if the user is employee
+  // Id is for agent, might be undifined if the user is employee
   applicationRouter.get(
     "/filter/:_id",
     asyncHandler(
@@ -35,13 +30,34 @@ export function createApplictionRouter(db: Database) {
   );
 
   applicationRouter.get(
+    "/get/rejected",
+    asyncHandler(
+      appController.getRejectedApplictionByAgentId,
+      "getRejectedApplictionByAgentId"
+    )
+  );
+
+  applicationRouter.get(
     "/get/by-agents/:_id",
     asyncHandler(appController.getAppByAgent, "getAppByAgent")
   );
 
   applicationRouter.post(
+    "/update/:_id",
+    asyncHandler(appController.updateApplication, "updateApplication")
+  );
+
+  applicationRouter.post(
+    "/update/status/:_id",
+    asyncHandler(
+      appController.updateApplicationStatus,
+      "updateApplicationStatus"
+    )
+  );
+
+  applicationRouter.post(
     "/status-update/:_id",
-    asyncHandler(appController.updateStats, "updateStats")
+    asyncHandler(appController.updateApplicationStatus, "updateStats")
   );
 
   applicationRouter.post(

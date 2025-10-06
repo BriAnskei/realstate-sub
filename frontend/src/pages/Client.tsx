@@ -21,6 +21,8 @@ import formDataToObject from "../utils/formDataToObject";
 import { debouncer } from "../utils/debouncer";
 import ClientInfoModal from "../components/modal/client/ClientInfoModal";
 import useClientInfoModal from "../hooks/client/useClientViewModal";
+import { userUser } from "../context/UserContext";
+import { Role } from "../context/mockData";
 
 export default function Client() {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,6 +39,8 @@ export default function Client() {
 
   const { isConfirmationOpen, closeConfirmationModal, openConfirmationModal } =
     useConfirmationModal();
+
+  const { curUser } = userUser();
 
   const {
     isClientInfoModalOpen,
@@ -118,6 +122,7 @@ export default function Client() {
           ]}
         >
           <ClientTable
+            isEmployee={curUser?.role === Role.Employee}
             status={status}
             openClientInfoModal={openClientInfoModal}
             setFilterStatus={setStatus}
