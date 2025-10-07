@@ -1,3 +1,5 @@
+import { Database } from "sqlite";
+
 export class LotService {
   static parseArrayIfNeeded(data: any) {
     if (typeof data === "string") {
@@ -14,5 +16,23 @@ export class LotService {
     return Object.fromEntries(
       Object.entries(data).filter(([key]) => !keys.includes(key))
     ) as Partial<T>;
+  }
+  static async markLotsAsReserved(
+    db: Database,
+    lotIds: string[]
+  ): Promise<void> {
+    if (!lotIds || lotIds.length === 0) {
+      throw new Error("No lot IDs provided to mark as reserved.");
+    }
+
+    // Build placeholders like (?, ?, ?)
+    const placeholders = lotIds.map(() => "?").join(", ");
+
+    await db.run(
+      `UPDATE Lot 
+       SET status = 'Reserved' 
+       WHERE _id IN (${placeholders})`,
+      lotIds
+    );
   }
 }

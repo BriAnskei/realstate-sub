@@ -8,6 +8,7 @@ import landRouter from "./routes/landRouter";
 import { createClientRouter } from "./routes/clientRouter";
 import { UPLOAD_PATHS } from "./middleware/multer/UploadPaths";
 import { createApplictionRouter } from "./routes/appRouter";
+import { createReservationRouter } from "./routes/reservationRouter";
 
 const app = express();
 const PORT = 4000;
@@ -44,6 +45,7 @@ async function startServer() {
     app.use("/api/lot", createLotRouter(db)); // Pass db to factory
     app.use("/api/client", createClientRouter(db));
     app.use("/api/application", createApplictionRouter(db));
+    app.use("/api/reservation", createReservationRouter(db));
 
     // Static routes (images)
     app.use("/uploads/clients", express.static(UPLOAD_PATHS.CLIENTS));

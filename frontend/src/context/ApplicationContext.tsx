@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { ApplicationType } from "../store/slices/applicationSlice";
-import { useLocation } from "react-router";
 
 interface ContextValue {
   editApplication: ApplicationType | undefined;

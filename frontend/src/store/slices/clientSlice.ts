@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { NormalizeState } from "../../types/TypesHelper";
 import { normalizeResponse } from "../../utils/normalizeResponse";
 import { ClientApi } from "../../utils/api/clientApi";
-import { RootState } from "../store";
 
 export const addClient = createAsyncThunk(
   "client/add",
@@ -57,10 +56,10 @@ export const getClientById = createAsyncThunk(
   async (clientId: string, { rejectWithValue, getState }) => {
     try {
       // check in state if the client exist before fetching
-      const state = getState() as RootState;
-      const { byId } = state.client;
-      if (byId[clientId]) {
-        return byId[clientId];
+      const { client: clientState } = getState() as any;
+      const clientById = clientState.byId;
+      if (clientById[clientId]) {
+        return clientById[clientId];
       }
 
       const response = await ClientApi.getClientById(clientId);

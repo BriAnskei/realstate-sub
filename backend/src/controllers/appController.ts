@@ -39,7 +39,7 @@ export class AppController {
   updateApplication = async (req: Request, res: Response): Promise<void> => {
     const _id = req.params._id;
     const ApplicationData = req.body;
-    console.log("Updating appliction: ", ApplicationData);
+
     const isSuccess: boolean = await this.appRepo.update({
       applicationId: _id,
       data: ApplicationData,
@@ -51,15 +51,16 @@ export class AppController {
     req: Request,
     res: Response
   ): Promise<void> => {
-    const { status, rejectionNote } = req.body;
+    const { status, application, note } = req.body;
 
-    await this.appRepo.updateStatus({
+    const response = await this.appRepo.updateStatus({
       applicationId: req.params._id,
-      status: status,
-      rejectionNote: rejectionNote,
+      status,
+      application,
+      note,
     });
 
-    res.json({ success: true });
+    res.json({ ...response });
   };
 
   /**
@@ -105,8 +106,8 @@ export class AppController {
   };
 
   getAppById = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const appId = parseInt(id, 10);
+    const { _id } = req.params;
+    const appId = parseInt(_id, 10);
 
     if (isNaN(appId)) {
       res.json({

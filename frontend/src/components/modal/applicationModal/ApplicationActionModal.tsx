@@ -4,26 +4,56 @@ import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
 import { ApplicationType } from "../../../store/slices/applicationSlice";
 
-interface RejectionModalProps {
+type ActionType = "approved" | "rejected";
+
+interface ApplicationActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   application?: ApplicationType;
   onSubmit: (payload: {
-    applicationId: string;
-    rejectionNote: string;
+    application: ApplicationType;
+    note: string;
+    status: ActionType;
   }) => Promise<void>;
   updateLoading: boolean;
+  actionType: ActionType;
 }
 
-const ApplicationRejectionModal: React.FC<RejectionModalProps> = ({
+const ApplicationActionModal: React.FC<ApplicationActionModalProps> = ({
   isOpen,
   onClose,
   application,
   onSubmit,
   updateLoading,
+  actionType,
 }) => {
-  const [rejectionNote, setRejectionNote] = useState("");
+  const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const config = {
+    approved: {
+      title: "Approve Application",
+      description: "Please provide a note for approving this application.",
+      sectionTitle: "Approval Note",
+      label: "Note for Approval",
+      placeholder: "Enter any notes for approving this application...",
+      submitText: "Approve Application",
+      submittingText: "Approving...",
+      buttonVariant: "primary" as const,
+    },
+    rejected: {
+      title: "Reject Application",
+      description: "Please provide a reason for rejecting this application.",
+      sectionTitle: "Rejection Reason",
+      label: "Reason for Rejection",
+      placeholder: "Enter the reason for rejecting this application...",
+      submitText: "Reject Application",
+      submittingText: "Rejecting...",
+      buttonVariant: "primary" as const,
+    },
+  };
+
+  const currentConfig = config[actionType];
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
@@ -41,17 +71,21 @@ const ApplicationRejectionModal: React.FC<RejectionModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!rejectionNote.trim() || !application) {
+    if ((actionType === "rejected" && !note.trim()) || !application) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await onSubmit({ applicationId: application._id, rejectionNote });
-      setRejectionNote("");
+      await onSubmit({
+        application,
+        note,
+        status: actionType,
+      });
+      setNote("");
       handleClose();
     } catch (error) {
-      console.error("Error submitting rejection:", error);
+      console.error(`Error submitting ${actionType}:`, error);
     } finally {
       setIsSubmitting(false);
     }
@@ -60,7 +94,7 @@ const ApplicationRejectionModal: React.FC<RejectionModalProps> = ({
   const handleClose = () => {
     if (updateLoading) return;
 
-    setRejectionNote("");
+    setNote("");
     onClose();
   };
 
@@ -71,10 +105,10 @@ const ApplicationRejectionModal: React.FC<RejectionModalProps> = ({
       <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
         <div className="px-2 pr-14">
           <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-            Reject Application
+            {currentConfig.title}
           </h4>
           <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-            Please provide a reason for rejecting this application.
+            {currentConfig.description}
           </p>
         </div>
 
@@ -110,23 +144,23 @@ const ApplicationRejectionModal: React.FC<RejectionModalProps> = ({
               </div>
             </div>
 
-            {/* Rejection Reason */}
+            {/* Note Section */}
             <div className="mt-7">
               <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                Rejection Reason
+                {currentConfig.sectionTitle}
               </h5>
 
               <div>
                 <Label>
-                  Reason for Rejection <span className="text-red-500">*</span>
+                  {currentConfig.label} <span className="text-red-500">*</span>
                 </Label>
                 <textarea
                   rows={4}
-                  value={rejectionNote}
-                  onChange={(e) => setRejectionNote(e.target.value)}
-                  placeholder="Enter the reason for rejecting this application..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder={currentConfig.placeholder}
                   className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:focus:border-blue-400"
-                  required
+                  required={actionType === "rejected"}
                 />
               </div>
             </div>
@@ -145,9 +179,14 @@ const ApplicationRejectionModal: React.FC<RejectionModalProps> = ({
             <Button
               type="submit"
               size="sm"
-              disabled={isSubmitting || !rejectionNote.trim()}
+              variant={currentConfig.buttonVariant}
+              disabled={
+                isSubmitting || (actionType === "rejected" && !note.trim()) // only require notes when rejection
+              }
             >
-              {isSubmitting ? "Rejecting..." : "Reject Application"}
+              {isSubmitting
+                ? currentConfig.submittingText
+                : currentConfig.submitText}
             </Button>
           </div>
         </form>
@@ -156,4 +195,4 @@ const ApplicationRejectionModal: React.FC<RejectionModalProps> = ({
   );
 };
 
-export default ApplicationRejectionModal;
+export default ApplicationActionModal;

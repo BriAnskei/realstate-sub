@@ -74,6 +74,20 @@ CREATE TABLE IF NOT EXISTS Application (
 CREATE INDEX IF NOT EXISTS idx_application_landName ON Application(landName);
 CREATE INDEX IF NOT EXISTS idx_application_landId ON Application(landId);
 CREATE INDEX IF NOT EXISTS idx_application_appointmentDate ON Application(appointmentDate);
+CREATE INDEX IF NOT EXISTS idx_application_status ON Application(status);
 
+
+
+CREATE TABLE IF NOT EXISTS Reservation (
+  _id INTEGER PRIMARY KEY AUTOINCREMENT,
+  applicationId INTEGER NOT NULL,
+  clientName TEXT NOT NULL,
+  status TEXT NOT NULL,
+  notes TEXT,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_reservation_applicationId ON Reservation(applicationId);
+CREATE INDEX IF NOT EXISTS idx_reservation_status ON Reservation(status);
 
 `;

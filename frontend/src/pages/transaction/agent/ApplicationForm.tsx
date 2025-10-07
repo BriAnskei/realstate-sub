@@ -14,6 +14,7 @@ import backtoTop from "../../../icons/back-to-top-icon.svg";
 import {
   addNewApp,
   ApplicationType,
+  Status,
   updateApplication,
 } from "../../../store/slices/applicationSlice";
 import { AppLotTable } from "../../../components/tables/application/AppLotTable";
@@ -260,6 +261,10 @@ function extractUpdateInputs(
   }
 
   if (updateChanges.size === 0) return undefined;
+
+  // update to pending if editing
+  updateChanges.set("status", Status.pending);
+
   return Object.fromEntries(updateChanges);
 }
 

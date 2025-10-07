@@ -134,6 +134,13 @@ const lotSclice = createSlice({
   name: "lot",
   initialState,
   reducers: {
+    markLotsStatus: (state, action) => {
+      const { lotsIds, status } = action.payload;
+
+      for (let id of lotsIds) {
+        state.byId[id] = { ...state.byId[id], status };
+      }
+    },
     updateName: (state, action) => {
       const { landId, newName } = action.payload;
       const allIds = state.allIds;
@@ -263,6 +270,11 @@ const lotSclice = createSlice({
   },
 });
 
-export const { bulkSaveLots, resetFilter, updateName, resetFetchedLots } =
-  lotSclice.actions;
+export const {
+  bulkSaveLots,
+  resetFilter,
+  updateName,
+  resetFetchedLots,
+  markLotsStatus,
+} = lotSclice.actions;
 export default lotSclice.reducer;

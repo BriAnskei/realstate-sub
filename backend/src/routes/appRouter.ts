@@ -20,6 +20,11 @@ export function createApplictionRouter(db: Database) {
     asyncHandler(appController.fetchAllApp, "fetchAllApp")
   );
 
+  applicationRouter.get(
+    "/get/byId/:_id",
+    asyncHandler(appController.getAppById, "getAppById")
+  );
+
   // Id is for agent, might be undifined if the user is employee
   applicationRouter.get(
     "/filter/:_id",
@@ -29,7 +34,7 @@ export function createApplictionRouter(db: Database) {
     )
   );
 
-  applicationRouter.get(
+  applicationRouter.post(
     "/get/rejected",
     asyncHandler(
       appController.getRejectedApplictionByAgentId,

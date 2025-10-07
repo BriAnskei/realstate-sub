@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
     icon: <TransactionIcon />,
     subItems: [
       { name: "Applications", path: "/application", pro: false },
-      { name: "Reservations", path: "/sale", pro: false },
+      { name: "Reservations", path: "/reservation", pro: false },
       { name: "Contracts", path: "/form-elements", pro: false },
     ],
   },
@@ -333,22 +333,6 @@ const EmployeeSlideBar: React.FC = () => {
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
-            </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
             </div>
           </div>
         </nav>

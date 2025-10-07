@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ApplicationType,
   Status,
@@ -150,24 +150,47 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
 }) => {
   const { getAppDealer } = userUser();
   const [agents, setAgents] = useState<UserType[] | undefined>(undefined);
+  const [fetchingAppDetails, setFetchinngAppDetails] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
     async function fetchRequredData() {
       try {
-        if (!isOpen) return;
-        await dispatch(getLotsByIds(application?.lotIds!));
+        if (
+          !isOpen ||
+          !application?._id ||
+          loading ||
+          fetchingAppDetails ||
+          hasFetchedRef.current
+        )
+          return;
 
+        hasFetchedRef.current = true;
+        setFetchinngAppDetails(true);
+
+        await dispatch(getLotsByIds(application?.lotIds!));
         setAgents(
           getAppDealer({
-            otherAgents: application?.otherAgentIds!.map(String)!,
+            otherAgents: application?.otherAgentIds?.map(String)!,
             dealerId: application?.agentDealerId!,
           })
         );
       } catch (error) {
         console.log(error);
+      } finally {
+        setFetchinngAppDetails(false);
       }
     }
+
     fetchRequredData();
+  }, [isOpen, application?._id, loading]);
+
+  // Reset the ref when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      hasFetchedRef.current = false;
+    }
   }, [isOpen]);
 
   const formatDate = (dateString?: string) => {
@@ -206,7 +229,7 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
           </p>
         </div>
 
-        {loading ? (
+        {loading || fetchingAppDetails ? (
           <LoadingContent />
         ) : !application ? (
           <div className="flex h-[450px] items-center justify-center">

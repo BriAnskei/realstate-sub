@@ -25,6 +25,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store/store";
 import { fetchAllAPP } from "../../store/slices/applicationSlice";
+import Reservation from "../transaction/Reservation";
+import { fetchAllReservaton } from "../../store/slices/reservationSlice";
 
 export default function EmployeApp() {
   const dispatch = useDispatch<AppDispatch>();
@@ -32,6 +34,7 @@ export default function EmployeApp() {
     async function fetchEmployeeStates() {
       try {
         await dispatch(fetchAllAPP());
+        await dispatch(fetchAllReservaton());
       } catch (error) {
         console.log("Error in fetchEmployeeStates", error);
       }
@@ -54,6 +57,7 @@ export default function EmployeApp() {
 
           {/* tansation */}
           <Route path="/application" element={<Application />} />
+          <Route path="/reservation" element={<Reservation />} />
 
           {/* Client and agent management */}
           <Route path="/client" element={<Client />} />

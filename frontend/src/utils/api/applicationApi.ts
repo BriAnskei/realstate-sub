@@ -1,4 +1,5 @@
 import { ApplicationType } from "../../store/slices/applicationSlice";
+import { ReserveType } from "../../store/slices/reservationSlice";
 import { api } from "./instance";
 
 export class AppApi {
@@ -32,11 +33,23 @@ export class AppApi {
         `/api/application/update/${applicationId}`,
         updateData
       );
-      console.log("udpate appliction response; ", res);
 
       return res.data;
     } catch (error) {
       console.log("Error in update", error);
+      throw error;
+    }
+  };
+
+  static getById = async (
+    applicationId: string
+  ): Promise<{ success: boolean; data: ApplicationType }> => {
+    try {
+      const res = await api.get(`/api/application/get/byId/${applicationId}`);
+      console.log("fetching reponse: ", res.data);
+      return res.data;
+    } catch (error) {
+      console.log("Error in getById", error);
       throw error;
     }
   };
@@ -52,15 +65,26 @@ export class AppApi {
    *
    */
   static updateStatus = async (payload: {
-    applicationId: string;
-    status: string;
-    rejectionNote?: string;
-  }): Promise<{ success: boolean }> => {
-    const { applicationId, status, rejectionNote } = payload;
+    application: ApplicationType;
+    status: "approved" | "rejected";
+    note?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    reservation?: ReserveType;
+  }> => {
     try {
+      const { application, status, note } = payload;
+
+      console.log("updating stats payload: ", payload);
+
       const res = await api.post(
-        `/api/application/update/status/${applicationId}`,
-        { status: status, ...(status === "rejected" && { rejectionNote }) }
+        `/api/application/update/status/${application._id}`,
+        {
+          status,
+          note,
+          application,
+        }
       );
 
       return res.data;
@@ -77,6 +101,21 @@ export class AppApi {
       return res.data;
     } catch (error) {
       console.log("Error in getAll", error);
+      throw error;
+    }
+  };
+
+  static getRejectedApByAgentId = async (
+    agentId: string
+  ): Promise<{
+    application: ApplicationType[];
+  }> => {
+    try {
+      const res = await api.post("/api/application/get/rejected", { agentId });
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in getRejectedApByAgentId, ", error);
       throw error;
     }
   };

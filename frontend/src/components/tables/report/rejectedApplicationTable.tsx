@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ViewIcon } from "../../../icons";
+import { useEffect, useState } from "react";
+import { EditIcon, ViewIcon } from "../../../icons";
 import { ApplicationType } from "../../../store/slices/applicationSlice";
 import {
   Table,
@@ -10,38 +10,22 @@ import {
 } from "../../ui/table";
 import Filter from "../../filter/Filter";
 import LoadingOverlay from "../../loading/LoadingOverlay";
-
-// Mock data - replace with actual data from Redux
-const mockRejectedApplications: ApplicationType[] = [
-  {
-    _id: "1",
-    clientName: "John Michael Smith",
-    landName: "Greenfield Estate",
-    appointmentDate: "2025-01-15T10:00:00Z",
-    createdAt: "2025-01-10T08:30:00Z",
-  },
-  {
-    _id: "2",
-    clientName: "Sarah Johnson",
-    landName: "Sunset Valley",
-    appointmentDate: "2025-01-20T14:00:00Z",
-    createdAt: "2025-01-12T11:20:00Z",
-  },
-  {
-    _id: "3",
-    clientName: "Robert Williams",
-    landName: "Mountain View Acres",
-    appointmentDate: "2025-01-18T09:00:00Z",
-    createdAt: "2025-01-11T15:45:00Z",
-  },
-] as any;
+import ViewRejectionDetailsModal from "../../modal/applicationModal/ViewRejectionDetailsModal";
+import { useViewRejectApplictionModal } from "../../../hooks/projects-hooks/modal/useViewRejectApplictionModal";
+import { UserType } from "../../../context/UserContext";
+import { useApplication } from "../../../context/ApplicationContext";
+import { useNavigate } from "react-router";
 
 function RejectedAppTableRow({
   application,
   openApplicationView,
+  isAgentDealer,
+  editApplicationHanlder,
 }: {
   application: ApplicationType;
   openApplicationView: (data: ApplicationType) => void;
+  isAgentDealer: boolean;
+  editApplicationHanlder?: (appliction: ApplicationType) => void;
 }) {
   function getName() {
     const splitedName: string[] = application.clientName?.trim().split(" ")!;
@@ -127,20 +111,43 @@ function RejectedAppTableRow({
             className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             onClick={() => openApplicationView(application)}
           />
+          {isAgentDealer && (
+            <EditIcon
+              className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              onClick={() => editApplicationHanlder!(application)} // this will be note unifined if the user is the dealer of this application
+            />
+          )}
         </div>
       </TableCell>
     </TableRow>
   );
 }
 
-export default function RejectedApplicationTable() {
+interface RejectedApplicationTableProp {
+  rejectedApplictions?: ApplicationType[];
+  currUser?: UserType;
+}
+
+export default function RejectedApplicationTable({
+  rejectedApplictions,
+  currUser,
+}: RejectedApplicationTableProp) {
+  const navigate = useNavigate();
+  const {
+    openAppRejectionViewModal,
+    closeAppRejectionViewModal,
+    appToView,
+    isViewRejectionOpen,
+  } = useViewRejectApplictionModal();
+  const { setEditApplication } = useApplication();
+
+  const editApplicationHanlder = (appliction: ApplicationType) => {
+    setEditApplication(appliction);
+    navigate("/application/update");
+  };
+
   const [search, setSearch] = useState<string | undefined>(undefined);
   const [loading] = useState(false);
-
-  const openAppInfoHandler = (data: ApplicationType) => {
-    console.log("View application:", data);
-    // TODO: Implement modal logic here
-  };
 
   const resetFilter = () => {
     setSearch(undefined);
@@ -200,18 +207,27 @@ export default function RejectedApplicationTable() {
               </TableHeader>
 
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {mockRejectedApplications.map((app) => (
-                  <RejectedAppTableRow
-                    key={app._id}
-                    application={app}
-                    openApplicationView={openAppInfoHandler}
-                  />
-                ))}
+                {rejectedApplictions &&
+                  rejectedApplictions.map((app) => (
+                    <RejectedAppTableRow
+                      key={app._id}
+                      isAgentDealer={currUser?._id === app.agentDealerId}
+                      editApplicationHanlder={editApplicationHanlder}
+                      application={app}
+                      openApplicationView={openAppRejectionViewModal}
+                    />
+                  ))}
               </TableBody>
             </Table>
           </div>
         </div>
       </div>
+
+      <ViewRejectionDetailsModal
+        isOpen={isViewRejectionOpen}
+        onClose={closeAppRejectionViewModal}
+        application={appToView}
+      />
     </>
   );
 }

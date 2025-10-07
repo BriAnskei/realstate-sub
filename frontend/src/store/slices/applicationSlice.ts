@@ -1,7 +1,9 @@
 import { NormalizeState } from "../../types/TypesHelper";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, current } from "@reduxjs/toolkit";
 import { AppApi } from "../../utils/api/applicationApi";
 import { normalizeResponse } from "../../utils/normalizeResponse";
+import { markLotsStatus } from "./lotSlice";
+import { addNewResersation } from "./reservationSlice";
 
 export const addNewApp = createAsyncThunk(
   "application/add",
@@ -20,11 +22,27 @@ export const addNewApp = createAsyncThunk(
   }
 );
 
+/**
+ * @member fucntion is only callable by agents
+ */
+export const getRejectedAppByAgentId = createAsyncThunk(
+  "application/get/rejected",
+  async (agentId: string, { rejectWithValue }) => {
+    try {
+      const res = await AppApi.getRejectedApByAgentId(agentId);
+
+      return res.application;
+    } catch (error) {
+      return rejectWithValue("Failed to update appliction:" + error);
+    }
+  }
+);
+
 export const updateApplication = createAsyncThunk(
   "application/update",
   async (
     payload: { applicationId: string; updateData: Partial<ApplicationType> },
-    { rejectWithValue }
+    { rejectWithValue, dispatch }
   ) => {
     try {
       const res = await AppApi.update(payload);
@@ -33,6 +51,8 @@ export const updateApplication = createAsyncThunk(
         return rejectWithValue(res.message || "failed to update application");
       }
 
+      dispatch(removeUpdatedAppToRejected(payload.applicationId));
+
       return payload;
     } catch (error) {
       return rejectWithValue("Failed to update appliction:" + error);
@@ -40,14 +60,57 @@ export const updateApplication = createAsyncThunk(
   }
 );
 
+export const getApplicationById = createAsyncThunk(
+  "application/update",
+  async (applicationId: string, { rejectWithValue }) => {
+    try {
+      console.log("fetching applicaiotn: ", applicationId);
+
+      const res = await AppApi.getById(applicationId);
+
+      if (!res.success) {
+        return rejectWithValue("Failed to fetch by application id");
+      }
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue("Error on getApplicationById" + error);
+    }
+  }
+);
+
 export const updateApplicationStatus = createAsyncThunk(
   "application/status/update",
   async (
-    payload: { applicationId: string; status: string; rejectionNote?: string },
-    { rejectWithValue }
+    payload: {
+      application: ApplicationType;
+      status: "approved" | "rejected";
+      note?: string;
+    },
+    { getState, dispatch, rejectWithValue }
   ) => {
     try {
-      await AppApi.updateStatus(payload);
+      const res = await AppApi.updateStatus(payload);
+
+      if (!res.success) {
+        return rejectWithValue(res.message || "Failed to update status");
+      }
+
+      // if status is approve process lots for reservation and display the  reservationData from the api
+      if (payload.status === Status.approved) {
+        const state = getState() as any;
+        const applicationData: ApplicationType =
+          state.application.byId[payload.application._id];
+
+        dispatch(addNewResersation(res.reservation!));
+
+        dispatch(
+          markLotsStatus({
+            lotsIds: applicationData.lotIds,
+            status: payload.status,
+          })
+        );
+      }
 
       return payload;
     } catch (error) {
@@ -64,7 +127,7 @@ export const fetchAllAPP = createAsyncThunk(
       const res = await AppApi.getAll();
       return res.applications;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue("error in fetchAllApp" + error);
     }
   }
 );
@@ -81,7 +144,6 @@ export const filterApplication = createAsyncThunk(
     try {
       const res = await AppApi.getFilteredApp(payload);
 
-      console.log("api response: ", res);
       return res.applications;
     } catch (error) {
       return rejectWithValue(error);
@@ -134,7 +196,7 @@ export interface ApplicationType {
   agentDealerId?: string;
   otherAgentIds?: number[];
   appointmentDate?: string;
-  rejectionNotes?: string;
+  rejectionNote?: string;
   status?: string;
   createdAt?: string;
 }
@@ -144,6 +206,10 @@ interface ApplicationState extends NormalizeState<ApplicationType> {
   filterIds: string[];
   filterLoading: boolean;
   updateLoading: boolean;
+
+  // for  rejectedAPplictions - agent view only
+  rejectedApplications: ApplicationType[];
+  fetchingRejectedLoading: boolean;
 }
 
 const initialState: ApplicationState = {
@@ -155,6 +221,9 @@ const initialState: ApplicationState = {
   loading: false,
   updateLoading: false,
   filterLoading: false,
+
+  rejectedApplications: [],
+  fetchingRejectedLoading: false,
 };
 
 const applicationSlice = createSlice({
@@ -171,6 +240,13 @@ const applicationSlice = createSlice({
       byId: { ...initialState.byId },
       filterById: { ...initialState.filterById },
     }),
+    removeUpdatedAppToRejected: (state, action) => {
+      const applictionId = action.payload;
+
+      state.rejectedApplications = state.rejectedApplications.filter(
+        (app) => app._id !== applictionId
+      );
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(addNewApp.pending, (state) => {
@@ -290,7 +366,8 @@ const applicationSlice = createSlice({
       state.updateLoading = true;
     });
     builder.addCase(updateApplicationStatus.fulfilled, (state, action) => {
-      const { applicationId, status } = action.payload;
+      const { application, status } = action.payload;
+      const applicationId = application._id;
 
       state.byId[applicationId] = {
         ...state.byId[applicationId],
@@ -308,8 +385,30 @@ const applicationSlice = createSlice({
       state.updateLoading = false;
       state.error = action.payload as string;
     });
+    builder.addCase(getRejectedAppByAgentId.pending, (state) => {
+      state.fetchingRejectedLoading = true;
+    });
+    builder.addCase(getRejectedAppByAgentId.fulfilled, (state, action) => {
+      state.rejectedApplications = action.payload;
+
+      console.log(
+        "fetchd: ",
+        action.payload,
+        current(state).rejectedApplications
+      );
+
+      state.fetchingRejectedLoading = false;
+    });
+    builder.addCase(getRejectedAppByAgentId.rejected, (state, action) => {
+      state.fetchingRejectedLoading = false;
+      state.error = action.payload as string;
+    });
   },
 });
 
-export const { resetFilters, clearApplicationState } = applicationSlice.actions;
+export const {
+  resetFilters,
+  clearApplicationState,
+  removeUpdatedAppToRejected,
+} = applicationSlice.actions;
 export default applicationSlice.reducer;

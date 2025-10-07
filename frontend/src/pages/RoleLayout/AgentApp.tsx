@@ -29,7 +29,10 @@ import ApplicationForm from "../transaction/agent/ApplicationForm";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store/store";
-import { fetchByAgent } from "../../store/slices/applicationSlice";
+import {
+  fetchByAgent,
+  getRejectedAppByAgentId,
+} from "../../store/slices/applicationSlice";
 import { userUser } from "../../context/UserContext";
 import { useApplication } from "../../context/ApplicationContext";
 import RejectedApplication from "../report/RejectedApplication";
@@ -40,7 +43,9 @@ export default function AgentsApp() {
   const { curUser } = userUser();
   useEffect(() => {
     const fetchApps = async () => {
+      // applictions
       await dispatch(fetchByAgent(curUser?._id!));
+      await dispatch(getRejectedAppByAgentId(curUser?._id!));
     };
     fetchApps();
   }, []);

@@ -65,9 +65,10 @@ import { ReactComponent as AgentsIcon } from "./agents-icon.svg?react";
 import { ReactComponent as ViewIcon } from "./view-icon.svg?react";
 import { ReactComponent as ApproveIcon } from "./approve-icon.svg?react";
 import { ReactComponent as RejectIcon } from "./reject-icon.svg?react";
-
+import { ReactComponent as FinilizeIcon } from "./finalized-icon.svg?react";
 
 export {
+  FinilizeIcon,
   RejectIcon,
   ApproveIcon,
   ViewIcon,

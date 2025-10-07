@@ -1,16 +1,8 @@
 import { Database } from "sqlite";
-import { ReserveType } from "../model/reserveModel";
+import { ReserveType } from "../model/reserationModel";
 
 export class ReserveRepo {
-  private static instance: ReserveRepo;
-
   constructor(private db: Database) {}
-  public static getInstance(db: Database): ReserveRepo {
-    if (!ReserveRepo.instance) {
-      ReserveRepo.instance = new ReserveRepo(db);
-    }
-    return ReserveRepo.instance;
-  }
 
   async create(reservation: ReserveType): Promise<ReserveType | undefined> {
     const reserveResult = await this.db.run(
@@ -53,15 +45,10 @@ export class ReserveRepo {
     };
   }
 
-  async findAll(status?: string): Promise<ReserveType[]> {
-    const rows = status
-      ? await this.db.all<ReserveType[]>(
-          `SELECT * FROM Reservation WHERE status = ? ORDER BY createdAt DESC`,
-          [status]
-        )
-      : await this.db.all<ReserveType[]>(
-          `SELECT * FROM Reservation ORDER BY createdat DESC`
-        );
+  async findAll(): Promise<ReserveType[]> {
+    const rows = await this.db.all<ReserveType[]>(
+      `SELECT * FROM Reservation ORDER BY createdat DESC`
+    );
 
     return rows.map((row) => ({
       ...row,

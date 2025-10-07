@@ -25,16 +25,17 @@ import LoadingOverlay from "../../loading/LoadingOverlay";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import ApplicationInfoModal from "../../modal/applicationModal/ApplicationInfoModal";
-import { Dispatch, useEffect, useState } from "react";
+import { Dispatch, useState } from "react";
 import { useFilteredData } from "../../../hooks/useFilteredData";
 import ConfirmationModal from "../../modal/ConfirmtionModal";
 import useConfirmationModal from "../../../hooks/useConfirmationModal";
 import { NavigateFunction } from "react-router";
 import { useApplication } from "../../../context/ApplicationContext";
 import { UserType } from "../../../context/UserContext";
-import ApplicationRejectionModal from "../../modal/applicationModal/ApplicationRejectionModal";
-import { useRejectApplicationModal } from "../../../hooks/projects-hooks/modal/useRejectApplicationModal";
+
 import { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
+import ApplicationActionModal from "../../modal/applicationModal/ApplicationActionModal";
+import { useActionApplicationModal } from "../../../hooks/projects-hooks/modal/useActionApplicationModal";
 
 function AppTable(payload: {
   application: ApplicationType;
@@ -46,7 +47,10 @@ function AppTable(payload: {
     React.SetStateAction<string | undefined>
   >;
   editApplication: (application: ApplicationType) => void;
-  openAppRejectionModal: (applicationToReject: ApplicationType) => void; // only be filed if user is employee
+  openAppActionModal: (
+    applicationToReject: ApplicationType,
+    action: "rejected" | "approved"
+  ) => void; // only be filed if user is employee
 }) {
   const {
     application,
@@ -56,7 +60,7 @@ function AppTable(payload: {
     setApplicationIdDelete,
     editApplication,
     agentId,
-    openAppRejectionModal,
+    openAppActionModal,
   } = payload;
 
   const onDeleteAppllication = () => {
@@ -184,11 +188,18 @@ function AppTable(payload: {
                 className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 onClick={() => openApplicationView(application)}
               />
-              <ApproveIcon className="w-3.5 h-3.5 cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors" />
-              <RejectIcon
-                className="w-3.5 h-3.5 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                onClick={() => openAppRejectionModal(application)}
-              />
+              {application.status === Status.pending && (
+                <>
+                  <ApproveIcon
+                    className="w-3.5 h-3.5 cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                    onClick={() => openAppActionModal(application, "approved")}
+                  />
+                  <RejectIcon
+                    className="w-3.5 h-3.5 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                    onClick={() => openAppActionModal(application, "rejected")}
+                  />
+                </>
+              )}
             </>
           ) : (
             <>
@@ -196,18 +207,23 @@ function AppTable(payload: {
                 className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 onClick={() => openApplicationView(application)}
               />
-              {agentId && agentId === application.agentDealerId && (
-                <EditIcon
-                  className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  onClick={() => editApplication(application)}
-                />
-              )}
-              {agentId && agentId === application.agentDealerId && (
-                <DeleteIcon
-                  className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                  onClick={onDeleteAppllication}
-                />
-              )}
+
+              {agentId &&
+                agentId === application.agentDealerId &&
+                application.status !== Status.approved && (
+                  <EditIcon
+                    className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    onClick={() => editApplication(application)}
+                  />
+                )}
+              {agentId &&
+                agentId === application.agentDealerId &&
+                application.status !== Status.approved && (
+                  <DeleteIcon
+                    className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                    onClick={onDeleteAppllication}
+                  />
+                )}
             </>
           )}
         </div>
@@ -263,15 +279,12 @@ export default function ApplicationTable({
     useConfirmationModal();
 
   const {
-    appToReject,
-    isAppRejectionOpen,
-    openAppRejectionModal,
-    closeAppRejectionModal,
-  } = useRejectApplicationModal();
-
-  useEffect(() => {
-    console.log("opening rejection modal;: ", isAppRejectionOpen);
-  }, [isAppRejectionOpen]);
+    isAppActionOpen,
+    openAppActionModal,
+    actionType,
+    closeAppActionModal,
+    appToAction,
+  } = useActionApplicationModal();
 
   // For application info modal view
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -296,16 +309,15 @@ export default function ApplicationTable({
     navigate("/application/update");
   };
 
-  const rejectionHanlder = async (payload: {
-    applicationId: string;
-    rejectionNote: string;
+  const applicationActionHanlder = async (payload: {
+    application: ApplicationType;
+    note?: string;
+    status: "approved" | "rejected";
   }) => {
     try {
-      await dispatch(
-        updateApplicationStatus({ ...payload, status: "rejected" })
-      );
+      await dispatch(updateApplicationStatus(payload));
     } catch (error) {
-      console.log("Error in rejectionHanlder", error);
+      console.log("Failed on applicationActionHanlder", error);
     }
   };
 
@@ -332,7 +344,7 @@ export default function ApplicationTable({
         onSortChange={setFilterStatus}
         sortOptions={[
           { label: "Approved", value: "approved" },
-          ...(!isEmployee ? [{ label: "Rejected", value: "rejected" }] : []),
+          { label: "Rejected", value: "rejected" },
           { label: "Pending", value: "pending" },
         ]}
         onClearFilters={resetFilter}
@@ -427,7 +439,7 @@ export default function ApplicationTable({
                       setApplicationIdDelete={setApplicationIdDelete}
                       openApplicationView={openAppInfoHandler}
                       openDeleteConfirmation={openConfirmationModal}
-                      openAppRejectionModal={openAppRejectionModal}
+                      openAppActionModal={openAppActionModal}
                       editApplication={editApplicationHanlder}
                     />
                   );
@@ -474,13 +486,17 @@ export default function ApplicationTable({
           onClose={closeConfirmationModal}
         />
       )}
-      <ApplicationRejectionModal
-        updateLoading={updateLoading}
-        isOpen={isAppRejectionOpen}
-        onClose={closeAppRejectionModal}
-        application={appToReject ?? undefined}
-        onSubmit={rejectionHanlder}
-      />
+
+      {!agentData && (
+        <ApplicationActionModal
+          updateLoading={updateLoading}
+          isOpen={isAppActionOpen}
+          onClose={closeAppActionModal}
+          application={appToAction ?? undefined}
+          onSubmit={applicationActionHanlder}
+          actionType={actionType}
+        />
+      )}
     </>
   );
 }

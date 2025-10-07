@@ -1,0 +1,8 @@
+<!-- Check-in-circle (24x24) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" role="img" aria-labelledby="finalize1-title" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <title id="finalize1-title">Finalize</title>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M8.2 12.5l2.2 2.2 5.4-6.4" />
+  <!-- small sparkle to emphasize finalization -->
+  <path d="M18.6 6.2l.8-1.6.8 1.6 1.6.8-1.6.8-.8 1.6-.8-1.6-1.6-.8z" transform="scale(.6) translate(18,4)" />
+</svg>

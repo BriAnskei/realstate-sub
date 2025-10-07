@@ -51,18 +51,13 @@ const navItems: NavItem[] = [
     name: "Report",
     icon: <ReportIcon />,
     subItems: [
-      { name: "Rejected Appliction", path: "/report/appliction", pro: false },
+      { name: "Rejected Application", path: "/report/appliction", pro: false },
     ],
   },
   {
     icon: <UserCircleIcon />,
     name: "Clients",
     path: "/client",
-  },
-  {
-    icon: <AgentsIcon />,
-    name: "Agents",
-    path: "/agents",
   },
 ];
 

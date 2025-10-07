@@ -1,6 +1,9 @@
 import { Database } from "sqlite";
 import { ApplicationType } from "../model/applicationModel";
 import { AppController } from "../controllers/appController";
+import { ReservationService } from "../service/reseervationService";
+import { LotService } from "../service/lot.service";
+import { ReserveType } from "../model/reserationModel";
 
 export class ApplicationRepo {
   constructor(private db: Database) {}
@@ -104,28 +107,75 @@ export class ApplicationRepo {
     return true;
   }
 
+  /**
+   *
+   * @param payload
+   * @returns returns success if any of the transaction passed, if the status if  approved, returns   the reservations  data
+   */
   async updateStatus(payload: {
-    status: string;
     applicationId: string;
-    rejectionNote?: string;
-  }) {
-    const { status, applicationId, rejectionNote } = payload;
+    status: "approved" | "rejected";
+    note?: string;
+    application: ApplicationType;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    reservation?: ReserveType;
+  }> {
+    const { status, note, application, applicationId } = payload;
+
+    let reservationData: ReserveType | undefined = undefined; // this variable will only be field if the application is approve
+    // here we need to return the reservaiton data after approval tracnsaction
 
     if (status === "rejected") {
-      if (!rejectionNote) {
-        throw new Error(
-          "Rejection note is required when rejecting an application"
-        );
-      }
       await this.db.run(
         `
-      UPDATE Application 
-      SET status = 'rejected', rejectionNote = ? 
+      UPDATE Application
+      SET status = 'rejected', rejectionNote = ?
       WHERE _id = ?
     `,
-        [rejectionNote, applicationId]
+        [note, applicationId]
       );
     } else if (status === "approved") {
+      // if application is approvedd we can expect that  the clientName or note will be field
+      const response = await this.proccessApprovedApplication({
+        application,
+        clientName: application.clientName,
+        note,
+      });
+
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      reservationData = response.reservation;
+    } else {
+      // For other status updates, just update the status
+      await this.db.run(
+        `
+      UPDATE Application
+      SET status = ?
+      WHERE _id = ?
+    `,
+        [status, applicationId]
+      );
+    }
+
+    return {
+      success: true,
+      ...(payload.status === "approved" && { reservation: reservationData }),
+    };
+  }
+
+  private async proccessApprovedApplication(payload: {
+    application: ApplicationType;
+    clientName: string;
+    note?: string;
+  }) {
+    const { application, clientName, note } = payload;
+    const applicationId = application._id!;
+
+    try {
+      await this.db.exec("BEGIN TRANSACTION");
       await this.db.run(
         `
       UPDATE Application 
@@ -134,22 +184,37 @@ export class ApplicationRepo {
     `,
         [applicationId]
       );
-    } else {
-      // For other status updates, just update the status
-      await this.db.run(
-        `
-      UPDATE Application 
-      SET status = ? 
-      WHERE _id = ?
-    `,
-        [status, applicationId]
-      );
+
+      await this.processSelectedLotsForApproval(application);
+
+      const response = await ReservationService.addReservation(this.db, {
+        applicationId,
+        clientName,
+        note,
+      });
+
+      await this.db.exec("COMMIT");
+      return response;
+    } catch (error) {
+      await this.db.exec("ROLLBACK");
+      return {
+        success: false,
+        message: "failed on approving application" + error,
+      };
     }
   }
 
+  private async processSelectedLotsForApproval(application: ApplicationType) {
+    await LotService.markLotsAsReserved(this.db, application.lotIds);
+  }
+
+  /**
+   *
+   * @returns return  all the applicaiton  with status of pending only  used for employee view.
+   */
   async getAll(): Promise<ApplicationType[]> {
     const rows = await this.db.all<any[]>(
-      `SELECT * FROM Application WHERE status != 'rejected'`
+      `SELECT * FROM Application ORDER BY appointmentDate DESC`
     );
 
     return rows.map((row) => ({
@@ -271,7 +336,19 @@ export class ApplicationRepo {
       [id]
     );
 
-    return row ?? null;
+    if (!row) {
+      throw new Error("Cannot find application");
+    }
+
+    let application: ApplicationType;
+
+    application = {
+      ...row,
+      lotIds: LotService.parseArrayIfNeeded(row?.lotIds!),
+      otherAgentIds: LotService.parseArrayIfNeeded(row?.otherAgentIds!),
+    };
+
+    return application ?? null;
   }
 
   async delete(id: string): Promise<boolean> {

@@ -30,7 +30,11 @@ export class LotController {
     const { lotIds } = req.body;
     let parsedData = LotService.parseArrayIfNeeded(lotIds);
 
+    console.log("Parsed lotsIds: ", parsedData, " original: ", lotIds);
+
     const lotsRes: Lot[] = await this.lotRepo.getLotsByIds(parsedData);
+
+    console.log("fetching lots: ", lotsRes);
 
     res.json({ lots: lotsRes });
   };

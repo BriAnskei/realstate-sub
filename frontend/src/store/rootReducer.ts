@@ -4,6 +4,7 @@ import agentReducer from "./slices/agentSlice";
 import landReducer from "./slices/landSlice";
 import lotReducer from "./slices/lotSlice";
 import appReducer from "./slices/applicationSlice";
+import reservationReducer from "./slices/reservationSlice";
 
 const rootReducer = combineReducers({
   client: clientReducer,
@@ -11,6 +12,7 @@ const rootReducer = combineReducers({
   land: landReducer,
   lot: lotReducer,
   application: appReducer,
+  reservation: reservationReducer,
 });
 
 export default rootReducer;
