@@ -30,7 +30,7 @@ export class LotService {
 
     await db.run(
       `UPDATE Lot 
-       SET status = 'Reserved' 
+       SET status = 'reserved' 
        WHERE _id IN (${placeholders})`,
       lotIds
     );

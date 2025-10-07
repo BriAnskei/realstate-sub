@@ -16,6 +16,22 @@ export const fetchAllReservaton = createAsyncThunk(
   }
 );
 
+export const filterReservation = createAsyncThunk(
+  "reservation/filter",
+  async (
+    payload: { searchQuery?: string; status?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await ReservationApi.getFilter(payload);
+      console.log(res);
+      return res.reservation;
+    } catch (error) {
+      return rejectWithValue("Error in filterReservation" + error);
+    }
+  }
+);
+
 export interface ReserveType {
   _id: string;
   applicationId?: string;
@@ -52,6 +68,10 @@ const reservationSlice = createSlice({
       state.byId = { ...state.byId, ...byId };
       state.allIds = [allIds[0], ...state.allIds];
     },
+    clearReservationFilter: (state) => {
+      state.filterById = {};
+      state.filterIds = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -71,9 +91,26 @@ const reservationSlice = createSlice({
       .addCase(fetchAllReservaton.rejected, (state, action) => {
         state.error = action.payload as string;
         state.loading = false;
+      })
+
+      .addCase(filterReservation.pending, (state) => {
+        state.filterLoading = true;
+      })
+      .addCase(filterReservation.fulfilled, (state, action) => {
+        const { allIds, byId } = normalizeResponse(action.payload!);
+
+        state.filterById = byId;
+        state.filterIds = allIds;
+
+        state.filterLoading = false;
+      })
+      .addCase(filterReservation.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.filterLoading = false;
       });
   },
 });
 
-export const { addNewResersation } = reservationSlice.actions;
+export const { addNewResersation, clearReservationFilter } =
+  reservationSlice.actions;
 export default reservationSlice.reducer;

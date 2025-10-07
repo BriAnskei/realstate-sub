@@ -9,6 +9,7 @@ export class ReservationController {
     this.getById = this.getById.bind(this);
     this.update = this.update.bind(this);
     this.delete = this.delete.bind(this);
+    this.getFiltered = this.getFiltered.bind(this);
   }
 
   async create(req: Request, res: Response): Promise<void> {
@@ -34,6 +35,18 @@ export class ReservationController {
       console.error("Error creating reservation:", error);
       res.json({ error: "Internal server error" });
     }
+  }
+
+  async getFiltered(req: Request, res: Response): Promise<void> {
+    const status = req.query.status as string;
+    const query = req.query.searchQuery as string;
+
+    const response = await this.reservationRepo.filterReservation({
+      status,
+      query,
+    });
+
+    res.json({ reservation: response });
   }
 
   async getById(req: Request, res: Response): Promise<void> {

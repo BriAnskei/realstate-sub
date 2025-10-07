@@ -24,8 +24,6 @@ export class ReserveRepo {
     const reserveId = reserveResult.lastID!;
     const createdReserve = await this.findById(reserveId);
 
-    console.log("creation result: ", createdReserve);
-
     return createdReserve;
   }
 
@@ -43,6 +41,34 @@ export class ReserveRepo {
         ? JSON.parse(row.applicationId as unknown as string)
         : [],
     };
+  }
+
+  async filterReservation(payload: {
+    query?: string;
+    status?: string;
+  }): Promise<ReserveType[]> {
+    const { query, status } = payload;
+
+    let sql = `
+    SELECT * FROM Reservation
+    WHERE 1 = 1
+  `;
+    const params: any[] = [];
+
+    if (status) {
+      sql += ` AND status = ?`;
+      params.push(status);
+    }
+
+    if (query) {
+      sql += ` AND LOWER(clientName) LIKE LOWER(?)`;
+      params.push(`%${query}%`);
+    }
+
+    sql += ` ORDER BY createdAt DESC`;
+
+    const rows = await this.db.all(sql, params);
+    return rows;
   }
 
   async findAll(): Promise<ReserveType[]> {

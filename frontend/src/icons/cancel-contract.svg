@@ -1,0 +1,9 @@
+<!-- Cancel shield -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+  viewBox="0 0 24 24" role="img" aria-labelledby="cancel2-title"
+  fill="none" stroke="currentColor" stroke-width="1.5"
+  stroke-linecap="round" stroke-linejoin="round">
+  <title id="cancel2-title">Process canceled</title>
+  <path d="M12 2l7 3v5c0 5-3.5 9-7 10-3.5-1-7-5-7-10V5l7-3z"/>
+  <path d="M9 9l6 6M15 9l-6 6"/>
+</svg>

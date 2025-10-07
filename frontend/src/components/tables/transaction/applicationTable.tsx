@@ -188,6 +188,14 @@ function AppTable(payload: {
                 className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 onClick={() => openApplicationView(application)}
               />
+              {/* the application only deletable if it is rejected */}
+              {application.status === Status.reject && (
+                <DeleteIcon
+                  className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                  onClick={onDeleteAppllication}
+                />
+              )}
+              {/* only show for pending application */}
               {application.status === Status.pending && (
                 <>
                   <ApproveIcon
@@ -208,21 +216,20 @@ function AppTable(payload: {
                 onClick={() => openApplicationView(application)}
               />
 
+              {/* if application is pending/rejected, agentDealer can deleting it   */}
               {agentId &&
                 agentId === application.agentDealerId &&
                 application.status !== Status.approved && (
-                  <EditIcon
-                    className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    onClick={() => editApplication(application)}
-                  />
-                )}
-              {agentId &&
-                agentId === application.agentDealerId &&
-                application.status !== Status.approved && (
-                  <DeleteIcon
-                    className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                    onClick={onDeleteAppllication}
-                  />
+                  <>
+                    <EditIcon
+                      className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      onClick={() => editApplication(application)}
+                    />
+                    <DeleteIcon
+                      className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                      onClick={onDeleteAppllication}
+                    />
+                  </>
                 )}
             </>
           )}

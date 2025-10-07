@@ -27,6 +27,21 @@ export class ReservationApi {
       throw error;
     }
   };
+  static getFilter = async (payload: {
+    searchQuery?: string;
+    status?: string;
+  }): Promise<{ reservation: ReserveType }> => {
+    try {
+      console.log("filter api payload: ", payload);
+      const res = await api.get("/api/reservation/get/filter", {
+        params: payload,
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error in getAllReservations:", error);
+      throw error;
+    }
+  };
 
   getReservationById = async (id: number): Promise<ReserveType> => {
     try {

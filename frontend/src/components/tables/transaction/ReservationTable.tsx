@@ -1,5 +1,11 @@
 import { Dispatch, useState } from "react";
-import { ViewIcon, EditIcon, DeleteIcon, FinilizeIcon } from "../../../icons";
+import {
+  ViewIcon,
+  EditIcon,
+  DeleteIcon,
+  FinilizeIcon,
+  CancelContractIcon,
+} from "../../../icons";
 import { ReserveType } from "../../../store/slices/reservationSlice";
 import {
   Table,
@@ -136,8 +142,8 @@ function ReservationTableRow({
             />
           )}
 
-          <DeleteIcon
-            className="w-3.5 h-3.5 text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+          <CancelContractIcon
+            className="text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
             onClick={() => openDeleteConfirmation(reservation)}
           />
         </div>
@@ -151,20 +157,22 @@ interface ReservationTableProp {
   allIds: string[];
   dispatch: ThunkDispatch<any, undefined, UnknownAction> &
     Dispatch<UnknownAction>;
+  setSearch: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setFilter: React.Dispatch<React.SetStateAction<string | undefined>>;
+  loading: boolean;
 }
 
 export default function ReservationTable({
   byId,
   allIds,
   dispatch,
+  setSearch,
+  setFilter,
+  loading,
 }: ReservationTableProp) {
   const { fetchedLots, fetchingLoading } = useSelector(
     (state: RootState) => state.lot
   );
-
-  const [search, setSearch] = useState<string | undefined>(undefined);
-  const [filter, setFilter] = useState<string | undefined>(undefined);
-  const [loading] = useState(false);
 
   // view application
   const [applicaionToView, setApplicationToView] = useState<
@@ -204,9 +212,10 @@ export default function ReservationTable({
         onSearchChange={setSearch}
         onSortChange={setFilter}
         sortOptions={[
-          { label: "Active", value: "active" },
           { label: "Pending", value: "pending" },
           { label: "Cancelled", value: "cancelled" },
+          { label: "On Contract", value: "on contract" },
+          { label: "No show", value: "no show" },
         ]}
         onClearFilters={resetFilter}
       />

@@ -66,8 +66,10 @@ import { ReactComponent as ViewIcon } from "./view-icon.svg?react";
 import { ReactComponent as ApproveIcon } from "./approve-icon.svg?react";
 import { ReactComponent as RejectIcon } from "./reject-icon.svg?react";
 import { ReactComponent as FinilizeIcon } from "./finalized-icon.svg?react";
+import { ReactComponent as CancelContractIcon } from "./cancel-contract.svg?react";
 
 export {
+  CancelContractIcon,
   FinilizeIcon,
   RejectIcon,
   ApproveIcon,

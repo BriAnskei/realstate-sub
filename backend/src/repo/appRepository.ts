@@ -292,8 +292,6 @@ export class ApplicationRepo {
 
     query += ` ORDER BY createdAt DESC`;
 
-    console.log("emplement query: ", query);
-
     return this.db.all<ApplicationType[]>(query, params);
   }
 

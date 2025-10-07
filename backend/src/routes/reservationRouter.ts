@@ -20,6 +20,11 @@ export function createReservationRouter(db: Database) {
   );
 
   reservationRouter.get(
+    "/get/filter",
+    asyncHandler(reservationController.getFiltered, "getFiltered")
+  );
+
+  reservationRouter.get(
     "/get/:id",
     asyncHandler(reservationController.getById, "getById")
   );

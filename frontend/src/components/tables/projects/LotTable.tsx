@@ -234,6 +234,7 @@ function LotTableRow(payload: {
   onDeleteHandler: (data: LotType) => void;
 }) {
   const { lot, isEmployee, editLot, onDeleteHandler } = payload;
+
   return (
     <>
       <TableRow className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">

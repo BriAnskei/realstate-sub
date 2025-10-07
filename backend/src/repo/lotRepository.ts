@@ -96,7 +96,7 @@ export class LotRepository {
     filterStatus?: string;
     limit?: number;
   }): Promise<{ lots: Lot[]; hasMore: boolean }> {
-    const { cursor, limit = 1000 } = payload;
+    const { cursor, limit = 10000 } = payload;
 
     let query = `
       SELECT Lot.*, Land.name
