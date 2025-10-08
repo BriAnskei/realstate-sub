@@ -4,6 +4,7 @@ import { AppController } from "../controllers/appController";
 import { ReservationService } from "../service/reseervationService";
 import { LotService } from "../service/lot.service";
 import { ReserveType } from "../model/reserationModel";
+import { LandService } from "../service/landService";
 
 export class ApplicationRepo {
   constructor(private db: Database) {}
@@ -188,7 +189,7 @@ export class ApplicationRepo {
       await this.processSelectedLotsForApproval(application);
 
       const response = await ReservationService.addReservation(this.db, {
-        applicationId,
+        application,
         clientName,
         note,
       });
@@ -205,6 +206,10 @@ export class ApplicationRepo {
   }
 
   private async processSelectedLotsForApproval(application: ApplicationType) {
+    await LandService.setSoldLots(this.db, {
+      landID: application.landId,
+      totalSoldLots: application.lotIds.length,
+    });
     await LotService.markLotsAsReserved(this.db, application.lotIds);
   }
 

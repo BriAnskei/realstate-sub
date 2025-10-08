@@ -1,5 +1,6 @@
 import { Database } from "sqlite";
 import { ReserveType } from "../model/reserationModel";
+import { ApplicationType } from "../model/applicationModel";
 
 export class ReservationService {
   /**
@@ -11,7 +12,7 @@ export class ReservationService {
   static async addReservation(
     db: Database,
     payload: {
-      applicationId: string;
+      application: ApplicationType;
       clientName: string;
       status?: string;
       note?: string;
@@ -21,20 +22,17 @@ export class ReservationService {
     message?: string;
     reservation?: ReserveType;
   }> {
-    const {
-      applicationId,
-      clientName,
-      note = "",
-      status = "pending",
-    } = payload;
+    const { application, clientName, note = "", status = "pending" } = payload;
 
     try {
+      const { _id, appointmentDate } = application;
+
       const rows = await db.run(
         `
-        INSERT INTO Reservation (applicationId, clientName, status, notes)
-        VALUES (?, ?, ?, ?)
-        `,
-        [applicationId, clientName, status, note]
+  INSERT INTO Reservation (applicationId, clientName, status, notes, appointmentDate)
+  VALUES (?, ?, ?, ?, ?)
+  `,
+        [_id, clientName, status, note, appointmentDate]
       );
 
       const createdRervation = await ReservationService.findReservationById(

@@ -38,6 +38,7 @@ export interface ReserveType {
   clientName?: string;
   status?: "pending" | "cancelled" | "on contract" | "no show";
   notes?: string | null;
+  appointmentDate?: string;
   createdAt?: string;
 }
 

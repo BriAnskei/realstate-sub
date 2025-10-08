@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, current } from "@reduxjs/toolkit";
 import { NormalizeState } from "../../types/TypesHelper";
 import { normalizeResponse } from "../../utils/normalizeResponse"; // adjust path
 import { bulkSaveLots, LotType, updateName } from "./lotSlice";
@@ -144,6 +144,23 @@ const landSlice = createSlice({
       state.filterIds = [];
     },
 
+    markSoldLots: (state, action) => {
+      const { landId, totalSoldLots } = action.payload;
+
+      if (state.byId[landId]) {
+        const landData = state.byId[landId];
+
+        const newAvailable =
+          landData.totalLots! - (landData.lotsSold + totalSoldLots);
+
+        state.byId[landId] = {
+          ...state.byId[landId],
+          lotsSold: landData.lotsSold + totalSoldLots,
+          available: newAvailable,
+        };
+      }
+    },
+
     decrementLotsCount: (state, action) => {
       // this function will be used for deletion
       const { status, landId } = action.payload;
@@ -244,6 +261,6 @@ const landSlice = createSlice({
   },
 });
 
-export const { resetLands, decrementLotsCount, resetLandFilter } =
+export const { resetLands, decrementLotsCount, resetLandFilter, markSoldLots } =
   landSlice.actions;
 export default landSlice.reducer;

@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS Reservation (
   clientName TEXT NOT NULL,
   status TEXT NOT NULL,
   notes TEXT,
+  appointmentDate DATETIME,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

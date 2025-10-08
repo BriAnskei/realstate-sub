@@ -4,6 +4,7 @@ import { AppApi } from "../../utils/api/applicationApi";
 import { normalizeResponse } from "../../utils/normalizeResponse";
 import { markLotsStatus } from "./lotSlice";
 import { addNewResersation } from "./reservationSlice";
+import { markSoldLots } from "./landSlice";
 
 export const addNewApp = createAsyncThunk(
   "application/add",
@@ -87,9 +88,10 @@ export const updateApplicationStatus = createAsyncThunk(
       status: "approved" | "rejected";
       note?: string;
     },
-    { getState, dispatch, rejectWithValue }
+    { dispatch, rejectWithValue }
   ) => {
     try {
+      const { application } = payload;
       const res = await AppApi.updateStatus(payload);
 
       if (!res.success) {
@@ -98,15 +100,18 @@ export const updateApplicationStatus = createAsyncThunk(
 
       // if status is approve process lots for reservation and display the  reservationData from the api
       if (payload.status === Status.approved) {
-        const state = getState() as any;
-        const applicationData: ApplicationType =
-          state.application.byId[payload.application._id];
-
         dispatch(addNewResersation(res.reservation!));
 
         dispatch(
+          markSoldLots({
+            landId: application.landId,
+            totalSoldLots: application.lotIds?.length,
+          })
+        );
+
+        dispatch(
           markLotsStatus({
-            lotsIds: applicationData.lotIds,
+            lotsIds: application.lotIds,
             status: payload.status,
           })
         );

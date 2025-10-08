@@ -12,18 +12,20 @@ import {
   ReserveType,
 } from "../../store/slices/reservationSlice";
 import { useFilteredData } from "../../hooks/useFilteredData";
-
-// export type reservationFilterTpe =
-//   | "pending"
-//   | "cancelled"
-//   | "on contract"
-//   | "no show";
+import useReservationAddModal from "../../hooks/projects-hooks/modal/useAddReservationModa";
+import AddReservationModal from "../../components/modal/reservationModal/addReservationModal/ReservationModal";
 
 export default function Reservation() {
   const dispatch = useDispatch<AppDispatch>();
 
   const { byId, allIds, filterById, filterIds, loading, filterLoading } =
     useSelector((state: RootState) => state.reservation);
+
+  const {
+    openReservationAddModal,
+    isReservationAddModalOpen,
+    closeReservationAddModal,
+  } = useReservationAddModal();
 
   const [search, setSearch] = useState<string | undefined>(undefined);
   const [filter, setFilter] = useState<string | undefined>(undefined);
@@ -59,9 +61,20 @@ export default function Reservation() {
       <PageMeta title="Reservations" description="Manage Reservations" />
       <PageBreadcrumb pageTitle="Reservations" />
       <div className="space-y-6">
-        <ComponentCard title="Reservations">
+        <ComponentCard
+          title="Reservations"
+          actions={[
+            <button
+              key="add"
+              className="inline-flex items-center justify-center gap-2 rounded-lg transition  px-4 py-3 text-sm   bg-green-500 hover:bg-green-600 text-white shadow"
+              onClick={openReservationAddModal}
+            >
+              Add Reservation
+            </button>,
+          ]}
+        >
           <ReservationTable
-            loading={loading || onFilterLoading || loading}
+            loading={loading || onFilterLoading || loading || filterLoading}
             dispatch={dispatch}
             byId={displayData.byId}
             allIds={displayData.allIds}
@@ -70,6 +83,10 @@ export default function Reservation() {
           />
         </ComponentCard>
       </div>
+      <AddReservationModal
+        isOpen={isReservationAddModalOpen}
+        onClose={closeReservationAddModal}
+      />
     </>
   );
 

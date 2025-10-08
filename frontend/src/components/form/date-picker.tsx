@@ -14,6 +14,7 @@ type PropsType = {
   label?: string;
   placeholder?: string;
   minDate?: DateOption;
+  position?: "auto" | "above" | "below"; // Add position prop
 };
 
 export default function DatePicker({
@@ -24,6 +25,7 @@ export default function DatePicker({
   defaultDate,
   placeholder,
   minDate,
+  position = "auto", // Default to auto
 }: PropsType) {
   useEffect(() => {
     const flatPickr = flatpickr(`#${id}`, {
@@ -34,6 +36,7 @@ export default function DatePicker({
       defaultDate,
       onChange,
       minDate: minDate || "today",
+      position: position, // Add position option
     });
 
     return () => {
@@ -41,7 +44,7 @@ export default function DatePicker({
         flatPickr.destroy();
       }
     };
-  }, [mode, onChange, id, defaultDate, minDate]);
+  }, [mode, onChange, id, defaultDate, minDate, position]);
 
   return (
     <div>
