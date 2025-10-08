@@ -1,6 +1,7 @@
 import { ContractType } from "../model/contractModel";
 import { ContractRepository } from "../repo/contractRepository";
 import { Request, Response } from "express";
+import { PdfService } from "../service/pdfGenerator";
 
 export class ContractController {
   constructor(private contractRepo: ContractRepository) {}
@@ -45,9 +46,23 @@ export class ContractController {
     }
   };
 
-  /**
-   * Fetch all contracts by a specific agent ID
-   */
+  getGeneratedPdf = async (req: Request, res: Response): Promise<void> => {
+    const { clientData, application, term } = req.body;
+
+    const genratedPdf = await PdfService.generateContractPDF(
+      clientData,
+      application,
+      term
+    );
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=contract-${application._id}.pdf`
+    );
+    res.send(genratedPdf);
+  };
+
   fetchContractsByAgentId = async (
     req: Request,
     res: Response

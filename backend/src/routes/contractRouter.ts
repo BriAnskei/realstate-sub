@@ -19,6 +19,11 @@ export function createContractRouter(db: Database) {
     asyncHandler(contractController.fetchAllContracts, "fetchAllContracts")
   );
 
+  contractRouter.post(
+    "/generate",
+    asyncHandler(contractController.getGeneratedPdf, "getGeneratedPdf")
+  );
+
   contractRouter.get(
     "/get/by-agent/:agentId",
     asyncHandler(
