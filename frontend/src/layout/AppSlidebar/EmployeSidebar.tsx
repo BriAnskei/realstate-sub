@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Applications", path: "/application", pro: false },
       { name: "Reservations", path: "/reservation", pro: false },
-      { name: "Contracts", path: "/form-elements", pro: false },
+      { name: "Contracts", path: "/contract", pro: false },
     ],
   },
 

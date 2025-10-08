@@ -51,7 +51,7 @@ const LotSelection = ({
       try {
         const landId = selectedLand?._id;
         if (!landId) return;
-        const res = await dispatch(getLotsByLandId(landId)).unwrap();
+        await dispatch(getLotsByLandId(landId)).unwrap();
       } catch (error) {
         console.log("Erro in fetchLotsByLand", error);
       }

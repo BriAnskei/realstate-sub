@@ -27,6 +27,7 @@ import { AppDispatch } from "../../store/store";
 import { fetchAllAPP } from "../../store/slices/applicationSlice";
 import Reservation from "../transaction/Reservation";
 import { fetchAllReservaton } from "../../store/slices/reservationSlice";
+import Contract from "../transaction/Contract";
 
 export default function EmployeApp() {
   const dispatch = useDispatch<AppDispatch>();
@@ -58,6 +59,7 @@ export default function EmployeApp() {
           {/* tansation */}
           <Route path="/application" element={<Application />} />
           <Route path="/reservation" element={<Reservation />} />
+          <Route path="/contract" element={<Contract />} />
 
           {/* Client and agent management */}
           <Route path="/client" element={<Client />} />

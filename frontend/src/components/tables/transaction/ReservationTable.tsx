@@ -30,6 +30,7 @@ import { RootState } from "../../../store/store";
 import { useSelector } from "react-redux";
 import ChangeReserveStatusModal from "../../modal/reservationModal/ChangeReserveStatusModalProps";
 import useReserveChangeStatusModal from "../../../hooks/projects-hooks/modal/useChangeReserveStatusModal";
+import AddContractModal from "../../modal/reservationModal/AddContractModal";
 
 function ReservationTableRow({
   reservation,
@@ -378,6 +379,15 @@ export default function ReservationTable({
         onClose={closeReserveChangeStatusModal}
         reserve={reservationToOpen}
         onSubmit={handleRejectionAction}
+      />
+
+      <AddContractModal
+        clientName="Brian Gierza"
+        applicationId="1"
+        isOpen={true}
+        onClose={function (): void {
+          throw new Error("Function not implemented.");
+        }}
       />
     </>
   );
