@@ -124,7 +124,14 @@ function AppTable(payload: {
 
       <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
         {/* add one to include dealer */}
-        {application.otherAgentIds?.length! + 1}
+        <span
+          className="truncate block max-w-[200px]"
+          title={application.lotIds?.length.toString() || "No notes"}
+        >
+          {application.otherAgentIds && application.otherAgentIds.length > 0
+            ? application.otherAgentIds?.length + 1
+            : "—"}
+        </span>
       </TableCell>
 
       <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">

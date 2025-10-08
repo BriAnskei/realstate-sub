@@ -1,5 +1,9 @@
 import Label from "../../../form/Label";
-import { LandTypes, LotType, ClientType } from "./ReservationModal";
+
+import { ClientType } from "../../../../store/slices/clientSlice";
+import { LandTypes } from "../../../../store/slices/landSlice";
+import { LotType } from "../../applicationModal/ApplicationInfoModal";
+import DatePicker from "../../../form/date-picker";
 
 interface AppointmentDetailsProp {
   selectedLand: LandTypes | null;
@@ -58,13 +62,23 @@ const AppointmentDetails = ({
 
       {/* Appointment Date */}
       <div>
-        <Label>Appointment Date</Label>
-
-        <input
-          type="date"
-          value={appointmentDate}
-          onChange={(e) => setAppointmentDate(e.target.value)}
-          className="w-full px-3 py-2 text-sm transition-colors border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:focus:ring-blue-400"
+        <DatePicker
+          id="appointment-date"
+          label="Appointment Date"
+          placeholder="Select appointment date"
+          defaultDate={appointmentDate || undefined}
+          minDate="today"
+          position="below"
+          onChange={(selectedDates) => {
+            if (selectedDates.length > 0) {
+              // Format date as YYYY-MM-DD
+              const date = selectedDates[0];
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, "0");
+              const day = String(date.getDate()).padStart(2, "0");
+              setAppointmentDate(`${year}-${month}-${day}`);
+            }
+          }}
         />
       </div>
 

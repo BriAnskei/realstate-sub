@@ -19,6 +19,11 @@ export function createReservationRouter(db: Database) {
     asyncHandler(reservationController.getAll, "getAll")
   );
 
+  reservationRouter.post(
+    "/reject",
+    asyncHandler(reservationController.rejectReservation, "rejectReservation")
+  );
+
   reservationRouter.get(
     "/get/filter",
     asyncHandler(reservationController.getFiltered, "getFiltered")

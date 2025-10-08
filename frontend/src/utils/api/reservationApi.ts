@@ -1,14 +1,22 @@
+import { ApplicationType } from "../../store/slices/applicationSlice";
 import { ReserveType } from "../../store/slices/reservationSlice";
 import { api } from "./instance";
 
 export class ReservationApi {
   constructor() {}
 
-  createReservation = async (
-    reservation: Omit<ReserveType, "reserveId" | "createdAt">
-  ): Promise<ReserveType> => {
+  static createReservation = async (payload: {
+    reservation: ReserveType;
+    application: ApplicationType;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    reservation: ReserveType;
+    application: ApplicationType;
+  }> => {
     try {
-      const res = await api.post("/api/reservation/add", reservation);
+      const res = await api.post("/api/reservation/add", { ...payload });
+      console.log("response: ", res);
       return res.data;
     } catch (error) {
       console.error("Error in createReservation:", error);
@@ -32,7 +40,6 @@ export class ReservationApi {
     status?: string;
   }): Promise<{ reservation: ReserveType }> => {
     try {
-      console.log("filter api payload: ", payload);
       const res = await api.get("/api/reservation/get/filter", {
         params: payload,
       });
@@ -66,6 +73,24 @@ export class ReservationApi {
     }
   };
 
+  static rejectReservation = async (payload: {
+    reservation: ReserveType;
+    status: string;
+    notes?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    application: ApplicationType;
+  }> => {
+    try {
+      const res = await api.post("/api/reservation/reject", payload);
+      return res.data;
+    } catch (error) {
+      console.error("Error in rejectReservation:", error);
+      throw error;
+    }
+  };
+
   deleteReservation = async (
     id: number
   ): Promise<{ message: string; success: boolean }> => {
@@ -90,19 +115,4 @@ export class ReservationApi {
       throw error;
     }
   };
-
-  //   getReservationsByClientName = async (
-  //     clientName: string
-  //   ): Promise<{ reservations: ReserveType[] }> => {
-  //     try {
-  //       const res = await api.get("/api/reservation/get/all");
-  //       const filteredReservations = res.data.filter((reservation: ReserveType) =>
-  //         reservation.clientName.toLowerCase().includes(clientName.toLowerCase())
-  //       );
-  //       return { reservations: filteredReservations };
-  //     } catch (error) {
-  //       console.error("Error in getReservationsByClientName:", error);
-  //       throw error;
-  //     }
-  //   };
 }

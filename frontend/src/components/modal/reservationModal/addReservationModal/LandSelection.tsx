@@ -8,12 +8,12 @@ import {
   TableCell,
   TableBody,
 } from "../../../ui/table";
-import { LandTypes } from "./ReservationModal";
+
 import { AppDispatch, RootState } from "../../../../store/store";
-import { RefObject, SetStateAction, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { debouncer } from "../../../../utils/debouncer";
 import { useFilteredData } from "../../../../hooks/useFilteredData";
-import { searchLand } from "../../../../store/slices/landSlice";
+import { LandTypes, searchLand } from "../../../../store/slices/landSlice";
 
 interface LandSelectionProp {
   selectedLand: LandTypes | null;

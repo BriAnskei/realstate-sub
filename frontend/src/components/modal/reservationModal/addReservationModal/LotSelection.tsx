@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import Filter from "../../../filter/Filter";
+import { useEffect } from "react";
 import Checkbox from "../../../form/input/Checkbox";
 import LoadingOverlay from "../../../loading/LoadingOverlay";
 import Button from "../../../ui/button/Button";
@@ -10,10 +9,11 @@ import {
   TableCell,
   TableBody,
 } from "../../../ui/table";
-import { LandTypes, LotType } from "./ReservationModal";
+
 import { AppDispatch, RootState } from "../../../../store/store";
 import { useSelector } from "react-redux";
-import { getLotsByLandId } from "../../../../store/slices/lotSlice";
+import { getLotsByLandId, LotType } from "../../../../store/slices/lotSlice";
+import { LandTypes } from "../../../../store/slices/landSlice";
 
 interface LotSelectionProp {
   selectedLand: LandTypes | null;
@@ -21,9 +21,7 @@ interface LotSelectionProp {
     React.SetStateAction<"client" | "lot" | "land" | "details">
   >;
   setSelectedLots: React.Dispatch<React.SetStateAction<LotType[]>>;
-
   selectedLots: LotType[];
-
   dispatch: AppDispatch;
 }
 
@@ -31,9 +29,7 @@ const LotSelection = ({
   selectedLand,
   setCurrentStep,
   setSelectedLots,
-
   selectedLots,
-
   dispatch,
 }: LotSelectionProp) => {
   const { filterById, allFilterIds, filterLoading } = useSelector(
@@ -55,7 +51,7 @@ const LotSelection = ({
       try {
         const landId = selectedLand?._id;
         if (!landId) return;
-        await dispatch(getLotsByLandId(landId)).unwrap();
+        const res = await dispatch(getLotsByLandId(landId)).unwrap();
       } catch (error) {
         console.log("Erro in fetchLotsByLand", error);
       }
@@ -119,6 +115,10 @@ const LotSelection = ({
               {allFilterIds.length > 0 ? (
                 allFilterIds.map((id) => {
                   const lot: LotType = filterById[id];
+
+                  // Only show available lots
+                  if (lot.status !== "available") return null;
+
                   return (
                     <TableRow
                       key={lot._id}
@@ -147,10 +147,8 @@ const LotSelection = ({
                 })
               ) : (
                 <TableRow>
-                  <TableCell className="px-3 py-6 text-center text-gray-500 dark:text-gray-400">
-                    {selectedLand
-                      ? "No available lots found for this land."
-                      : "Please select a land first."}
+                  <TableCell className="text-center text-gray-500 py-4">
+                    No available lots found.
                   </TableCell>
                 </TableRow>
               )}

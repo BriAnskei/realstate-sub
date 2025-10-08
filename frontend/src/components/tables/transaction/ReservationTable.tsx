@@ -6,7 +6,10 @@ import {
   FinilizeIcon,
   CancelContractIcon,
 } from "../../../icons";
-import { ReserveType } from "../../../store/slices/reservationSlice";
+import {
+  rejectReservation,
+  ReserveType,
+} from "../../../store/slices/reservationSlice";
 import {
   Table,
   TableBody,
@@ -25,21 +28,21 @@ import {
 import { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../store/store";
 import { useSelector } from "react-redux";
-import AddReservationModal from "../../modal/reservationModal/addReservationModal/ReservationModal";
-import useReservationAddModal from "../../../hooks/projects-hooks/modal/useAddReservationModa";
+import ChangeReserveStatusModal from "../../modal/reservationModal/ChangeReserveStatusModalProps";
+import useReserveChangeStatusModal from "../../../hooks/projects-hooks/modal/useChangeReserveStatusModal";
 
 function ReservationTableRow({
   reservation,
   openReservationView,
   openEditModal,
-  openDeleteConfirmation,
+  openReserveChangeStatusModal,
   viewApplicatonInfoHanlder,
 }: {
   viewApplicatonInfoHanlder: (applivationId: string) => Promise<void>;
   reservation: ReserveType;
   openReservationView: (data: ReserveType) => void;
   openEditModal: (data: ReserveType) => void;
-  openDeleteConfirmation: (data: ReserveType) => void;
+  openReserveChangeStatusModal: (reservation: ReserveType) => void;
 }) {
   function isPastAppointment() {
     const appointmentDate = getDateInstance(reservation.appointmentDate!);
@@ -86,15 +89,16 @@ function ReservationTableRow({
 
   function getStatusColor() {
     switch (reservation.status) {
-      case "no show":
-        return "success";
       case "pending":
-        return undefined;
+        return "info"; // blue color
+      case "cancelled":
+        return "error";
       case "on contract":
-        return "warning";
-
+        return "success";
+      case "no show":
+        return "light";
       default:
-        return undefined;
+        return "light";
     }
   }
 
@@ -103,7 +107,7 @@ function ReservationTableRow({
   return (
     <TableRow
       className={`transition-colors ${
-        overDueAppointment
+        overDueAppointment && reservation.status === "pending"
           ? "bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/10 dark:hover:bg-yellow-900/20"
           : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
       }`}
@@ -143,13 +147,21 @@ function ReservationTableRow({
           title={getFullDateFormat(reservation.appointmentDate!)}
         >
           <span
-            className={`hidden lg:inline ${
-              overDueAppointment && "text-red-400"
+            className={`hidden lg:inline  ${
+              overDueAppointment &&
+              reservation.status === "pending" &&
+              "text-red-400"
             }`}
           >
             {getFullDateFormat(reservation.appointmentDate!)}
           </span>
-          <span className={`lg:hidden ${overDueAppointment && "text-red-400"}`}>
+          <span
+            className={`lg:hidden ${
+              overDueAppointment &&
+              reservation.status === "pending" &&
+              "text-red-400"
+            }`}
+          >
             {getShortDateFormat(reservation.appointmentDate!)}
           </span>
         </span>
@@ -171,17 +183,20 @@ function ReservationTableRow({
 
       <TableCell className="px-2 py-4 lg:px-4">
         <div className="flex gap-1 justify-center">
-          {reservation.status === "pending" && (
-            <FinilizeIcon
-              className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              onClick={() => openReservationView(reservation)}
-            />
+          {reservation.status === "pending" ? (
+            <>
+              <FinilizeIcon
+                className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                onClick={() => openReservationView(reservation)}
+              />
+              <CancelContractIcon
+                className="text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                onClick={() => openReserveChangeStatusModal(reservation)}
+              />
+            </>
+          ) : (
+            <span className="truncate block max-w-[200px]">—</span>
           )}
-
-          <CancelContractIcon
-            className="text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
-            onClick={() => openDeleteConfirmation(reservation)}
-          />
         </div>
       </TableCell>
     </TableRow>
@@ -210,6 +225,13 @@ export default function ReservationTable({
     (state: RootState) => state.lot
   );
 
+  const {
+    isReserveChangeStatusModalOpen,
+    openReserveChangeStatusModal,
+    closeReserveChangeStatusModal,
+    reservationToOpen,
+  } = useReserveChangeStatusModal();
+
   // view application
   const [applicaionToView, setApplicationToView] = useState<
     ApplicationType | undefined
@@ -230,9 +252,16 @@ export default function ReservationTable({
     // TODO: Implement edit logic here
   };
 
-  const openDeleteHandler = (data: ReserveType) => {
-    console.log("Delete reservation:", data);
-    // TODO: Implement delete confirmation here
+  const handleRejectionAction = async (
+    reservation: ReserveType,
+    status: string,
+    notes?: string
+  ) => {
+    try {
+      await dispatch(rejectReservation({ reservation, status, notes }));
+    } catch (error) {
+      console.log("Error in handleRejectionAction: ", handleRejectionAction);
+    }
   };
 
   const resetFilter = () => {
@@ -321,12 +350,14 @@ export default function ReservationTable({
 
                   return (
                     <ReservationTableRow
+                      openReserveChangeStatusModal={
+                        openReserveChangeStatusModal
+                      }
                       viewApplicatonInfoHanlder={viewApplicatonInfoHanlder}
                       key={reservation._id}
                       reservation={reservation}
                       openReservationView={openReservationInfoHandler}
                       openEditModal={openEditHandler}
-                      openDeleteConfirmation={openDeleteHandler}
                     />
                   );
                 })}
@@ -341,6 +372,12 @@ export default function ReservationTable({
         application={applicaionToView}
         lots={fetchedLots}
         loading={fetchingApplicationLoading || fetchingLoading}
+      />
+      <ChangeReserveStatusModal
+        isOpen={isReserveChangeStatusModalOpen}
+        onClose={closeReserveChangeStatusModal}
+        reserve={reservationToOpen}
+        onSubmit={handleRejectionAction}
       />
     </>
   );

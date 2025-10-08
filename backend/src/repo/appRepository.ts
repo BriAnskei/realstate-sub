@@ -5,6 +5,7 @@ import { ReservationService } from "../service/reseervationService";
 import { LotService } from "../service/lot.service";
 import { ReserveType } from "../model/reserationModel";
 import { LandService } from "../service/landService";
+import { AppService } from "../service/applictionService";
 
 export class ApplicationRepo {
   constructor(private db: Database) {}
@@ -16,7 +17,7 @@ export class ApplicationRepo {
   }> {
     // check if clienAppliction exist(landIdd, appointment)
     const doesApplicationApointmentExist =
-      await this.findByClientLandAndDateIfExist(application);
+      await AppService.findClientPendingAppIfItExist(this.db, application);
 
     if (doesApplicationApointmentExist) {
       return {
@@ -49,32 +50,9 @@ export class ApplicationRepo {
 
     const appId = res.lastID!;
 
-    const createdApp = await this.findById(appId!);
+    const createdApp = await AppService.findById(this.db, appId!);
 
     return { success: true, application: createdApp! };
-  }
-
-  async findByClientLandAndDateIfExist(
-    application: ApplicationType
-  ): Promise<boolean> {
-    const { clientId, landId, appointmentDate } = application;
-
-    const query = `
-    SELECT *
-    FROM Application
-    WHERE clientId = ?
-      AND landId = ?
-      AND appointmentDate = ?
-    LIMIT 1
-  `;
-
-    return Boolean(
-      await this.db.get<ApplicationType>(query, [
-        clientId,
-        landId,
-        appointmentDate,
-      ])
-    );
   }
 
   async update(payload: {
@@ -210,7 +188,10 @@ export class ApplicationRepo {
       landID: application.landId,
       totalSoldLots: application.lotIds.length,
     });
-    await LotService.markLotsAsReserved(this.db, application.lotIds);
+    await LotService.setLotsStatus(this.db, {
+      lotIds: application.lotIds,
+      status: "reserved",
+    });
   }
 
   /**
@@ -328,11 +309,6 @@ export class ApplicationRepo {
     }));
   }
 
-  /**
-   *
-   * @param id
-   * @returns return specific application based on id
-   */
   async findById(id: number): Promise<ApplicationType | null> {
     const row = await this.db.get<ApplicationType>(
       `SELECT * FROM Application WHERE _id = ?`,

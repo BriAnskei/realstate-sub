@@ -143,7 +143,6 @@ const landSlice = createSlice({
       state.filterById = {};
       state.filterIds = [];
     },
-
     markSoldLots: (state, action) => {
       const { landId, totalSoldLots } = action.payload;
 
@@ -160,7 +159,19 @@ const landSlice = createSlice({
         };
       }
     },
+    redoLandLotSold: (state, action) => {
+      const { landId, totalSolLots } = action.payload;
 
+      if (state.byId[landId]) {
+        const landData = state.byId[landId];
+
+        state.byId[landId] = {
+          ...landData,
+          available: landData.available + totalSolLots,
+          lotsSold: landData.lotsSold! - totalSolLots,
+        };
+      }
+    },
     decrementLotsCount: (state, action) => {
       // this function will be used for deletion
       const { status, landId } = action.payload;

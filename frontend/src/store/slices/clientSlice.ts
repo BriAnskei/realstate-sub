@@ -12,8 +12,6 @@ export const addClient = createAsyncThunk(
       console.log("api respomse: ", res);
 
       if (!res.success) {
-        console.log("faile:", res.message);
-
         return rejectWithValue(res.message || "Failed to add Client");
       }
 

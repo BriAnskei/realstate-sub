@@ -17,22 +17,34 @@ export class LotService {
       Object.entries(data).filter(([key]) => !keys.includes(key))
     ) as Partial<T>;
   }
-  static async markLotsAsReserved(
+  static async setLotsStatus(
     db: Database,
-    lotIds: string[]
-  ): Promise<void> {
-    if (!lotIds || lotIds.length === 0) {
-      throw new Error("No lot IDs provided to mark as reserved.");
+    payload: {
+      lotIds: string[];
+      status: string;
     }
+  ): Promise<void> {
+    try {
+      const { lotIds, status } = payload;
 
-    // Build placeholders like (?, ?, ?)
-    const placeholders = lotIds.map(() => "?").join(", ");
+      if (!lotIds || lotIds.length === 0) {
+        throw new Error("No lot IDs provided to update status.");
+      }
+      const placeholders = lotIds.map(() => "?").join(", ");
 
-    await db.run(
-      `UPDATE Lot 
-       SET status = 'reserved' 
-       WHERE _id IN (${placeholders})`,
-      lotIds
-    );
+      const params = [status, ...lotIds];
+
+      await db.run(
+        `
+    UPDATE Lot
+    SET status = ?
+    WHERE _id IN (${placeholders})
+    `,
+        params
+      );
+    } catch (error) {
+      console.error("Error in setLotsStatus", error);
+      throw error;
+    }
   }
 }

@@ -29,6 +29,43 @@ export class LandService {
     );
   }
 
+  /**
+   * @description this function is used for reservation rejection(no show/cancelled).
+   * this will redo the sold lots by rejection resertvaion-application
+   */
+  static async redoSoldLotsAvailability(
+    db: Database,
+    payload: {
+      landId: string;
+      totalSoldToRedo: number;
+    }
+  ): Promise<void> {
+    try {
+      const { landId, totalSoldToRedo } = payload;
+      if (!landId) {
+        throw new Error("Land ID is required.");
+      }
+
+      if (totalSoldToRedo <= 0) {
+        throw new Error("Invalid totalSoldToRedo value.");
+      }
+
+      await db.run(
+        `
+      UPDATE Land
+      SET 
+        available = available + ?,
+        lotsSold = lotsSold - ?
+      WHERE _id = ?
+      `,
+        [totalSoldToRedo, totalSoldToRedo, landId]
+      );
+    } catch (error) {
+      console.error("Error in redoSoldLotsAvailability:", error);
+      throw error;
+    }
+  }
+
   static async findLandById(
     db: Database,
     landID: string

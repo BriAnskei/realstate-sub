@@ -112,7 +112,7 @@ export const updateApplicationStatus = createAsyncThunk(
         dispatch(
           markLotsStatus({
             lotsIds: application.lotIds,
-            status: payload.status,
+            status: "reserved",
           })
         );
       }
@@ -236,6 +236,25 @@ const applicationSlice = createSlice({
   initialState,
 
   reducers: {
+    setApplicaitonStatus: (state, action) => {
+      const { applicationId, status, notes } = action.payload;
+
+      const finalNote = notes ? `${status} - ${notes}` : status;
+
+      if (state.byId[applicationId]) {
+        state.byId[applicationId] = {
+          ...state.byId[applicationId],
+          status,
+          rejectionNote: finalNote,
+        };
+      }
+    },
+    addReserveApplication: (state, action) => {
+      const { allIds, byId } = normalizeResponse(action.payload);
+
+      state.allIds = [...allIds, ...state.allIds];
+      state.byId = { ...byId, ...state.byId };
+    },
     resetFilters: (state) => {
       state.filterById = {};
       state.filterIds = [];
@@ -413,7 +432,9 @@ const applicationSlice = createSlice({
 
 export const {
   resetFilters,
+  setApplicaitonStatus,
   clearApplicationState,
   removeUpdatedAppToRejected,
+  addReserveApplication,
 } = applicationSlice.actions;
 export default applicationSlice.reducer;

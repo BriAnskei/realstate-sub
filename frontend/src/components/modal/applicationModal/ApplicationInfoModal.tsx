@@ -274,60 +274,61 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
                     </div>
                   </div>
 
-                  {true && (
-                    <div className="col-span-2">
-                      <Label>Other Agents</Label>
-                      <div className="overflow-hidden rounded-md border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800">
-                        <div className="max-h-[240px] overflow-y-auto">
-                          <Table className="w-full border-collapse">
-                            <TableHeader className="sticky top-0 z-10 border-b border-gray-100 bg-white dark:border-white/[0.05] dark:bg-gray-900">
-                              <TableRow>
-                                <TableCell
-                                  isHeader
-                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
-                                >
-                                  Full Name
-                                </TableCell>
-                                <TableCell
-                                  isHeader
-                                  className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
-                                >
-                                  Email
-                                </TableCell>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                              {agents &&
-                                agents.map((agent, index) => (
-                                  <TableRow
-                                    key={agent._id || index}
-                                    className={`transition-colors ${
-                                      isDealer(agent._id!)
-                                        ? "hover:bg-blue-50  bg-blue-50 dark:bg-blue-900/20"
-                                        : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-                                    }`}
+                  {application.otherAgentIds &&
+                    application.otherAgentIds?.length > 0 && (
+                      <div className="col-span-2">
+                        <Label>Other Agents</Label>
+                        <div className="overflow-hidden rounded-md border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800">
+                          <div className="max-h-[240px] overflow-y-auto">
+                            <Table className="w-full border-collapse">
+                              <TableHeader className="sticky top-0 z-10 border-b border-gray-100 bg-white dark:border-white/[0.05] dark:bg-gray-900">
+                                <TableRow>
+                                  <TableCell
+                                    isHeader
+                                    className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
                                   >
-                                    <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
-                                      <div className="flex items-center gap-2">
-                                        {getFullName(agent)}
-                                        {isDealer(agent._id!) && (
-                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300">
-                                            Dealer
-                                          </span>
-                                        )}
-                                      </div>
-                                    </TableCell>
-                                    <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
-                                      {agent.email || "N/A"}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
+                                    Full Name
+                                  </TableCell>
+                                  <TableCell
+                                    isHeader
+                                    className="whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-theme-xs"
+                                  >
+                                    Email
+                                  </TableCell>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                                {agents &&
+                                  agents.map((agent, index) => (
+                                    <TableRow
+                                      key={agent._id || index}
+                                      className={`transition-colors ${
+                                        isDealer(agent._id!)
+                                          ? "hover:bg-blue-50  bg-blue-50 dark:bg-blue-900/20"
+                                          : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                                      }`}
+                                    >
+                                      <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                        <div className="flex items-center gap-2">
+                                          {getFullName(agent)}
+                                          {isDealer(agent._id!) && (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300">
+                                              Dealer
+                                            </span>
+                                          )}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="px-3 py-3 text-start text-sm text-gray-500 dark:text-gray-400">
+                                        {agent.email || "N/A"}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </div>
 

@@ -1,6 +1,7 @@
-import { Request, Response } from "express";
+import { Application, Request, Response } from "express";
 import { ReserveRepo } from "../repo/reservationRepo";
 import { ReserveType } from "../model/reserationModel";
+import { ApplicationType } from "../model/applicationModel";
 
 export class ReservationController {
   constructor(private reservationRepo: ReserveRepo) {
@@ -9,32 +10,38 @@ export class ReservationController {
     this.getById = this.getById.bind(this);
     this.update = this.update.bind(this);
     this.delete = this.delete.bind(this);
+    this.rejectReservation = this.rejectReservation.bind(this);
     this.getFiltered = this.getFiltered.bind(this);
   }
 
+  /**
+   * @description so this controller, will be use for manual adding resevation.
+   * @param res payload: {applicaiton, reservation}
+   * @returns application, reservation w/ created and _id
+   */
   async create(req: Request, res: Response): Promise<void> {
-    try {
-      const reservationData: ReserveType = req.body;
+    const reservation: ReserveType = req.body.reservation;
+    const application: ApplicationType = req.body.application;
 
-      if (!reservationData.clientName) {
-        res.json({ error: "Client name is required" });
-        return;
-      }
+    const response = await this.reservationRepo.create({
+      application,
+      reservation,
+    });
 
-      const createdReservation = await this.reservationRepo.create(
-        reservationData
-      );
+    res.json({ ...response });
+  }
 
-      if (!createdReservation) {
-        res.json({ error: "Failed to create reservation" });
-        return;
-      }
+  async rejectReservation(req: Request, res: Response): Promise<void> {
+    const reservation = req.body.reservation as ReserveType;
+    const { status, notes } = req.body;
 
-      res.json(createdReservation);
-    } catch (error) {
-      console.error("Error creating reservation:", error);
-      res.json({ error: "Internal server error" });
-    }
+    const response = await this.reservationRepo.rejectReservation({
+      reservation,
+      status,
+      notes,
+    });
+
+    res.json({ ...response });
   }
 
   async getFiltered(req: Request, res: Response): Promise<void> {
