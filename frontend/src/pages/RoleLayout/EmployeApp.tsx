@@ -28,6 +28,7 @@ import { fetchAllAPP } from "../../store/slices/applicationSlice";
 import Reservation from "../transaction/Reservation";
 import { fetchAllReservaton } from "../../store/slices/reservationSlice";
 import Contract from "../transaction/Contract";
+import { fetchAllContracts } from "../../store/slices/contractSlice";
 
 export default function EmployeApp() {
   const dispatch = useDispatch<AppDispatch>();
@@ -36,6 +37,7 @@ export default function EmployeApp() {
       try {
         await dispatch(fetchAllAPP());
         await dispatch(fetchAllReservaton());
+        await dispatch(fetchAllContracts());
       } catch (error) {
         console.log("Error in fetchEmployeeStates", error);
       }

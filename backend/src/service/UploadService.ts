@@ -15,6 +15,28 @@ export class UploadService {
     ),
   };
 
+  static readonly contracts = {
+    upload: UploadMiddlewareFactory.createFileUploadMiddleware(
+      StorageConfig.createContractPdfStorage(),
+      "contractPdf"
+    ),
+  };
+
+  // Optional: save a PDF from memory storage (e.g. from PDFKit buffer)
+  static async saveContractPdf(
+    contractId: string,
+    file: Express.Multer.File
+  ): Promise<string> {
+    const uploadPath = PathBuilder.buildContractPdfPath(contractId);
+    const fileName = generateUniqueFileName(file.originalname);
+    const fullPath = path.join(uploadPath, fileName);
+
+    await FileManager.ensureDirectoryExists(uploadPath);
+    await fs.promises.writeFile(fullPath, file.buffer);
+
+    return fileName;
+  }
+
   static async saveClientProfileIfExist(
     clientId: number,
     file?: Express.Multer.File

@@ -1,4 +1,4 @@
-import { Dispatch, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import {
   ViewIcon,
   EditIcon,
@@ -31,18 +31,19 @@ import { useSelector } from "react-redux";
 import ChangeReserveStatusModal from "../../modal/reservationModal/ChangeReserveStatusModalProps";
 import useReserveChangeStatusModal from "../../../hooks/projects-hooks/modal/useChangeReserveStatusModal";
 import AddContractModal from "../../modal/reservationModal/AddContractModal";
+import { ContractApi } from "../../../utils/api/contractApi";
+import useContractReservationModal from "../../../hooks/projects-hooks/modal/userContractReservationModal";
+import { addContract, ContractType } from "../../../store/slices/contractSlice";
 
 function ReservationTableRow({
   reservation,
-  openReservationView,
-  openEditModal,
+  openContractReservationModal,
   openReserveChangeStatusModal,
   viewApplicatonInfoHanlder,
 }: {
   viewApplicatonInfoHanlder: (applivationId: string) => Promise<void>;
   reservation: ReserveType;
-  openReservationView: (data: ReserveType) => void;
-  openEditModal: (data: ReserveType) => void;
+  openContractReservationModal: (reservation: ReserveType) => void;
   openReserveChangeStatusModal: (reservation: ReserveType) => void;
 }) {
   function isPastAppointment() {
@@ -188,7 +189,7 @@ function ReservationTableRow({
             <>
               <FinilizeIcon
                 className="w-3.5 h-3.5 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                onClick={() => openReservationView(reservation)}
+                onClick={() => openContractReservationModal(reservation)}
               />
               <CancelContractIcon
                 className="text-red-600 cursor-pointer hover:text-red-700 dark:hover:text-red-400 transition-colors"
@@ -233,6 +234,15 @@ export default function ReservationTable({
     reservationToOpen,
   } = useReserveChangeStatusModal();
 
+  // contract
+  const {
+    openContractReservationModal,
+    isContractReservationModalOpen,
+    selectedData,
+    closeContractReservationModal,
+  } = useContractReservationModal();
+  const [downloadingContract, setDownloadingContract] = useState(false);
+
   // view application
   const [applicaionToView, setApplicationToView] = useState<
     ApplicationType | undefined
@@ -242,16 +252,6 @@ export default function ReservationTable({
     useState(false);
 
   const viewApplicatonInfoHanlder = fetchApplicationById();
-
-  const openReservationInfoHandler = (data: ReserveType) => {
-    console.log("View reservation:", data);
-    // TODO: Implement modal logic here
-  };
-
-  const openEditHandler = (data: ReserveType) => {
-    console.log("Edit reservation:", data);
-    // TODO: Implement edit logic here
-  };
 
   const handleRejectionAction = async (
     reservation: ReserveType,
@@ -268,6 +268,23 @@ export default function ReservationTable({
   const resetFilter = () => {
     setSearch(undefined);
     setFilter(undefined);
+  };
+
+  // contractModal
+  const handleDownLoadGeneratedContract = genratePdfDownLoader(
+    setDownloadingContract
+  );
+
+  const handleReservationOnContract = async (
+    contract: Partial<ContractType>
+  ) => {
+    try {
+      await dispatch(addContract(contract)).unwrap();
+    } catch (error) {
+      console.log("Failed on handleReservationOnContract, ", error);
+    } finally {
+      closeContractReservationModal();
+    }
   };
 
   return (
@@ -357,8 +374,9 @@ export default function ReservationTable({
                       viewApplicatonInfoHanlder={viewApplicatonInfoHanlder}
                       key={reservation._id}
                       reservation={reservation}
-                      openReservationView={openReservationInfoHandler}
-                      openEditModal={openEditHandler}
+                      openContractReservationModal={
+                        openContractReservationModal
+                      }
                     />
                   );
                 })}
@@ -382,12 +400,13 @@ export default function ReservationTable({
       />
 
       <AddContractModal
-        clientName="Brian Gierza"
-        applicationId="1"
-        isOpen={true}
-        onClose={function (): void {
-          throw new Error("Function not implemented.");
-        }}
+        onSubmit={handleReservationOnContract}
+        onDownloadFormat={handleDownLoadGeneratedContract}
+        reservation={selectedData}
+        isOpen={isContractReservationModalOpen}
+        onClose={closeContractReservationModal}
+        downloadLoading={downloadingContract}
+        dispatch={dispatch}
       />
     </>
   );
@@ -410,4 +429,45 @@ export default function ReservationTable({
       }
     };
   }
+}
+function genratePdfDownLoader(setDownloadingContract: {
+  (value: SetStateAction<boolean>): void;
+  (arg0: boolean): void;
+}) {
+  return async (payload: {
+    clientId: string;
+    applicationId: string;
+    term: string;
+  }) => {
+    try {
+      setDownloadingContract(true);
+      const { applicationId } = payload;
+      const response = await ContractApi.generateContractPdf(payload);
+
+      // Create a URL for the blob
+      const blob = new Blob([response], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary download link
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `contract-${applicationId || "template"}.pdf`
+      );
+
+      // Trigger the download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.log("Error in handleDownLoadGeneratedContract", error);
+      setDownloadingContract(false);
+    } finally {
+      setDownloadingContract(false);
+    }
+  };
 }

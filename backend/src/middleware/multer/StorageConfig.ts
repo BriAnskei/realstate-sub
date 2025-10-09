@@ -30,6 +30,29 @@ export class StorageConfig {
       },
     });
   }
+
+  static createContractPdfStorage(): multer.StorageEngine {
+    return multer.diskStorage({
+      destination: async (req, file, callback) => {
+        try {
+          const contractId = req.body.contractId;
+          if (!contractId) throw new Error("Contract ID is required");
+
+          const uploadPath = PathBuilder.buildContractPdfPath(contractId);
+          await FileManager.ensureDirectoryExists(uploadPath);
+
+          callback(null, uploadPath);
+        } catch (error) {
+          callback(error as Error, "");
+        }
+      },
+      filename(req, file, callback) {
+        const uniqueName = generateUniqueFileName(file.originalname);
+        callback(null, uniqueName);
+      },
+    });
+  }
+
   static createMemoryStorage(): multer.StorageEngine {
     return multer.memoryStorage();
   }

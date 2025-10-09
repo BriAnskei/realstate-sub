@@ -1,18 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Label from "../../form/Label";
 import Button from "../../ui/button/Button";
 import { Modal } from "../../ui/modal";
 import { Download, Loader2 } from "lucide-react";
+import { ReserveType } from "./addReservationModal/ReservationModal";
+import {
+  ApplicationType,
+  getApplicationById,
+} from "../../../store/slices/applicationSlice";
+import { AppDispatch } from "../../../store/store";
+import { ContractType } from "../../../store/slices/contractSlice";
 
 interface AddContractModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit?: (term: string) => void;
-  onDownloadFormat?: () => void;
+  onSubmit?: (contract: Partial<ContractType>) => void;
+  onDownloadFormat: (payload: {
+    clientId: string;
+    applicationId: string;
+    term: string;
+  }) => void;
   loading?: boolean;
   downloadLoading?: boolean;
-  applicationId?: string;
-  clientName?: string;
+  reservation?: ReserveType;
+  dispatch: AppDispatch;
 }
 
 const AddContractModal: React.FC<AddContractModalProps> = ({
@@ -22,15 +33,53 @@ const AddContractModal: React.FC<AddContractModalProps> = ({
   onDownloadFormat,
   loading = false,
   downloadLoading = false,
-  applicationId,
-  clientName,
+  reservation,
+  dispatch,
 }) => {
   const [term, setTerm] = useState("");
+  const [application, setApplication] = useState<ApplicationType | undefined>(
+    undefined
+  );
+  const [fetchingState, setFetchingState] = useState(false);
+
+  // fetch application
+  useEffect(() => {
+    async function fetchApplication() {
+      try {
+        if (!isOpen || !reservation) return;
+
+        setFetchingState(true);
+        const application = await dispatch(
+          getApplicationById(reservation.applicationId!)
+        ).unwrap();
+
+        setApplication(application);
+      } catch (error) {
+        console.log("Error in fetchApplication");
+      } finally {
+        setFetchingState(false);
+      }
+    }
+    fetchApplication();
+  }, [isOpen, reservation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSubmit && term.trim()) {
-      onSubmit(term);
+    if (onSubmit && term.trim() && application) {
+      console.log("Application: ", application);
+      const contract: Partial<ContractType> = {
+        clientId: application?.clientId,
+        ...(application.agentDealerId && {
+          agentsIds: [
+            parseInt(application.agentDealerId!, 10),
+            ...(application.otherAgentIds ?? []),
+          ],
+        }),
+        applicationId: application._id,
+        term,
+      };
+
+      onSubmit(contract);
     }
   };
 
@@ -40,9 +89,15 @@ const AddContractModal: React.FC<AddContractModalProps> = ({
   };
 
   const handleDownloadFormat = () => {
-    if (onDownloadFormat) {
-      onDownloadFormat();
-    }
+    if (!application) throw new Error("No application fetched");
+
+    const payload = {
+      clientId: application.clientId!,
+      applicationId: application._id,
+      term,
+    };
+
+    onDownloadFormat(payload);
   };
 
   const handleTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +116,7 @@ const AddContractModal: React.FC<AddContractModalProps> = ({
     >
       <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 sm:p-6 lg:p-11">
         {/* Loading Overlay */}
-        {loading && (
+        {fetchingState && (
           <div className="absolute inset-0 z-50 flex items-center justify-center rounded-3xl bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-10 w-10 animate-spin text-blue-600 dark:text-blue-400" />

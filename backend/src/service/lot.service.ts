@@ -1,4 +1,5 @@
 import { Database } from "sqlite";
+import { Lot } from "../model/lotModel";
 
 export class LotService {
   static parseArrayIfNeeded(data: any) {
@@ -46,5 +47,18 @@ export class LotService {
       console.error("Error in setLotsStatus", error);
       throw error;
     }
+  }
+
+  static async getLotsByIds(db: Database, lotIds: string[]): Promise<Lot[]> {
+    // Create placeholders (?, ?, ?) based on lotIds length
+    const placeholders = lotIds?.map(() => "?").join(", ");
+
+    const query = `
+      SELECT * FROM Lot
+      WHERE _id IN (${placeholders})
+    `;
+
+    const rows = await db.all<Lot[]>(query, lotIds);
+    return rows;
   }
 }

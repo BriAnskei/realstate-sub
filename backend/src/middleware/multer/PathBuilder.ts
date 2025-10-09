@@ -7,4 +7,9 @@ export class PathBuilder {
     validateUserId(userId);
     return path.join(UPLOAD_PATHS.CLIENTS, userId);
   }
+
+  static buildContractPdfPath(contractId: string): string {
+    if (!contractId) throw new Error("Contract ID is required");
+    return path.join(UPLOAD_PATHS.PDF, contractId);
+  }
 }

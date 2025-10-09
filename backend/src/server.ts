@@ -49,6 +49,12 @@ async function startServer() {
     app.use("/api/reservation", createReservationRouter(db));
     app.use("/api/contract", createContractRouter(db));
 
+    // Static routes
+    // images
+    app.use("/uploads/clients", express.static(UPLOAD_PATHS.CLIENTS));
+    // pdf
+    app.use("/uploads/pdf", express.static(UPLOAD_PATHS.PDF));
+
     // FINALLY start the server
     httpServer.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on http://0.0.0.0:${PORT}`);

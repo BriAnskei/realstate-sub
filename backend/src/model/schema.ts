@@ -91,4 +91,24 @@ CREATE TABLE IF NOT EXISTS Reservation (
 CREATE INDEX IF NOT EXISTS idx_reservation_applicationId ON Reservation(applicationId);
 CREATE INDEX IF NOT EXISTS idx_reservation_status ON Reservation(status);
 
+
+CREATE TABLE IF NOT EXISTS Contract (
+  _id INTEGER PRIMARY KEY AUTOINCREMENT,
+  clientId INTEGER,                       
+  agentsIds TEXT,           
+  applicationId INTEGER,                  
+  contractPDF TEXT,                        
+  term TEXT,                           
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (clientId) REFERENCES Client(_id) ON DELETE SET NULL,
+  FOREIGN KEY (applicationId) REFERENCES Application(_id) ON DELETE SET NULL
+);
+
+
+CREATE INDEX IF NOT EXISTS idx_contract_clientId ON Contract(clientId);
+CREATE INDEX IF NOT EXISTS idx_contract_applicationId ON Contract(applicationId);
+CREATE INDEX IF NOT EXISTS idx_contract_createdAt ON Contract(createdAt);
+
+
 `;

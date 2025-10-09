@@ -127,13 +127,6 @@ export default function ClientTable({
                     isHeader
                     className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-[100px]"
                   >
-                    Status
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="px-3 py-3 font-medium text-gray-500 text-start text-xs sm:px-5 sm:text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-[100px]"
-                  >
                     Actions
                   </TableCell>
                 </TableRow>
@@ -220,18 +213,6 @@ export default function ClientTable({
                           >
                             {client.address}
                           </div>
-                        </TableCell>
-
-                        <TableCell className="px-3 py-4 sm:px-4 text-gray-500 text-start text-sm dark:text-gray-400 min-w-[100px]">
-                          <Badge
-                            size="sm"
-                            color={
-                              client.status === "active" ? "success" : "error"
-                            }
-                          >
-                            {client.status?.charAt(0).toUpperCase()! +
-                              client.status?.slice(1)!}
-                          </Badge>
                         </TableCell>
 
                         <TableCell>

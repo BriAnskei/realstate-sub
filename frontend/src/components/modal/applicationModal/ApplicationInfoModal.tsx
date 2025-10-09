@@ -16,35 +16,8 @@ import {
 } from "../../ui/table";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../store/store";
-import { getLotsByIds } from "../../../store/slices/lotSlice";
-import { userUser } from "../../../context/UserContext";
-
-export interface UserType {
-  _id?: string;
-  profilePicc?: string;
-  firstName?: string;
-  middleName: string;
-  lastName?: string;
-  email?: string;
-  userName?: string;
-  passWord?: string;
-  role?: string;
-  userRole?: string;
-}
-
-export interface LotType {
-  _id: string;
-  name?: string;
-  landId?: string;
-  blockNumber?: string;
-  lotNumber?: string;
-  lotSize?: string;
-  pricePerSqm?: string;
-  totalAmount?: string;
-  lotType?: string;
-  status?: string;
-  createdAt?: string;
-}
+import { getLotsByIds, LotType } from "../../../store/slices/lotSlice";
+import { UserType, userUser } from "../../../context/UserContext";
 
 interface ApplicationInfoModalProps {
   isOpen: boolean;
@@ -170,12 +143,15 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
         setFetchinngAppDetails(true);
 
         await dispatch(getLotsByIds(application?.lotIds!));
-        setAgents(
-          getAppDealer({
-            otherAgents: application?.otherAgentIds?.map(String)!,
-            dealerId: application?.agentDealerId!,
-          })
-        );
+
+        if (application.agentDealerId) {
+          setAgents(
+            getAppDealer({
+              otherAgents: application?.otherAgentIds?.map(String) || [],
+              dealerId: application?.agentDealerId!,
+            })
+          );
+        }
       } catch (error) {
         console.log(error);
       } finally {
@@ -184,7 +160,7 @@ const ApplicationInfoModal: React.FC<ApplicationInfoModalProps> = ({
     }
 
     fetchRequredData();
-  }, [isOpen, application?._id, loading]);
+  }, [isOpen, application, loading]);
 
   // Reset the ref when modal closes
   useEffect(() => {

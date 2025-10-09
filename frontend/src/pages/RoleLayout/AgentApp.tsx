@@ -36,6 +36,8 @@ import {
 import { userUser } from "../../context/UserContext";
 import { useApplication } from "../../context/ApplicationContext";
 import RejectedApplication from "../report/RejectedApplication";
+import Contract from "../transaction/Contract";
+import { fetchContractsByAgentId } from "../../store/slices/contractSlice";
 
 export default function AgentsApp() {
   const dispatch = useDispatch<AppDispatch>();
@@ -49,6 +51,18 @@ export default function AgentsApp() {
     };
     fetchApps();
   }, []);
+
+  useEffect(() => {
+    async function fetchAgetContract() {
+      try {
+        if (!curUser) return;
+        await dispatch(fetchContractsByAgentId(curUser?._id!));
+      } catch (error) {
+        console.log("Failt on fetchAgetContract", error);
+      }
+    }
+    fetchAgetContract();
+  }, [curUser]);
 
   return (
     <>
@@ -72,30 +86,10 @@ export default function AgentsApp() {
 
           {/* Report */}
           <Route path="/report/appliction" element={<RejectedApplication />} />
+          <Route path="/report/contract" element={<Contract />} />
 
           {/* Client and agent management */}
           <Route path="/client" element={<Client />} />
-          <Route path="/agents" element={<Agents />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/blank" element={<Blank />} />
-
-          {/* Forms */}
-          <Route path="/form-elements" element={<FormElements />} />
-
-          {/* Tables */}
-          <Route path="/basic-tables" element={<BasicTables />} />
-
-          {/* Ui Elements */}
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/avatars" element={<Avatars />} />
-          <Route path="/badge" element={<Badges />} />
-          <Route path="/buttons" element={<Buttons />} />
-          <Route path="/images" element={<Images />} />
-          <Route path="/videos" element={<Videos />} />
-
-          {/* Charts */}
-          <Route path="/line-chart" element={<LineChart />} />
-          <Route path="/bar-chart" element={<BarChart />} />
         </Route>
 
         {/* Auth Layout */}

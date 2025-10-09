@@ -72,4 +72,11 @@ export class LandService {
   ): Promise<Land | undefined> {
     return await db.get("SELECT * FROM Land WHERE _id = ?", [landID]);
   }
+
+  static async findById(
+    db: Database,
+    landId: string
+  ): Promise<Land | undefined> {
+    return await db.get<Land>(`SELECT * FROM Land WHERE _id = ?`, [landId]);
+  }
 }

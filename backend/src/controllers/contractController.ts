@@ -13,11 +13,12 @@ export class ContractController {
     try {
       const contractData: Omit<ContractType, "_id" | "createdAt"> = req.body;
 
-      await this.contractRepo.addContract(contractData);
+      const contract = await this.contractRepo.addContract(contractData);
 
       res.json({
         success: true,
         message: "Contract created successfully.",
+        contract,
       });
     } catch (error: any) {
       console.error("Error creating contract:", error);
@@ -27,6 +28,24 @@ export class ContractController {
         error: error.message,
       });
     }
+  };
+
+  uploadContractPdf = async (req: Request, res: Response): Promise<void> => {
+    const contract = req.body.contract as ContractType;
+
+    const repoResponse = await this.contractRepo.handleContractPdfFileUploader(
+      contract
+    );
+
+    const newContract: ContractType = {
+      ...contract,
+      contractPDF: repoResponse.fileName,
+    };
+    res.json({
+      contract: newContract,
+      application: repoResponse.application,
+      reservation: repoResponse.reservation,
+    });
   };
 
   /**
@@ -47,18 +66,18 @@ export class ContractController {
   };
 
   getGeneratedPdf = async (req: Request, res: Response): Promise<void> => {
-    const { clientData, application, term } = req.body;
+    const { clientId, applicationId, term } = req.body;
 
-    const genratedPdf = await PdfService.generateContractPDF(
-      clientData,
-      application,
-      term
-    );
+    const genratedPdf = await this.contractRepo.getGeneratedPdf({
+      clientId,
+      applicationId,
+      term,
+    });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=contract-${application._id}.pdf`
+      `attachment; filename=contract-${applicationId}.pdf`
     );
     res.send(genratedPdf);
   };
@@ -111,7 +130,7 @@ export class ContractController {
         return;
       }
 
-      const contract = await this.contractRepo.findById(_id);
+      const contract = await this.contractRepo.findById(parseInt(_id, 10));
 
       if (!contract) {
         res.json({

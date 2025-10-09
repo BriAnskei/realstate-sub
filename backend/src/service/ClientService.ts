@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { Client } from "../model/clientModel";
+import { Database } from "sqlite";
 
 export class ClientService {
   static buildCreationPayload(req: Request): Client {
@@ -13,5 +14,13 @@ export class ClientService {
       address: req.body.address,
       status: req.body.status,
     };
+  }
+  static async fintById(
+    db: Database,
+    clientId: string
+  ): Promise<Client | undefined> {
+    return await db.get<Client>("SELECT * FROM Client WHERE _id = ?", [
+      clientId,
+    ]);
   }
 }

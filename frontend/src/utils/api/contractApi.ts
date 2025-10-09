@@ -1,5 +1,6 @@
 import { ApplicationType } from "../../store/slices/applicationSlice";
 import { ContractType } from "../../store/slices/contractSlice";
+import { ReserveType } from "../../store/slices/reservationSlice";
 import { api } from "./instance";
 
 export class ContractApi {
@@ -8,9 +9,24 @@ export class ContractApi {
   /**
    * Add a new contract
    */
-  addContract = async (payload: Omit<ContractType, "_id" | "createdAt">) => {
+  addContract = async (
+    payload: Partial<ContractType>
+  ): Promise<{
+    contract: ContractType;
+    application: ApplicationType;
+    reservation: ReserveType;
+  }> => {
     try {
-      const res = await api.post("/api/contract/add", payload);
+      // add first to get the id
+      const addRes = await api.post("/api/contract/add", payload);
+
+      const genreatedContract = addRes.data.contract;
+
+      // begin genrate pdf and upload to server
+      const res = await api.post("/api/contract/upload/pdf", {
+        contract: genreatedContract,
+      });
+
       return res.data;
     } catch (error) {
       console.error("Error in addContract:", error);
@@ -26,7 +42,9 @@ export class ContractApi {
     contracts: ContractType[];
   }> => {
     try {
-      const res = await api.get("/api/contract/all");
+      const res = await api.get("/api/contract/get/all");
+
+      console.log("Fetchedd conrtacs: ", res.data);
       return res.data;
     } catch (error) {
       console.error("Error in fetchAllContracts:", error);
@@ -37,9 +55,9 @@ export class ContractApi {
   /**
    * Generate PDF for a contract
    */
-  generateContractPdf = async (payload: {
-    clientData: ClientTypes;
-    application: ApplicationType;
+  static generateContractPdf = async (payload: {
+    clientId: string;
+    applicationId: string;
     term: string;
   }): Promise<Blob> => {
     try {

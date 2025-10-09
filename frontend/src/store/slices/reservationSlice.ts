@@ -158,6 +158,13 @@ const reservationSlice = createSlice({
       state.filterById = {};
       state.filterIds = [];
     },
+    updateReservationStatus: (state, action) => {
+      const { reservationId, status } = action.payload;
+
+      if (state.byId[reservationId]) {
+        state.byId[reservationId] = { ...state.byId[reservationId], status };
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -234,6 +241,9 @@ const reservationSlice = createSlice({
   },
 });
 
-export const { addNewResersation, clearReservationFilter } =
-  reservationSlice.actions;
+export const {
+  addNewResersation,
+  clearReservationFilter,
+  updateReservationStatus,
+} = reservationSlice.actions;
 export default reservationSlice.reducer;

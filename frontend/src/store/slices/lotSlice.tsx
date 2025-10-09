@@ -93,6 +93,7 @@ export const getLotsByIds = createAsyncThunk(
   "lot/getLotsByIds",
   async (lotIds: number[], { rejectWithValue }) => {
     try {
+      console.log("ltos;d", lotIds);
       const response = await lotApi.getLotsByIds(lotIds);
       return response.lots;
     } catch (error) {

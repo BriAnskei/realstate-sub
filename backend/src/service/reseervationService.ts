@@ -65,4 +65,46 @@ export class ReservationService {
       [id]
     );
   }
+
+  static async findReservationByApplicationId(
+    db: Database,
+    applicationId: string
+  ): Promise<ReserveType | null> {
+    try {
+      const reservation = await db.get(
+        `
+      SELECT *
+      FROM Reservation
+      WHERE applicationId = ?
+      `,
+        [applicationId]
+      );
+
+      return reservation || null;
+    } catch (error) {
+      console.error("Error finding reservation by applicationId:", error);
+      throw new Error("Failed to find reservation by applicationId.");
+    }
+  }
+
+  static async updateReservationStatus(
+    db: Database,
+    payload: { applicationId: string; status: string }
+  ) {
+    const { applicationId, status } = payload;
+
+    const reservation = await this.findReservationByApplicationId(
+      db,
+      applicationId
+    );
+    if (!reservation)
+      throw new Error("Cannot find reservation on appplication Id");
+
+    await db.run(
+      `
+      UPDATE Reservation SET status = ? WHERE _id = ?
+      `,
+      [status, reservation._id]
+    );
+  }
 }
