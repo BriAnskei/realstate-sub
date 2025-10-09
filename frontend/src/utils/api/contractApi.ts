@@ -78,7 +78,7 @@ export class ContractApi {
     agentId: string
   ): Promise<{ success: boolean; contracts: ContractType[] }> => {
     try {
-      const res = await api.post(`/api/contract/agent/${agentId}`);
+      const res = await api.post(`/api/contract/get/by-agent/${agentId}`);
       return res.data;
     } catch (error) {
       console.error("Error in fetchContractsByAgentId:", error);

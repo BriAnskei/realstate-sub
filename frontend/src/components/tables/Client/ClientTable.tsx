@@ -73,10 +73,6 @@ export default function ClientTable({
         sortTitle="All"
         onSearchChange={setSearch}
         onSortChange={setFilterStatus}
-        sortOptions={[
-          { label: "Active", value: "active" },
-          { label: "Inactive", value: "inactive" },
-        ]}
         onClearFilters={resetFilter}
       />
 

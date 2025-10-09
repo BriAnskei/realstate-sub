@@ -1,28 +1,14 @@
 import { Routes, Route } from "react-router";
 import { ScrollToTop } from "../../components/common/ScrollToTop";
 import AppLayout from "../../layout/AppLayout";
-import Agents from "../Agents";
 import SignIn from "../AuthPages/SignIn";
 import SignUp from "../AuthPages/SignUp";
-import Blank from "../Blank";
-import Calendar from "../Calendar";
-import BarChart from "../Charts/BarChart";
-import LineChart from "../Charts/LineChart";
 import Client from "../Client";
-import FormElements from "../Forms/FormElements";
 
-import SaleForm from "../Forms/SaleForm";
 import NotFound from "../OtherPage/NotFound";
 import Land from "../projects/Land";
 import Lot from "../projects/Lot";
-import BasicTables from "../Tables/BasicTables";
 
-import Alerts from "../UiElements/Alerts";
-import Avatars from "../UiElements/Avatars";
-import Badges from "../UiElements/Badges";
-import Buttons from "../UiElements/Buttons";
-import Images from "../UiElements/Images";
-import Videos from "../UiElements/Videos";
 import AgentHome from "../Dashboard/AgentHome";
 import Application from "../transaction/Application";
 import ApplicationForm from "../transaction/agent/ApplicationForm";
@@ -33,36 +19,18 @@ import {
   fetchByAgent,
   getRejectedAppByAgentId,
 } from "../../store/slices/applicationSlice";
-import { userUser } from "../../context/UserContext";
+import { UserType, userUser } from "../../context/UserContext";
 import { useApplication } from "../../context/ApplicationContext";
 import RejectedApplication from "../report/RejectedApplication";
 import Contract from "../transaction/Contract";
 import { fetchContractsByAgentId } from "../../store/slices/contractSlice";
+import { Role } from "../../context/mockData";
 
 export default function AgentsApp() {
   const dispatch = useDispatch<AppDispatch>();
   const { editApplication } = useApplication();
   const { curUser } = userUser();
-  useEffect(() => {
-    const fetchApps = async () => {
-      // applictions
-      await dispatch(fetchByAgent(curUser?._id!));
-      await dispatch(getRejectedAppByAgentId(curUser?._id!));
-    };
-    fetchApps();
-  }, []);
-
-  useEffect(() => {
-    async function fetchAgetContract() {
-      try {
-        if (!curUser) return;
-        await dispatch(fetchContractsByAgentId(curUser?._id!));
-      } catch (error) {
-        console.log("Failt on fetchAgetContract", error);
-      }
-    }
-    fetchAgetContract();
-  }, [curUser]);
+  FetchAgentState(dispatch, curUser);
 
   return (
     <>
@@ -73,7 +41,6 @@ export default function AgentsApp() {
           <Route index path="/" element={<AgentHome />} />
 
           {/* {Projects} */}
-
           <Route path="/land" element={<Land />} />
           <Route path="/lot" element={<Lot />} />
 
@@ -101,4 +68,26 @@ export default function AgentsApp() {
       </Routes>
     </>
   );
+}
+function FetchAgentState(dispatch: AppDispatch, curUser: UserType | undefined) {
+  useEffect(() => {
+    const fetchApps = async () => {
+      // applictions
+      await dispatch(fetchByAgent(curUser?._id!));
+      await dispatch(getRejectedAppByAgentId(curUser?._id!));
+    };
+    fetchApps();
+  }, []);
+
+  useEffect(() => {
+    async function fetchAgetContract() {
+      try {
+        if (!curUser || curUser.role === Role.Employee) return;
+        await dispatch(fetchContractsByAgentId(curUser?._id!));
+      } catch (error) {
+        console.log("Failt on fetchAgetContract", error);
+      }
+    }
+    fetchAgetContract();
+  }, [curUser]);
 }

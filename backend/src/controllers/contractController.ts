@@ -88,7 +88,7 @@ export class ContractController {
   ): Promise<void> => {
     try {
       const agentId = req.params.agentId || req.body.agentId;
-
+      console.log("Fetching contract of this agent: ", agentId);
       if (!agentId) {
         res.json({
           success: false,

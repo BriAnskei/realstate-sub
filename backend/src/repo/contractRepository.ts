@@ -176,6 +176,7 @@ export class ContractRepository {
    * @returns Array of matching contracts.
    */
   async fetchContractsByAgentId(agentId: string): Promise<ContractType[]> {
+    console.log("fetching contract with this agent: ", agentId);
     const rows = await this.db.all(
       `
       SELECT * FROM Contract

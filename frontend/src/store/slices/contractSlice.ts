@@ -44,6 +44,7 @@ const contractApi = new ContractApi();
 export const fetchAllContracts = createAsyncThunk(
   "contract/fetchAll",
   async (_, { rejectWithValue }) => {
+    console.log("Callingall the contracts: ");
     try {
       const res = await contractApi.fetchAllContracts();
       return res.contracts;
@@ -88,10 +89,11 @@ export const fetchContractsByAgentId = createAsyncThunk(
   "contract/fetchByAgent",
   async (agentId: string, { rejectWithValue }) => {
     try {
+      console.log("Feting contract of: ", agentId);
       const res = await contractApi.fetchContractsByAgentId(agentId);
       return res.contracts;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue("error in fetchContractsByAgentId" + error);
     }
   }
 );

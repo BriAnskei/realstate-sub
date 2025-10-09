@@ -73,6 +73,30 @@ export const users: UserType[] = [
     role: Role.Agent,
     userRole: UserRole.Staff,
   },
+  {
+    _id: "6",
+    profilePicc: "https://randomuser.me/api/portraits/women/45.jpg",
+    firstName: "Angela",
+    middleName: "M",
+    lastName: "Santos",
+    email: "angela.santos@example.com",
+    userName: "angelam",
+    passWord: "agent987",
+    role: Role.Agent,
+    userRole: UserRole.Staff,
+  },
+  {
+    _id: "7",
+    profilePicc: "https://randomuser.me/api/portraits/men/27.jpg",
+    firstName: "Joshua",
+    middleName: "D",
+    lastName: "Reyes",
+    email: "joshua.reyes@example.com",
+    userName: "joshreyes",
+    passWord: "agent321",
+    role: Role.Agent,
+    userRole: UserRole.Staff,
+  },
 
   // Employees
   {
