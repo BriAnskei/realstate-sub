@@ -55,22 +55,12 @@ function ContractTableRow({
     <TableRow className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
       <TableCell className="px-2 py-4 lg:px-4 text-start dark:text-gray-50">
         <div className="font-medium text-gray-800 text-sm dark:text-white/90">
-          {contract.term || "—"}
+          {contract.clientName}
         </div>
       </TableCell>
 
       <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
-        <span
-          className="truncate block max-w-[120px]"
-          title={getFullDateFormat(contract.createdAt!)}
-        >
-          <span className="hidden lg:inline">
-            {getFullDateFormat(contract.createdAt!)}
-          </span>
-          <span className="lg:hidden">
-            {getShortDateFormat(contract.createdAt!)}
-          </span>
-        </span>
+        {contract.term}
       </TableCell>
 
       <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
@@ -95,6 +85,20 @@ function ContractTableRow({
           }
         />
       </TableCell>
+
+      <TableCell className="px-2 py-4 lg:px-4 text-gray-500 text-start text-sm dark:text-gray-400">
+        <span
+          className="truncate block max-w-[120px]"
+          title={getFullDateFormat(contract.createdAt!)}
+        >
+          <span className="hidden lg:inline">
+            {getFullDateFormat(contract.createdAt!)}
+          </span>
+          <span className="lg:hidden">
+            {getShortDateFormat(contract.createdAt!)}
+          </span>
+        </span>
+      </TableCell>
     </TableRow>
   );
 }
@@ -104,6 +108,7 @@ interface ContractTableProp {
   allIds: string[];
   dispatch: AppDispatch;
   loading: boolean;
+  filterAgent: React.Dispatch<SetStateAction<string | undefined>>;
 }
 
 export default function ContractTable({
@@ -111,6 +116,7 @@ export default function ContractTable({
   allIds,
   dispatch,
   loading,
+  filterAgent,
 }: ContractTableProp) {
   // application view
   const [application, setApplication] = useState<ApplicationType | undefined>(
@@ -156,6 +162,11 @@ export default function ContractTable({
 
   return (
     <>
+      <Filter
+        SearchPlaceholder="Search By Client name"
+        sortTitle="All"
+        onSearchChange={filterAgent}
+      />
       <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         {loading && <LoadingOverlay message="Loading...." />}
 
@@ -168,15 +179,17 @@ export default function ContractTable({
                     isHeader
                     className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[160px]"
                   >
-                    Term
+                    <span className="hidden lg:inline">Clients Name</span>
+                    <span className="lg:hidden">Client</span>
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[140px]"
+                    className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[160px]"
                   >
-                    <span className="hidden lg:inline">Created Date</span>
-                    <span className="lg:hidden">Created</span>
+                    <span className="hidden lg:inline">Contract Term</span>
+                    <span className="lg:hidden">Term</span>
                   </TableCell>
+
                   <TableCell
                     isHeader
                     className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[120px]"
@@ -197,6 +210,13 @@ export default function ContractTable({
                   >
                     <span className="hidden md:inline">View Contract PDF</span>
                     <span className="md:hidden">PDF</span>
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[140px]"
+                  >
+                    <span className="hidden lg:inline">Created Date</span>
+                    <span className="lg:hidden">Created</span>
                   </TableCell>
                 </TableRow>
               </TableHeader>

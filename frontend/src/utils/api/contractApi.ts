@@ -19,10 +19,8 @@ export class ContractApi {
     try {
       // add first to get the id
       const addRes = await api.post("/api/contract/add", payload);
-
       const genreatedContract = addRes.data.contract;
-
-      // begin genrate pdf and upload to server
+      // begin generate pdf and upload to server(the resaon for this is we need to get the contract Id for the directory of the file.)
       const res = await api.post("/api/contract/upload/pdf", {
         contract: genreatedContract,
       });
@@ -30,24 +28,6 @@ export class ContractApi {
       return res.data;
     } catch (error) {
       console.error("Error in addContract:", error);
-      throw error;
-    }
-  };
-
-  /**
-   * Fetch all contracts
-   */
-  fetchAllContracts = async (): Promise<{
-    success: boolean;
-    contracts: ContractType[];
-  }> => {
-    try {
-      const res = await api.get("/api/contract/get/all");
-
-      console.log("Fetchedd conrtacs: ", res.data);
-      return res.data;
-    } catch (error) {
-      console.error("Error in fetchAllContracts:", error);
       throw error;
     }
   };
@@ -72,13 +52,51 @@ export class ContractApi {
   };
 
   /**
+   *
+   * Filter contract by client name
+   */
+  filterContract = async (payload: {
+    clientName: string;
+    agentId?: string;
+  }): Promise<{ contract: ContractType }> => {
+    try {
+      const res = await api.get("/api/contract/search", {
+        params: payload,
+      });
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in filterContract", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Fetch all contracts
+   */
+  fetchAllContracts = async (): Promise<{
+    success: boolean;
+    contracts: ContractType[];
+  }> => {
+    try {
+      const res = await api.get("/api/contract/get/all");
+
+      console.log("Fetchedd conrtacs: ", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Error in fetchAllContracts:", error);
+      throw error;
+    }
+  };
+
+  /**
    * Fetch contracts by agent ID
    */
   fetchContractsByAgentId = async (
     agentId: string
   ): Promise<{ success: boolean; contracts: ContractType[] }> => {
     try {
-      const res = await api.post(`/api/contract/get/by-agent/${agentId}`);
+      const res = await api.get(`/api/contract/get/by-agent/${agentId}`);
       return res.data;
     } catch (error) {
       console.error("Error in fetchContractsByAgentId:", error);

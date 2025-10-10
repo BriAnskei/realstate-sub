@@ -26,6 +26,11 @@ export function createContractRouter(db: Database) {
     asyncHandler(contractController.fetchAllContracts, "fetchAllContracts")
   );
 
+  contractRouter.get(
+    "/search",
+    asyncHandler(contractController.searchContract, "searchContract")
+  );
+
   contractRouter.post(
     "/generate",
     asyncHandler(contractController.getGeneratedPdf, "getGeneratedPdf")

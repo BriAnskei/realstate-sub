@@ -3,6 +3,8 @@ export interface ContractType {
   clientId?: string;
   agentsIds: string[];
   applicationId?: string;
+  clientName?: string;
+  landName?: string;
   contractPDF?: string;
   term?: string;
   createdAt?: string;

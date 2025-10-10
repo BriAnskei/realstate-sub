@@ -10,6 +10,7 @@ export interface ContractType {
   clientId?: string;
   agentsIds: number[];
   applicationId?: string;
+  clientName?: string;
   contractPDF?: string;
   term?: string;
   createdAt?: string;
@@ -20,9 +21,9 @@ interface ContractState extends NormalizeState<ContractType> {
   updateLoading: boolean;
   fetchingLoading: boolean;
   filterLoading: boolean;
-  error: string | null;
   selectedContract?: ContractType;
-  filteredContracts: ContractType[];
+  filteredContractById: { [key: string]: ContractType };
+  filteredContractIds: string[];
 }
 
 const initialState: ContractState = {
@@ -33,7 +34,8 @@ const initialState: ContractState = {
   fetchingLoading: false,
   filterLoading: false,
   error: null,
-  filteredContracts: [],
+  filteredContractById: {},
+  filteredContractIds: [],
 };
 
 const contractApi = new ContractApi();
@@ -62,6 +64,7 @@ export const addContract = createAsyncThunk(
   async (payload: Partial<ContractType>, { rejectWithValue, dispatch }) => {
     try {
       console.log("Addding newe contract: ", payload);
+
       const res = await contractApi.addContract(payload);
 
       const reservationId = res.reservation._id;
@@ -91,9 +94,29 @@ export const fetchContractsByAgentId = createAsyncThunk(
     try {
       console.log("Feting contract of: ", agentId);
       const res = await contractApi.fetchContractsByAgentId(agentId);
+      console.log("res: ", res);
       return res.contracts;
     } catch (error) {
       return rejectWithValue("error in fetchContractsByAgentId" + error);
+    }
+  }
+);
+
+/**
+ * filter contract(optional agentId)
+ */
+export const filterContract = createAsyncThunk(
+  "contract/filter",
+  async (
+    payload: { clientName: string; agentId?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await contractApi.filterContract(payload);
+      console.log("Filtering contract:", payload, res);
+      return res.contract;
+    } catch (error) {
+      return rejectWithValue("Failed on filterContract " + error);
     }
   }
 );
@@ -123,11 +146,16 @@ const contractSlice = createSlice({
     resetContractState: (state) => {
       state.byId = {};
       state.allIds = [];
-      state.filteredContracts = [];
+      state.filteredContractById = {};
+      state.filteredContractIds = [];
       state.error = null;
     },
     resetSelectedContract: (state) => {
       state.selectedContract = undefined;
+    },
+    clearContractFilter: (state) => {
+      state.filteredContractById = {};
+      state.filteredContractIds = [];
     },
   },
   extraReducers: (builder) => {
@@ -192,6 +220,23 @@ const contractSlice = createSlice({
       })
       .addCase(getContractById.rejected, (state, action) => {
         state.fetchingLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // filter
+      .addCase(filterContract.pending, (state) => {
+        state.filterLoading = true;
+      })
+      .addCase(filterContract.fulfilled, (state, action) => {
+        const { byId, allIds } = normalizeResponse(action.payload);
+
+        state.filteredContractById = byId;
+        state.filteredContractIds = allIds;
+
+        state.filterLoading = false;
+      })
+      .addCase(filterContract.rejected, (state, action) => {
+        state.filterLoading = false;
         state.error = action.payload as string;
       });
   },

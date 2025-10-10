@@ -13,6 +13,8 @@ export class ContractController {
     try {
       const contractData: Omit<ContractType, "_id" | "createdAt"> = req.body;
 
+      console.log("contract payload: ", contractData);
+
       const contract = await this.contractRepo.addContract(contractData);
 
       res.json({
@@ -57,12 +59,19 @@ export class ContractController {
       res.json({ success: true, contracts });
     } catch (error: any) {
       console.error("Error fetching contracts:", error);
-      res.json({
-        success: false,
-        message: "Failed to fetch contracts.",
-        error: error.message,
-      });
     }
+  };
+
+  searchContract = async (req: Request, res: Response): Promise<void> => {
+    const clientName = req.query.clientName as string;
+    const agentId = req.query.agentId as string;
+
+    const contract = await this.contractRepo.searchContractsByClientName({
+      name: clientName,
+      agentId,
+    });
+
+    res.json({ contract });
   };
 
   getGeneratedPdf = async (req: Request, res: Response): Promise<void> => {
@@ -88,7 +97,7 @@ export class ContractController {
   ): Promise<void> => {
     try {
       const agentId = req.params.agentId || req.body.agentId;
-      console.log("Fetching contract of this agent: ", agentId);
+
       if (!agentId) {
         res.json({
           success: false,

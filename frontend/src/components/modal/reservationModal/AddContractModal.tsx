@@ -66,7 +66,6 @@ const AddContractModal: React.FC<AddContractModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSubmit && term.trim() && application) {
-      console.log("Application: ", application);
       const contract: Partial<ContractType> = {
         clientId: application?.clientId,
         ...(application.agentDealerId && {
@@ -76,6 +75,7 @@ const AddContractModal: React.FC<AddContractModalProps> = ({
           ],
         }),
         applicationId: application._id,
+        clientName: application.clientName,
         term,
       };
 

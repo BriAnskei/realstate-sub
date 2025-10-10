@@ -18,20 +18,30 @@ export class ContractRepository {
   async addContract(
     payload: Omit<ContractType, "_id" | "createdAt">
   ): Promise<ContractType> {
-    const { clientId, agentsIds, applicationId, contractPDF, term } = payload;
+    const {
+      clientId,
+      agentsIds,
+      applicationId,
+      contractPDF,
+      term,
+      clientName, // ✅ Added clientName to payload
+    } = payload;
+
     try {
       await this.db.exec("BEGIN TRANSACTION");
+
       const res = await this.db.run(
         `
-      INSERT INTO Contract (clientId, agentsIds, applicationId, contractPDF, term)
-      VALUES (?, ?, ?, ?, ?)
-      `,
+        INSERT INTO Contract (clientId, agentsIds, applicationId, contractPDF, term, clientName)
+        VALUES (?, ?, ?, ?, ?, ?)
+        `,
         [
           clientId ?? null,
           JSON.stringify(agentsIds), // Store array as JSON string
           applicationId ?? null,
           contractPDF ?? null,
           term ?? null,
+          clientName ?? null, // ✅ Save clientName
         ]
       );
 
@@ -41,8 +51,9 @@ export class ContractRepository {
         throw new Error("Cannot find created contract");
       }
 
-      await this.processRservationOnContract(applicationId!);
+      await this.processRervationOnContract(applicationId!);
       await this.db.exec("COMMIT");
+
       return createdContract;
     } catch (error) {
       await this.db.exec("ROLLBACK");
@@ -50,7 +61,7 @@ export class ContractRepository {
     }
   }
 
-  private async processRservationOnContract(applicationId: string) {
+  private async processRervationOnContract(applicationId: string) {
     try {
       const application = await AppService.findById(
         this.db,
@@ -71,6 +82,38 @@ export class ContractRepository {
     } catch (error) {
       throw new Error("Error  in processRservationOnContract" + error);
     }
+  }
+
+  /**
+   * Search contracts by client name (case-insensitive),
+   * optionally filter by agentId (if provided).
+   */
+  async searchContractsByClientName(payload: {
+    name: string;
+    agentId?: string;
+  }): Promise<ContractType[]> {
+    const { name, agentId } = payload;
+
+    let sql = `
+    SELECT * FROM Contract
+    WHERE LOWER(clientName) LIKE LOWER(?)
+  `;
+    const params: any[] = [`%${name}%`];
+
+    // If agentId exists, add a filter for it in the JSON agentsIds column
+    if (agentId) {
+      sql += ` AND json_extract(agentsIds, '$') LIKE ?`;
+      params.push(`%${agentId}%`);
+    }
+
+    sql += ` ORDER BY createdAt DESC`;
+
+    const rows = await this.db.all(sql, params);
+
+    return rows.map((row) => ({
+      ...row,
+      agentsIds: row.agentsIds ? JSON.parse(row.agentsIds) : [],
+    }));
   }
 
   async handleContractPdfFileUploader(contract: ContractType): Promise<{
@@ -176,7 +219,7 @@ export class ContractRepository {
    * @returns Array of matching contracts.
    */
   async fetchContractsByAgentId(agentId: string): Promise<ContractType[]> {
-    console.log("fetching contract with this agent: ", agentId);
+    console.log("Fetching contract by agent id: ", agentId);
     const rows = await this.db.all(
       `
       SELECT * FROM Contract

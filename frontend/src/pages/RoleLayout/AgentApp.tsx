@@ -84,6 +84,7 @@ function FetchAgentState(dispatch: AppDispatch, curUser: UserType | undefined) {
       try {
         if (!curUser || curUser.role === Role.Employee) return;
         await dispatch(fetchContractsByAgentId(curUser?._id!));
+        await dispatch(fetchContractsByAgentId(curUser._id!));
       } catch (error) {
         console.log("Failt on fetchAgetContract", error);
       }

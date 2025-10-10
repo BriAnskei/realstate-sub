@@ -234,7 +234,7 @@ export class ApplicationRepo {
    *
    * @param agentId
    * @param filters
-   * @returns returns the filtered application of corresponding agent(if it exist)s or all applications
+   * @returns returns the filtered application of corresponding agent(if it exist) or all applications
    * this fucntion is useable for employee for filtering
    */
   async getFilteredData(payload: {
@@ -242,7 +242,6 @@ export class ApplicationRepo {
     filters: { search?: string; status?: string };
   }): Promise<ApplicationType[]> {
     const { agentId, filters } = payload;
-    console.log("payload: ", payload);
 
     // Base query - no agent filter initially
     let query = `SELECT * FROM Application WHERE 1=1`;

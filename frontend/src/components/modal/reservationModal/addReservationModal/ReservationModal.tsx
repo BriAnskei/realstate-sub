@@ -9,9 +9,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../store/store";
 import { ClientType } from "../../../../store/slices/clientSlice";
 import { LandTypes } from "../../../../store/slices/landSlice";
-import { LotType } from "../../applicationModal/ApplicationInfoModal";
+
 import { ApplicationType } from "../../../../store/slices/applicationSlice";
 import { manualAddReservation } from "../../../../store/slices/reservationSlice";
+import { LotType } from "../../../../store/slices/lotSlice";
 
 // Type Definitions
 export interface ReserveType {
@@ -52,6 +53,17 @@ const AddReservationModal: React.FC<AddReservationModalProps> = ({
   // Form states
   const [appointmentDate, setAppointmentDate] = useState("");
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedLand(null);
+      setSelectedLots([]);
+      setSelectedClient(null);
+      setAppointmentDate("");
+      setNotes("");
+      setCurrentStep("land");
+    }
+  }, [isOpen]);
 
   const getFullName = (client: ClientType) => {
     return (
