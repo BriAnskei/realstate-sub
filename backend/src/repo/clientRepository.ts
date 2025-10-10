@@ -1,6 +1,7 @@
 import { Database } from "sqlite";
 import { Client } from "../model/clientModel";
 import { UploadService } from "../service/UploadService";
+import { AppService } from "../service/applictionService";
 
 export class ClientRepository {
   constructor(private db: Database) {}
@@ -130,8 +131,22 @@ export class ClientRepository {
     return rows;
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number): Promise<{ success: boolean; message?: string }> {
+    const doesClientHasTansaction = await AppService.doesClientHasApplication(
+      this.db,
+      id.toString()
+    );
+
+    if (doesClientHasTansaction) {
+      return {
+        success: false,
+        message:
+          "This client cannot be deleted because they are associated with an existing application.",
+      };
+    }
+
     await this.db.run("DELETE FROM Client WHERE _id = ?", [id]);
+    return { success: true };
   }
 
   async findById(

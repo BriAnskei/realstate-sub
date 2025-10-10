@@ -189,7 +189,7 @@ export default function MonthlySalesChart() {
         </div>
       </div>
 
-      <div className="w-full pb-4">
+      <div className="w-full pb-4 min-h-[250px]">
         <Chart
           options={options}
           series={series}

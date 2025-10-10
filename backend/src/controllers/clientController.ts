@@ -57,8 +57,8 @@ export class ClientController {
   };
 
   deleteClient = async (req: Request, res: Response) => {
-    await this.clientRepo.delete(Number(req.params.id));
-    res.json({ message: "Client deleted successfully" });
+    const response = await this.clientRepo.delete(Number(req.params.id));
+    res.json({ ...response });
   };
 
   search = async (req: Request, res: Response) => {

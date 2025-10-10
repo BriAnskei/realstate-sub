@@ -100,7 +100,9 @@ export const deleteClient = createAsyncThunk(
   "client/delete",
   async (data: ClientType, { rejectWithValue }) => {
     try {
-      await ClientApi.deleteClient(parseInt(data._id, 10));
+      const res = await ClientApi.deleteClient(parseInt(data._id, 10));
+
+      if (!res.success) return rejectWithValue(res.message);
 
       return data;
     } catch (error) {

@@ -77,7 +77,7 @@ export default function Client() {
     try {
       await dispatch(deleteClient(deleteData!)).unwrap();
     } catch (error) {
-      console.log("failed to delete client: ", error);
+      alert(error);
     }
   };
 

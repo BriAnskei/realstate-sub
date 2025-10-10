@@ -72,7 +72,9 @@ export class ClientApi {
     }
   };
 
-  static deleteClient = async (id: number) => {
+  static deleteClient = async (
+    id: number
+  ): Promise<{ success: boolean; message?: string }> => {
     try {
       const res = await api.delete(`/api/client/delete/${id}`);
 

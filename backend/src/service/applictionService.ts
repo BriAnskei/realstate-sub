@@ -95,6 +95,15 @@ export class AppService {
     return application ?? null;
   }
 
+  static async doesClientHasApplication(
+    db: Database,
+    clientId: string
+  ): Promise<boolean> {
+    return Boolean(
+      await db.all(`SELECT * FROM Application WHERE clientId = ? `, [clientId])
+    );
+  }
+
   static async manageReserveAppRejection(
     db: Database,
     payload: { applicationId: number; status: string; notes?: string }
