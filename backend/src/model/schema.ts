@@ -84,11 +84,15 @@ CREATE TABLE IF NOT EXISTS Contract (
   clientId INTEGER,                       
   agentsIds TEXT,           
   applicationId INTEGER,       
+  reservationId TEXT,
   clientName TEXT,           
   contractPDF TEXT,                        
   term TEXT,                           
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (clientId) REFERENCES Client(_id) ON DELETE SET NULL,
+
+
+  FOREIGN KEY (reservationId) REFERENCES Reservation(_id), 
+  FOREIGN KEY (clientId) REFERENCES Client(_id),
   FOREIGN KEY (applicationId) REFERENCES Application(_id) 
 );
 CREATE INDEX IF NOT EXISTS idx_contract_clientId ON Contract(clientId);

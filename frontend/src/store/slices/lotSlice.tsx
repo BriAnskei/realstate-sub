@@ -163,6 +163,21 @@ const lotSclice = createSlice({
       state.allIds = [...allIds, ...state.allIds];
       state.byId = { ...state.byId, ...byId };
     },
+
+    dropByLandId: (state, action) => {
+      const { landId } = action.payload;
+      const lotIds = state.allIds;
+      const setIds = new Set(lotIds);
+
+      for (let id of lotIds) {
+        if (state.byId[id].landId === landId) {
+          setIds.delete(id);
+          delete state.byId[id];
+        }
+      }
+
+      state.allIds = Array.from(setIds);
+    },
     resetFilter: (state) => {
       state.allFilterIds = [];
       state.filterById = {};
@@ -277,5 +292,6 @@ export const {
   updateName,
   resetFetchedLots,
   markLotsStatus,
+  dropByLandId,
 } = lotSclice.actions;
 export default lotSclice.reducer;

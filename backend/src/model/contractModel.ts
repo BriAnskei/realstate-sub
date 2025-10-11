@@ -3,6 +3,7 @@ export interface ContractType {
   clientId?: string;
   agentsIds: string[];
   applicationId?: string;
+  reservationId?: string;
   clientName?: string;
   landName?: string;
   contractPDF?: string;

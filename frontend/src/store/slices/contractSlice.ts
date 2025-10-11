@@ -10,6 +10,7 @@ export interface ContractType {
   clientId?: string;
   agentsIds: number[];
   applicationId?: string;
+  reservationId?: string;
   clientName?: string;
   contractPDF?: string;
   term?: string;
@@ -63,13 +64,9 @@ export const addContract = createAsyncThunk(
   "contract/add",
   async (payload: Partial<ContractType>, { rejectWithValue, dispatch }) => {
     try {
-      console.log("Addding newe contract: ", payload);
-
       const res = await contractApi.addContract(payload);
 
       const reservationId = res.reservation._id;
-
-      console.log(reservationId, res.reservation._id, res.reservation);
 
       dispatch(
         updateReservationStatus({ reservationId, status: "on contract" })

@@ -281,7 +281,7 @@ export default function ReservationTable({
     try {
       await dispatch(addContract(contract)).unwrap();
     } catch (error) {
-      console.log("Failed on handleReservationOnContract, ", error);
+      console.error("Failed on handleReservationOnContract, ", error);
     } finally {
       closeContractReservationModal();
     }

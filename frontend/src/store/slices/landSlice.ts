@@ -1,7 +1,7 @@
-import { createSlice, createAsyncThunk, current } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { NormalizeState } from "../../types/TypesHelper";
 import { normalizeResponse } from "../../utils/normalizeResponse"; // adjust path
-import { bulkSaveLots, LotType, updateName } from "./lotSlice";
+import { bulkSaveLots, dropByLandId, LotType, updateName } from "./lotSlice";
 import { LandApi } from "../../utils/api/landApi";
 import { RootState } from "../store";
 
@@ -122,9 +122,11 @@ export const updateLand = createAsyncThunk(
 
 export const deleteLand = createAsyncThunk(
   "lands/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue, dispatch }) => {
     try {
       await landApi.deleteLand(parseInt(id, 10));
+
+      dispatch(dropByLandId({ landId: id }));
       return id;
     } catch (error) {
       return rejectWithValue(error);

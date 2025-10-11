@@ -75,6 +75,7 @@ const AddContractModal: React.FC<AddContractModalProps> = ({
           ],
         }),
         applicationId: application._id,
+        reservationId: reservation?._id,
         clientName: application.clientName,
         term,
       };

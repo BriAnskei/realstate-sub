@@ -23,6 +23,7 @@ export class ContractRepository {
       agentsIds,
       applicationId,
       contractPDF,
+      reservationId,
       term,
       clientName, // ✅ Added clientName to payload
     } = payload;
@@ -32,13 +33,14 @@ export class ContractRepository {
 
       const res = await this.db.run(
         `
-        INSERT INTO Contract (clientId, agentsIds, applicationId, contractPDF, term, clientName)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO Contract (clientId, agentsIds, applicationId, reservationId,  contractPDF, term, clientName)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         `,
         [
           clientId ?? null,
           JSON.stringify(agentsIds), // Store array as JSON string
           applicationId ?? null,
+          reservationId,
           contractPDF ?? null,
           term ?? null,
           clientName ?? null, // ✅ Save clientName

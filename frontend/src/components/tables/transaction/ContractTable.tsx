@@ -194,7 +194,7 @@ export default function ContractTable({
                     isHeader
                     className="px-2 py-3 font-medium text-gray-500 text-start text-xs lg:px-4 lg:text-theme-xs dark:text-gray-400 whitespace-nowrap w-[120px]"
                   >
-                    <span className="hidden md:inline">View Client</span>
+                    <span className="hidden md:inline">View Detials</span>
                     <span className="md:hidden">Client</span>
                   </TableCell>
                   <TableCell
